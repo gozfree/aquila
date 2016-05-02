@@ -55,6 +55,7 @@ CFLAGS	+= -I$(OUTPUT)/include -I./
 CFLAGS	+= -I./algo
 CFLAGS	+= -I./codec
 CFLAGS	+= -I./device
+CFLAGS	+= -I./filter
 CFLAGS	+= -I./playback
 CFLAGS	+= -I./protocol
 CFLAGS	+= -I./util
@@ -63,6 +64,8 @@ CFLAGS	+= $(CFLAGS_SDL)
 LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
+LDFLAGS	+= -llog
+LDFLAGS	+= -lgevent
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
@@ -77,18 +80,32 @@ ALGO_OBJS :=
 
 CODEC_OBJS :=
 
-DEVICE_OBJS :=
+DEVICE_OBJS := \
+    device/device.o \
+    device/v4l2.o
 
-PLAYBACK_OBJS :=
+FILTER_OBJS := \
+    filter/filter.o \
+    filter/videocap_filter.o \
+    filter/playback_filter.o
+
+
+
+PLAYBACK_OBJS := \
+    playback/playback.o \
+    playback/sdl.o
 
 PROTOCOL_OBJS :=
 
-UTIL_OBJS :=
+UTIL_OBJS := \
+    util/url.o \
+    util/queue.o
 
 OBJS := \
     $(ALGO_OBJS) \
     $(CODEC_OBJS) \
     $(DEVICE_OBJS) \
+    $(FILTER_OBJS) \
     $(PLAYBACK_OBJS) \
     $(PROTOCOL_OBJS) \
     $(UTIL_OBJS) \
