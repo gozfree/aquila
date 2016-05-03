@@ -82,7 +82,8 @@ CODEC_OBJS :=
 
 DEVICE_OBJS := \
     device/device.o \
-    device/v4l2.o
+    device/v4l2.o \
+    device/vdevfake.o
 
 FILTER_OBJS := \
     filter/filter.o \
