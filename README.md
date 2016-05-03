@@ -17,6 +17,9 @@ ipcam or drone.
 ## Libraries
 This app is mostly based on [libraries](https://github.com/gozfree/libraries)
 
+## Build
+How to build aquila, please refer to [INSTALL](https://github.com/gozfree/aquila/INSTALL.md)
+
 ## Documentation
 The documentation is available in the **doc/** directory.
 
