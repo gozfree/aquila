@@ -37,6 +37,7 @@ void device_register_all(void)
     registered = 1;
 
     REGISTER_DEVICE(v4l2);
+    REGISTER_DEVICE(vdevfake);
 }
 
 struct device_ctx *device_open(const char *url)

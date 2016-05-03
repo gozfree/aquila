@@ -55,8 +55,8 @@ static int vf_open(struct device_ctx *dc, const char *dev)
         goto failed;
     }
     vc->fd = fd;
-    vc->width = 640;
-    vc->height = 360;
+    vc->width = 720;
+    vc->height = 480;
 
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = vc->width;

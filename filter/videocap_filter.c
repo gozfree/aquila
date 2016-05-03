@@ -16,8 +16,10 @@
 #include "device.h"
 #include "filter.h"
 
-#define VIDEOCAP_FILTER_URL    "v4l2:///dev/video0"
-//char *vid_url = "file:///path/of/yuv/720x480.yuv";
+#define VIDEOCAP_V4L2       "v4l2:///dev/video0"
+#define VIDEOCAP_VDEVFAKE   "vdevfake:////home/gongzf/github/snowball.repo/aquila/720x480.yuv"
+
+#define VIDEOCAP_FILTER_URL VIDEOCAP_V4L2
 
 
 struct videocap_ctx {
@@ -51,9 +53,31 @@ static int on_videocap_read(void *arg, void *in_data, int in_len,
     return *out_len;
 }
 
+static char *videocap_probe()
+{
+#if 0
+    char *path = NULL;
+    char *buf = NULL;
+    if ((buf = get_current_dir_name()) == NULL) {
+        loge("getcwd failed: %s\n", strerror(errno));
+        return NULL;
+    }
+    logi("buf: %s\n", buf);
+    path = strcat("vdevfake://", buf);
+    path = strcat(buf, "/");
+    path = strcat(path, VIDEOCAP_VDEVFAKE);
+    logi("path: %s\n", path);
+    return path;
+#else
+    return VIDEOCAP_VDEVFAKE;
+#endif
+}
+
 static int videocap_open(struct filter_ctx *fc)
 {
     const char *url = VIDEOCAP_FILTER_URL;
+    url = videocap_probe();
+    //url = VIDEOCAP_FILTER_URL;
     struct device_ctx *dc = device_open(url);
     if (!dc) {
         loge("open %s failed!\n", url);

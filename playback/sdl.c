@@ -367,7 +367,7 @@ static int sdl_open(struct playback_ctx *pc, const char *type, struct media_para
     c->width = format->video.width;
     c->height = format->video.height;
 
-    logd("sdl pix format: %d*%d\n", c->width, c->height);
+    logi("sdl pix format: %d*%d\n", c->width, c->height);
     if (-1 == sdl_init(c)) {
         loge("sdl_init failed!\n");
         goto failed;

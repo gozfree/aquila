@@ -49,6 +49,7 @@ LDFLAGS_SDL	= `pkg-config --libs sdl`
 LDFLAGS_X264	= -lx264
 LDFLAGS_ALSA	= -lasound
 LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
+LDFLAGS_JPEG	= -ljpeg
 
 CFLAGS	:= -g -Wall -Werror
 CFLAGS	+= -I$(OUTPUT)/include -I./
@@ -71,6 +72,7 @@ LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
 LDFLAGS += $(LDFLAGS_ALSA)
 LDFLAGS += $(LDFLAGS_FFMPEG)
+LDFLAGS += $(LDFLAGS_JPEG)
 
 .PHONY : all clean
 
@@ -78,38 +80,41 @@ TGT	:= $(TGT_NAME)
 
 ALGO_OBJS :=
 
-CODEC_OBJS :=
+CODEC_OBJS := 			\
+    codec/codec.o 		\
+    codec/x264_enc.o		\
+    codec/mjpeg_enc.o
 
-DEVICE_OBJS := \
-    device/device.o \
-    device/v4l2.o \
+DEVICE_OBJS := 			\
+    device/device.o 		\
+    device/v4l2.o 		\
     device/vdevfake.o
 
-FILTER_OBJS := \
-    filter/filter.o \
-    filter/videocap_filter.o \
+FILTER_OBJS := 			\
+    filter/filter.o 		\
+    filter/videocap_filter.o 	\
     filter/playback_filter.o
 
 
 
-PLAYBACK_OBJS := \
-    playback/playback.o \
+PLAYBACK_OBJS := 		\
+    playback/playback.o 	\
     playback/sdl.o
 
 PROTOCOL_OBJS :=
 
-UTIL_OBJS := \
-    util/url.o \
+UTIL_OBJS := 			\
+    util/url.o 			\
     util/queue.o
 
 OBJS := \
-    $(ALGO_OBJS) \
-    $(CODEC_OBJS) \
-    $(DEVICE_OBJS) \
-    $(FILTER_OBJS) \
-    $(PLAYBACK_OBJS) \
-    $(PROTOCOL_OBJS) \
-    $(UTIL_OBJS) \
+    $(ALGO_OBJS) 		\
+    $(CODEC_OBJS) 		\
+    $(DEVICE_OBJS) 		\
+    $(FILTER_OBJS) 		\
+    $(PLAYBACK_OBJS) 		\
+    $(PROTOCOL_OBJS) 		\
+    $(UTIL_OBJS) 		\
     main.o
 
 all: $(TGT)

@@ -9,8 +9,9 @@
 #include <signal.h>
 #include <liblog.h>
 #include "device.h"
-#include "filter.h"
+#include "codec.h"
 #include "playback.h"
+#include "filter.h"
 #include "queue.h"
 
 struct aquila {
@@ -73,6 +74,7 @@ int main(int argc, char **argv)
     signal_init();
     device_register_all();
     playback_register_all();
+    codec_register_all();
     filter_register_all();
 
     if (-1 == aquila_init(&aq_instance)) {

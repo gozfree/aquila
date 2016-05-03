@@ -207,8 +207,8 @@ static int v4l2_open(struct device_ctx *dc, const char *dev)
         goto failed;
     }
     vc->fd = fd;
-    vc->width = 640;//XXX
-    vc->height = 480;//XXX
+    vc->width = 320;//XXX
+    vc->height = 240;//XXX
 
     if (-1 == v4l2_set_format(vc)) {
         loge("v4l2_set_format failed\n");
