@@ -82,8 +82,11 @@ failed:
     return -1;
 }
 
-static void YUV420p_to_YUV422p(unsigned char *yuv420, unsigned char *yuv422, int width, int height)
+static void YUV420p_to_YUV422p(unsigned char *yuv420, unsigned char *yuv422, int width, int height, int len)
 {
+#if 1
+    memcpy(yuv422, yuv420, len);
+#else
     int y;
     //亮度信号Y复制
     int Ylen = width*height;
@@ -109,6 +112,7 @@ static void YUV420p_to_YUV422p(unsigned char *yuv420, unsigned char *yuv422, int
         memcpy(pV422 + y*width, yuv420_2 + y*Vwidth, Vwidth);
         memcpy(pV422 + y*width + Vwidth, yuv420_2 + y*Vwidth, Vwidth);
     }
+#endif
 }
 
 
@@ -120,7 +124,7 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
     void *tmp = calloc(1, len);
 
     if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
-        perror("Failed read from notify pipe");
+        loge("Failed read from notify pipe");
     }
 
     flen = read(vc->fd, tmp, len);
@@ -134,7 +138,8 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
         return -1;
     }
     logd("read frame is %d bytes, but buffer len is %d\n", flen, len);
-    YUV420p_to_YUV422p(tmp, buf, vc->width, vc->height);
+    YUV420p_to_YUV422p(tmp, buf, vc->width, vc->height, flen);
+    //usleep(200*1000);
     free(tmp);
 
     return flen;

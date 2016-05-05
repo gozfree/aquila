@@ -16,6 +16,7 @@
 
 struct aquila {
     struct filter_ctx *videocap_filter;
+    struct filter_ctx *vencode_filter;
     struct filter_ctx *playback_filter;
 };
 
@@ -24,13 +25,19 @@ static struct aquila aq_instance;
 int aquila_init(struct aquila *aq)
 {
     struct queue *q1 = queue_create();
+    struct queue *q2 = queue_create();
 
     aq->videocap_filter = filter_create("videocap", NULL, q1);
     if (!aq->videocap_filter) {
         loge("filter videocap create failed!\n");
         return -1;
     }
-    aq->playback_filter = filter_create("playback", q1, NULL);
+    aq->vencode_filter = filter_create("vencode", q1, q2);
+    if (!aq->vencode_filter) {
+        loge("filter vencode create failed!\n");
+        return -1;
+    }
+    aq->playback_filter = filter_create("playback", q2, NULL);
     if (!aq->playback_filter) {
         loge("filter playback create failed!\n");
         return -1;
@@ -41,6 +48,7 @@ int aquila_init(struct aquila *aq)
 int aquila_dispatch(struct aquila *aq)
 {
     filter_dispatch(aq->videocap_filter, 0);
+    filter_dispatch(aq->vencode_filter, 0);
     filter_dispatch(aq->playback_filter, 0);
     while (1) {
         sleep(2);

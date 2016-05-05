@@ -27,7 +27,6 @@ struct codec {
     int (*encode)(struct codec_ctx *c, struct iovec *in, struct iovec *out);
     int (*decode)(struct codec_ctx *c, struct iovec *in, struct iovec *out);
     void (*close)(struct codec_ctx *c);
-    int priv_size;
     struct codec *next;
 };
 

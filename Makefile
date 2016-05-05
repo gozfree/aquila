@@ -93,13 +93,15 @@ DEVICE_OBJS := 			\
 FILTER_OBJS := 			\
     filter/filter.o 		\
     filter/videocap_filter.o 	\
+    filter/vencode_filter.o 	\
     filter/playback_filter.o
 
 
 
 PLAYBACK_OBJS := 		\
     playback/playback.o 	\
-    playback/sdl.o
+    playback/sdl.o		\
+    playback/snkfake.o
 
 PROTOCOL_OBJS :=
 

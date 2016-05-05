@@ -21,6 +21,7 @@ extern "C" {
 struct filter_ctx {
     int rfd;
     int wfd;
+    const char *name;
     pthread_mutex_t lock;
     struct gevent_base *ev_base;
     struct gevent *ev_read;

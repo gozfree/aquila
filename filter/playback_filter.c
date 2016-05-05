@@ -18,8 +18,9 @@
 #include "filter.h"
 #include "common.h"
 
-#define PLAYBACK_FILTER_URL_RGB "sdl://rgb"
-#define PLAYBACK_FILTER_URL_YUV "sdl://yuv"
+#define PLAYBACK_FILTER_SDL_RGB "sdl://rgb"
+#define PLAYBACK_FILTER_SDL_YUV "sdl://yuv"
+#define PLAYBACK_FILTER_SNK "snk://"
 
 struct playback_filter_ctx {
     int seq;
@@ -41,8 +42,9 @@ static int on_playback_read(void *arg, void *in_data, int in_len,
 
 static int playback_filter_open(struct filter_ctx *fc)
 {
-    //const char *url = PLAYBACK_FILTER_URL_RGB;
-    const char *url = PLAYBACK_FILTER_URL_YUV;
+    //const char *url = PLAYBACK_FILTER_SDL_RGB;
+    //const char *url = PLAYBACK_FILTER_SDL_YUV;
+    const char *url = PLAYBACK_FILTER_SNK;
     struct playback_ctx *pc = playback_open(url, &fc->media);
     if (!pc) {
         loge("open %s failed!\n", url);

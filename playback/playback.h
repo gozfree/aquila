@@ -30,7 +30,6 @@ struct playback {
     int (*read)(struct playback_ctx *c, void *buf, int len);
     int (*write)(struct playback_ctx *c, void *buf, int len);
     void (*close)(struct playback_ctx *c);
-    int priv_size;
     struct playback *next;
 };
 

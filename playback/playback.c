@@ -43,6 +43,7 @@ void playback_register_all()
     registered = 1;
 
     REGISTER_PLAYBACK(sdl);
+    REGISTER_PLAYBACK(snk);
 }
 
 struct playback_ctx *playback_open(const char *url, struct media_params *format)

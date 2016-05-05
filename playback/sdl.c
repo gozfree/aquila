@@ -408,6 +408,7 @@ static void sdl_close(struct playback_ctx *pc)
 {
     struct sdl_ctx *c = pc->priv;
     sdl_deinit(c);
+    free(c);
 }
 
 struct playback aq_sdl_playback = {
@@ -416,5 +417,4 @@ struct playback aq_sdl_playback = {
     .read = sdl_read,
     .write = sdl_write,
     .close = sdl_close,
-    .priv_size = sizeof(struct sdl_ctx),
 };

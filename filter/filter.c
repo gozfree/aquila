@@ -38,6 +38,7 @@ void filter_register_all(void)
     registered = 1;
 
     REGISTER_FILTER(videocap);
+    REGISTER_FILTER(vencode);
     REGISTER_FILTER(playback);
 }
 
@@ -62,6 +63,7 @@ static void on_filter_read(int fd, void *arg)
     }
     pthread_mutex_lock(&ctx->lock);
     ctx->ops->on_read(ctx->priv, in_data, in_len, &out_data, &out_len);
+    logd("filter[%s] out_data = %p, out_len = %d\n", ctx->name, out_data, out_len);
     if (out_data) {
         //memory create
         struct queue_item *out_item = queue_item_new(out_data, out_len);
@@ -108,6 +110,7 @@ struct filter_ctx *filter_ctx_new(const char *name)
     logi("\t[filter module] <%s> loaded\n", name);
 
     fc->ops = p;
+    fc->name = name;
     return fc;
 }
 
@@ -123,10 +126,13 @@ struct filter_ctx *filter_create(const char *name,
     pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
-    if (ctx->q_src) {//middle filter
+    if (ctx->q_src) {//not sink filter
         memcpy(&ctx->media, &q_src->media, sizeof(q_src->media));
-        logd("media.video: %d*%d\n",
-             ctx->media.video.width, ctx->media.video.height);
+        if (ctx->q_snk) {
+            memcpy(&q_snk->media, &q_src->media, sizeof(q_src->media));
+        }
+        logd("%s, media.video: %d*%d\n",
+             name, ctx->media.video.width, ctx->media.video.height);
     }
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;

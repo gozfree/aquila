@@ -46,6 +46,8 @@ static int mjpeg_open(struct codec_ctx *c, int width, int height)
         loge("malloc mjpeg_ctx failed!\n");
         return -1;
     }
+    mc->width = width;
+    mc->height = height;
     mc->encoder.err = jpeg_std_error(&mc->errmgr);
     jpeg_create_compress(&mc->encoder);
     jpeg_set_quality(&mc->encoder, DEFAULT_JPEG_QUALITY, 1);
@@ -98,6 +100,7 @@ static void dest_buffer(j_compress_ptr cinfo, unsigned char *buffer, int size, i
     dest->outbuffer_cursor = buffer;
     dest->written = written;
 }
+
 static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
 {
     struct mjpeg_ctx *mc = cc->priv;
@@ -146,9 +149,7 @@ static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
     encoder->comp_info[2].v_samp_factor = 1;
 
     jpeg_set_quality(encoder, quality, TRUE /* limit to baseline-JPEG values */);
-    loge("xxx\n");
     jpeg_start_compress(encoder, TRUE);
-    loge("xxx\n");
 
     for (j = 0; j < mc->height; j += 16) {
         for (i = 0; i < 16; i++) {
@@ -161,9 +162,7 @@ static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
         }
         jpeg_write_raw_data(encoder, planes, 16);
     }
-    loge("xxx\n");
     jpeg_finish_compress(encoder);
-    loge("xxx\n");
     out->iov_len = written;
     return 0;
 }

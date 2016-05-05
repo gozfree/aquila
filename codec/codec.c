@@ -73,7 +73,7 @@ struct codec_ctx *codec_open(const char *name, int width, int height)
         loge("%s codec is not support!\n", name);
         goto failed;
     }
-    logi("codec module %s loaded\n", p->name);
+    logi("\t[codec module] <%s> loaded\n", p->name);
     c->ops = p;
     if (!c->ops->open) {
         loge("codec open ops can't be null\n");
