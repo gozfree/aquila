@@ -107,7 +107,8 @@ PROTOCOL_OBJS :=
 
 UTIL_OBJS := 			\
     util/url.o 			\
-    util/queue.o
+    util/queue.o		\
+    util/imgconvert.o
 
 OBJS := \
     $(ALGO_OBJS) 		\

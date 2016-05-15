@@ -16,7 +16,6 @@
 extern "C" {
 #endif
 
-
 struct frame {
     struct iovec buf;
     int index;
@@ -27,6 +26,7 @@ struct media_params {
     struct {
         int width;
         int height;
+        int pix_fmt;
     } video;
     struct {
     } audio;

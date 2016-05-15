@@ -95,6 +95,13 @@ int device_write(struct device_ctx *dc, void *buf, int len)
     return dc->ops->write(dc, buf, len);
 }
 
+int device_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len)
+{
+    if (!dc->ops->ioctl)
+        return -1;
+    return dc->ops->ioctl(dc, cmd, buf, len);
+}
+
 void device_close(struct device_ctx *dc)
 {
     if (!dc) {

@@ -389,7 +389,7 @@ static int sdl_read(struct playback_ctx *pc, void *buf, int len)
 
 static int sdl_write(struct playback_ctx *pc, void *buf, int len)
 {
-    struct sdl_ctx *c = pc->priv;
+    struct sdl_ctx *c = (struct sdl_ctx *)pc->priv;
     if (-1 == SDL_LockMutex(c->mutex)) {
         //in case mutex be destroyed in sdl event thread
         return -1;
@@ -406,7 +406,7 @@ static int sdl_write(struct playback_ctx *pc, void *buf, int len)
 
 static void sdl_close(struct playback_ctx *pc)
 {
-    struct sdl_ctx *c = pc->priv;
+    struct sdl_ctx *c = (struct sdl_ctx *)pc->priv;
     sdl_deinit(c);
     free(c);
 }

@@ -74,7 +74,7 @@ failed:
 
 static void venc_close(struct filter_ctx *fc)
 {
-    struct venc_ctx *vc = fc->priv;
+    struct venc_ctx *vc = (struct venc_ctx *)fc->priv;
     if (vc->encoder) {
         codec_close(vc->encoder);
         free(vc->encoder);

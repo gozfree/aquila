@@ -69,7 +69,7 @@ static char *videocap_probe()
     logi("path: %s\n", path);
     return path;
 #else
-    return VIDEOCAP_VDEVFAKE;
+    return (char *)VIDEOCAP_VDEVFAKE;
 #endif
 }
 
@@ -77,7 +77,7 @@ static int videocap_open(struct filter_ctx *fc)
 {
     const char *url = VIDEOCAP_FILTER_URL;
     url = videocap_probe();
-    //url = VIDEOCAP_FILTER_URL;
+    url = VIDEOCAP_FILTER_URL;
     struct device_ctx *dc = device_open(url);
     if (!dc) {
         loge("open %s failed!\n", url);
@@ -110,7 +110,7 @@ failed:
 
 static void videocap_close(struct filter_ctx *fc)
 {
-    struct videocap_ctx *vc = fc->priv;
+    struct videocap_ctx *vc = (struct videocap_ctx *)fc->priv;
     if (vc->dev) {
         device_close(vc->dev);
         free(vc);

@@ -14,13 +14,13 @@
 int url_parse(struct url *u, const char *input)
 {
     char *p;
-    int hlen, blen;
+    size_t hlen, blen;
     if (!u || !input || strlen(input) <= strlen(URL_TAG)) {
         loge("invalid paraments!\n");
         return -1;
     }
 
-    p = strstr(input, URL_TAG);
+    p = (char *)strstr(input, URL_TAG);
     if (!p) {
         loge("input is not url format\n");
         return -1;

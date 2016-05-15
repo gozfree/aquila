@@ -59,7 +59,8 @@ static int mjpeg_open(struct codec_ctx *c, int width, int height)
 static void init_destination(j_compress_ptr cinfo)
 {
     struct jpeg_args *dest = (struct jpeg_args*) cinfo->dest;
-    dest->buffer = (JOCTET *)(*cinfo->mem->alloc_small)((j_common_ptr) cinfo, JPOOL_IMAGE, OUTPUT_BUF_SIZE * sizeof(JOCTET));
+    dest->buffer = (JOCTET *)(*cinfo->mem->alloc_small)((j_common_ptr) cinfo,
+                    JPOOL_IMAGE, OUTPUT_BUF_SIZE * sizeof(JOCTET));
     *(dest->written) = 0;
     dest->pub.next_output_byte = dest->buffer;
     dest->pub.free_in_buffer = OUTPUT_BUF_SIZE;
@@ -84,26 +85,27 @@ static void term_destination(j_compress_ptr cinfo)
     dest->outbuffer_cursor += datacount;
     *(dest->written) += datacount;
 }
-static void dest_buffer(j_compress_ptr cinfo, unsigned char *buffer, int size, int *written)
+static void dest_buffer(j_compress_ptr cinfo, void *buffer, int size, int *written)
 {
     struct jpeg_args * dest;
     if (cinfo->dest == NULL) {
-        cinfo->dest = (struct jpeg_destination_mgr *)(*cinfo->mem->alloc_small)((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(struct jpeg_args));
+        cinfo->dest = (struct jpeg_destination_mgr *)(*cinfo->mem->alloc_small)
+             ((j_common_ptr) cinfo, JPOOL_PERMANENT, sizeof(struct jpeg_args));
     }
 
     dest = (struct jpeg_args*) cinfo->dest;
     dest->pub.init_destination = init_destination;
     dest->pub.empty_output_buffer = empty_output_buffer;
     dest->pub.term_destination = term_destination;
-    dest->outbuffer = buffer;
+    dest->outbuffer = (unsigned char *)buffer;
     dest->outbuffer_size = size;
-    dest->outbuffer_cursor = buffer;
+    dest->outbuffer_cursor = (unsigned char *)buffer;
     dest->written = written;
 }
 
 static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
 {
-    struct mjpeg_ctx *mc = cc->priv;
+    struct mjpeg_ctx *mc = (struct mjpeg_ctx *)cc->priv;
     out->iov_len = mc->width * mc->height * COLOR_COMPONENTS;
     out->iov_base = calloc(1, out->iov_len);
     if (!out->iov_base) {
@@ -154,10 +156,10 @@ static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
     for (j = 0; j < mc->height; j += 16) {
         for (i = 0; i < 16; i++) {
             row = mc->width * (i + j);
-            y[i] = in->iov_base + row;
+            y[i] = (uint8_t *)in->iov_base + row;
             if (i % 2 == 0) {
-                cb[i/2] = in->iov_base + size + row/4;
-                cr[i/2] = in->iov_base + size + quarter_size + row/4;
+                cb[i/2] = (uint8_t *)in->iov_base + size + row/4;
+                cr[i/2] = (uint8_t *)in->iov_base + size + quarter_size + row/4;
             }
         }
         jpeg_write_raw_data(encoder, planes, 16);
@@ -169,7 +171,7 @@ static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
 
 static void mjpeg_close(struct codec_ctx *cc)
 {
-    struct mjpeg_ctx *mc = cc->priv;
+    struct mjpeg_ctx *mc = (struct mjpeg_ctx *)cc->priv;
     jpeg_destroy_compress(&mc->encoder);
     free(mc);
 }

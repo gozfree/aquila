@@ -19,6 +19,7 @@
 #include <libgzf.h>
 #include <liblog.h>
 #include "device.h"
+#include "imgconvert.h"
 
 struct vdev_fake_ctx {
     int fd;
@@ -61,6 +62,7 @@ static int vf_open(struct device_ctx *dc, const char *dev)
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = vc->width;
     dc->media.video.height = vc->height;
+    //dc->media.video.pix_fmt = YUV420;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe\n");
         goto failed;
@@ -81,40 +83,6 @@ failed:
     }
     return -1;
 }
-
-static void YUV420p_to_YUV422p(unsigned char *yuv420, unsigned char *yuv422, int width, int height, int len)
-{
-#if 1
-    memcpy(yuv422, yuv420, len);
-#else
-    int y;
-    //亮度信号Y复制
-    int Ylen = width*height;
-    unsigned char *pU422 = yuv422 + Ylen; //指向U的位置
-    int Uwidth = width>>1; //422色度信号U宽度
-    int Uheight = height>>1; //422色度信号U高度
-
-    void *yuv420_0 = yuv420;
-    void *yuv420_1 = yuv420 + Ylen;
-    void *yuv420_2 = yuv420 + Uwidth*Uheight;
-    memcpy(yuv422, yuv420_0, Ylen);
-    //色度信号U复制
-
-    for (y = 0; y < Uheight; y++) {
-        memcpy(pU422 + y*width, yuv420_1 + y*Uwidth, Uwidth);
-        memcpy(pU422 + y*width + Uwidth, yuv420_1 + y*Uwidth, Uwidth);
-    }
-    //色度信号V复制
-    unsigned char *pV422 = yuv422 + Ylen + (Ylen>>1); //指向V的位置
-    int Vwidth = Uwidth; //422色度信号V宽度
-    int Vheight = Uheight; //422色度信号U宽度
-    for (y = 0; y < Vheight; y++) {
-        memcpy(pV422 + y*width, yuv420_2 + y*Vwidth, Vwidth);
-        memcpy(pV422 + y*width + Vwidth, yuv420_2 + y*Vwidth, Vwidth);
-    }
-#endif
-}
-
 
 static int vf_read(struct device_ctx *dc, void *buf, int len)
 {
@@ -138,8 +106,11 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
         return -1;
     }
     logd("read frame is %d bytes, but buffer len is %d\n", flen, len);
-    YUV420p_to_YUV422p(tmp, buf, vc->width, vc->height, flen);
-    //usleep(200*1000);
+#if 1
+    memcpy(buf, tmp, flen);
+#else
+    conv_yuv420to422p(buf, tmp, vc->width, vc->height, flen);
+#endif
     free(tmp);
 
     return flen;
@@ -171,5 +142,6 @@ struct device aq_vdevfake_device = {
     .open = vf_open,
     .read = vf_read,
     .write = vf_write,
+    .ioctl = NULL,
     .close = vf_close,
 };

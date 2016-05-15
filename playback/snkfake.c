@@ -47,7 +47,7 @@ static int snk_read(struct playback_ctx *pc, void *buf, int len)
 
 static int snk_write(struct playback_ctx *pc, void *buf, int len)
 {
-    struct snkfake_ctx *c = pc->priv;
+    struct snkfake_ctx *c = (struct snkfake_ctx *)pc->priv;
     char filename[64] = {0};
     int fd = -1;
     snprintf(filename, sizeof(filename), "%dx%d_%02d.jpg",

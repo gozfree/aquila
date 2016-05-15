@@ -84,7 +84,7 @@ failed:
 
 static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
 {
-    struct x264_ctx *c = cc->priv;
+    struct x264_ctx *c = (struct x264_ctx *)cc->priv;
     x264_picture_t pic_out;
     int nNal = 0;
     int bit_len = 0;
@@ -100,7 +100,7 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
     int widthStep422 = c->param->i_width * 2;
 
     for(i = 0; i < c->param->i_height; i += 2) {
-        p422 = in->iov_base + i * widthStep422;
+        p422 = (uint8_t *)in->iov_base + i * widthStep422;
         for(j = 0; j < widthStep422; j+=4) {
             *(y++) = p422[j];
             *(u++) = p422[j+1];
@@ -126,7 +126,7 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
     for (i = 0; i < nNal; i++) {
         bit_len += c->nal[i].i_payload;
     }
-    p_out = calloc(1, bit_len);
+    p_out = (uint8_t *)calloc(1, bit_len);
     if (!p_out) {
         return -1;
     }
@@ -141,7 +141,7 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
 
 static void x264_close(struct codec_ctx *cc)
 {
-    struct x264_ctx *c = cc->priv;
+    struct x264_ctx *c = (struct x264_ctx *)cc->priv;
     if (c->handle) {
         x264_encoder_close(c->handle);
     }

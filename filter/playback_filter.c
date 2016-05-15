@@ -75,7 +75,7 @@ failed:
 
 static void playback_filter_close(struct filter_ctx *fc)
 {
-    struct playback_filter_ctx *pfc = fc->priv;
+    struct playback_filter_ctx *pfc = (struct playback_filter_ctx *)fc->priv;
     if (pfc->pc) {
         playback_close(pfc->pc);
         free(pfc);
