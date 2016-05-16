@@ -50,6 +50,7 @@ LDFLAGS_X264	= -lx264
 LDFLAGS_ALSA	= -lasound
 LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
 LDFLAGS_JPEG	= -ljpeg
+LDFLAGS_LUA	= -llua5.2
 
 CFLAGS	:= -g -Wall -Werror
 CFLAGS	+= -I$(OUTPUT)/include -I./
@@ -66,13 +67,16 @@ LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -llog
+LDFLAGS	+= -lconfig
 LDFLAGS	+= -lgevent
 LDFLAGS	+= -lpthread -lrt
+LDFLAGS	+= -ljansson
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
 LDFLAGS += $(LDFLAGS_ALSA)
 LDFLAGS += $(LDFLAGS_FFMPEG)
 LDFLAGS += $(LDFLAGS_JPEG)
+LDFLAGS	+= $(LDFLAGS_LUA)
 
 .PHONY : all clean
 
@@ -108,6 +112,7 @@ PROTOCOL_OBJS :=
 UTIL_OBJS := 			\
     util/url.o 			\
     util/queue.o		\
+    util/config.o		\
     util/imgconvert.o
 
 OBJS := \

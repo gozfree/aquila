@@ -13,8 +13,10 @@
 #include "playback.h"
 #include "filter.h"
 #include "queue.h"
+#include "config.h"
 
 struct aquila {
+    struct aq_config config;
     struct filter_ctx *videocap_filter;
     struct filter_ctx *vencode_filter;
     struct filter_ctx *playback_filter;
@@ -24,6 +26,7 @@ static struct aquila aq_instance;
 
 int aquila_init(struct aquila *aq)
 {
+    load_conf(&aq->config);
     struct queue *q1 = queue_create();
     struct queue *q2 = queue_create();
 
@@ -85,6 +88,7 @@ int main(int argc, char **argv)
     codec_register_all();
     filter_register_all();
 
+    memset(&aq_instance, 0, sizeof(aq_instance));
     if (-1 == aquila_init(&aq_instance)) {
         loge("aquila_init failed!\n");
         return -1;
