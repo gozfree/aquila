@@ -40,7 +40,7 @@ void device_register_all(void)
     REGISTER_DEVICE(vdevfake);
 }
 
-struct device_ctx *device_open(const char *url)
+struct device_ctx *device_open(const char *url, struct media_params *media)
 {
     struct device *p;
     struct device_ctx *dc = CALLOC(1, struct device_ctx);
@@ -69,7 +69,7 @@ struct device_ctx *device_open(const char *url)
         loge("device open ops can't be null\n");
         goto failed;
     }
-    if (0 != dc->ops->open(dc, dc->url.body)) {
+    if (0 != dc->ops->open(dc, dc->url.body, media)) {
         loge("open %s failed!\n", dc->url.body);
         goto failed;
     }

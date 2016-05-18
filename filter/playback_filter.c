@@ -17,14 +17,16 @@
 #include "playback.h"
 #include "filter.h"
 #include "common.h"
+#include "config.h"
 
 #define PLAYBACK_FILTER_SDL_RGB "sdl://rgb"
 #define PLAYBACK_FILTER_SDL_YUV "sdl://yuv"
-#define PLAYBACK_FILTER_SNK "snk://"
+#define PLAYBACK_FILTER_SNK "snkfake://"
 
 struct playback_filter_ctx {
     int seq;
     struct playback_ctx *pc;
+    struct playback_conf *conf;
 };
 
 static int on_playback_read(void *arg, void *in_data, int in_len,
@@ -42,19 +44,19 @@ static int on_playback_read(void *arg, void *in_data, int in_len,
 
 static int playback_filter_open(struct filter_ctx *fc)
 {
-    //const char *url = PLAYBACK_FILTER_SDL_RGB;
-    //const char *url = PLAYBACK_FILTER_SDL_YUV;
-    const char *url = PLAYBACK_FILTER_SNK;
-    struct playback_ctx *pc = playback_open(url, &fc->media);
-    if (!pc) {
-        loge("open %s failed!\n", url);
-        return -1;
-    }
+    struct filter_conf *fconf = (struct filter_conf *)fc->config;
     struct playback_filter_ctx *pfc = CALLOC(1, struct playback_filter_ctx);
     if (!pfc) {
         loge("malloc failed!\n");
+        return -1;
+    }
+    pfc->conf = &fconf->conf.playback;
+    struct playback_ctx *pc = playback_open(fc->url, &pfc->conf->param);
+    if (!pc) {
+        loge("open %s failed!\n", fc->url);
         goto failed;
     }
+
     pfc->pc = pc;
     pfc->seq = 0;
     pc->media.video.width = fc->media.video.width;
@@ -83,9 +85,9 @@ static void playback_filter_close(struct filter_ctx *fc)
 }
 
 struct filter aq_playback_filter = {
-    .name = "playback",
-    .open = playback_filter_open,
-    .on_read = on_playback_read,
+    .name     = "playback",
+    .open     = playback_filter_open,
+    .on_read  = on_playback_read,
     .on_write = NULL,
-    .close = playback_filter_close,
+    .close    = playback_filter_close,
 };

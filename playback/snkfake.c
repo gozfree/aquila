@@ -70,7 +70,7 @@ static void snk_close(struct playback_ctx *pc)
 
 }
 struct playback aq_snk_playback = {
-    .name = "snk",
+    .name = "snkfake",
     .open = snk_open,
     .read = snk_read,
     .write = snk_write,

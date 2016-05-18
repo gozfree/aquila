@@ -40,7 +40,7 @@ struct device_ctx {
 
 struct device {
     const char *name;
-    int (*open)(struct device_ctx *c, const char *url);
+    int (*open)(struct device_ctx *c, const char *url, struct media_params *media);
     int (*read)(struct device_ctx *c, void *buf, int len);
     int (*write)(struct device_ctx *c, void *buf, int len);
     int (*ioctl)(struct device_ctx *c, uint32_t cmd, void *buf, int len);
@@ -50,7 +50,7 @@ struct device {
 
 
 void device_register_all();
-struct device_ctx *device_open(const char *url);
+struct device_ctx *device_open(const char *url, struct media_params *media);
 int device_read(struct device_ctx *dc, void *buf, int len);
 int device_write(struct device_ctx *dc, void *buf, int len);
 int device_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len);

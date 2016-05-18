@@ -45,6 +45,8 @@ struct queue {
     int max_depth;
     struct list_head pipe_list;
     struct media_params media;
+    char src_filter[32];
+    char snk_filter[32];
 };
 
 struct queue_item *queue_item_new(void *data, int len);

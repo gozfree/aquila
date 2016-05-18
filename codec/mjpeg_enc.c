@@ -16,16 +16,17 @@
 
 #include "codec.h"
 #include "common.h"
+#include "imgconvert.h"
 
 #define COLOR_COMPONENTS    (3)
 #define OUTPUT_BUF_SIZE     (4096)
-#define IYUV                (0)
-#define NV12                (1)
 #define DEFAULT_JPEG_QUALITY	(60)
 
 struct mjpeg_ctx {
     int width;
     int height;
+    int encode_format;
+    int input_format;
     struct jpeg_compress_struct encoder;
     struct jpeg_error_mgr errmgr;
 };
@@ -39,15 +40,17 @@ typedef struct jpeg_args {
     int *written;
 } jpeg_args_t;
 
-static int mjpeg_open(struct codec_ctx *c, int width, int height)
+static int mjpeg_open(struct codec_ctx *c, struct media_params *media)
 {
     struct mjpeg_ctx *mc = CALLOC(1, struct mjpeg_ctx);
     if (!mc) {
         loge("malloc mjpeg_ctx failed!\n");
         return -1;
     }
-    mc->width = width;
-    mc->height = height;
+    mc->width = media->video.width;
+    mc->height = media->video.height;
+    mc->input_format = media->video.pix_fmt;
+    mc->encode_format = YUV420;
     mc->encoder.err = jpeg_std_error(&mc->errmgr);
     jpeg_create_compress(&mc->encoder);
     jpeg_set_quality(&mc->encoder, DEFAULT_JPEG_QUALITY, 1);
@@ -152,6 +155,16 @@ static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
 
     jpeg_set_quality(encoder, quality, TRUE /* limit to baseline-JPEG values */);
     jpeg_start_compress(encoder, TRUE);
+    if (mc->input_format == YUV422) {
+        struct iovec in_tmp;
+        in_tmp.iov_len = in->iov_len;
+        in_tmp.iov_base = calloc(1, in->iov_len);
+        conv_yuv422to420p(in_tmp.iov_base, in->iov_base, mc->width, mc->height);
+        for (i = 0; i < (int)in->iov_len; i++) {//8 byte copy
+            *((char *)in->iov_base + i) = *((char *)in_tmp.iov_base + i);
+        }
+        free(in_tmp.iov_base);
+    }
 
     for (j = 0; j < mc->height; j += 16) {
         for (i = 0; i < 16; i++) {

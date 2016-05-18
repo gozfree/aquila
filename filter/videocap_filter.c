@@ -15,16 +15,19 @@
 
 #include "device.h"
 #include "filter.h"
+#include "config.h"
 
 #define VIDEOCAP_V4L2       "v4l2:///dev/video0"
 #define VIDEOCAP_VDEVFAKE   "vdevfake:////home/gongzf/github/snowball.repo/aquila/720x480.yuv"
 
 #define VIDEOCAP_FILTER_URL VIDEOCAP_V4L2
 
+extern struct ikey_cvalue conf_map_table[];
 
 struct videocap_ctx {
     int seq;
     struct device_ctx *dev;
+    struct videocap_conf *conf;
 };
 
 static int on_videocap_read(void *arg, void *in_data, int in_len,
@@ -53,48 +56,32 @@ static int on_videocap_read(void *arg, void *in_data, int in_len,
     return *out_len;
 }
 
-static char *videocap_probe()
-{
-#if 0
-    char *path = NULL;
-    char *buf = NULL;
-    if ((buf = get_current_dir_name()) == NULL) {
-        loge("getcwd failed: %s\n", strerror(errno));
-        return NULL;
-    }
-    logi("buf: %s\n", buf);
-    path = strcat("vdevfake://", buf);
-    path = strcat(buf, "/");
-    path = strcat(path, VIDEOCAP_VDEVFAKE);
-    logi("path: %s\n", path);
-    return path;
-#else
-    return (char *)VIDEOCAP_VDEVFAKE;
-#endif
-}
-
 static int videocap_open(struct filter_ctx *fc)
 {
-    const char *url = VIDEOCAP_FILTER_URL;
-    url = videocap_probe();
-    url = VIDEOCAP_FILTER_URL;
-    struct device_ctx *dc = device_open(url);
-    if (!dc) {
-        loge("open %s failed!\n", url);
-        return -1;
-    }
+    struct filter_conf *fconf = (struct filter_conf *)fc->config;
     struct videocap_ctx *vc = CALLOC(1, struct videocap_ctx);
     if (!vc) {
         loge("malloc failed!\n");
+        return -1;
+    }
+    vc->conf = &fconf->conf.videocap;
+    struct device_ctx *dc = device_open(fc->url, &vc->conf->param);
+    if (!dc) {
+        loge("open %s failed!\n", fc->url);
         goto failed;
     }
     vc->dev = dc;
     vc->seq = 0;
 
+    logi("vc->conf->width = %d\n", vc->conf->param.video.width);
+    logi("vc->conf->fomat = %s\n", vc->conf->format);
+    loge("vc->conf->fomat = %s\n", conf_map_table[vc->dev->media.video.pix_fmt].str);
+
     fc->rfd = vc->dev->fd;
     fc->wfd = -1;
     fc->media.video.width = vc->dev->media.video.width;
     fc->media.video.height = vc->dev->media.video.height;
+    fc->media.video.pix_fmt = vc->dev->media.video.pix_fmt;
     fc->priv = vc;
     return 0;
 
@@ -118,9 +105,9 @@ static void videocap_close(struct filter_ctx *fc)
 }
 
 struct filter aq_videocap_filter = {
-    .name = "videocap",
-    .open = videocap_open,
-    .on_read = on_videocap_read,
+    .name     = "videocap",
+    .open     = videocap_open,
+    .on_read  = on_videocap_read,
     .on_write = NULL,
-    .close = videocap_close,
+    .close    = videocap_close,
 };

@@ -32,7 +32,7 @@ struct vdev_fake_ctx {
     int req_count;
 };
 
-static int vf_open(struct device_ctx *dc, const char *dev)
+static int vf_open(struct device_ctx *dc, const char *dev, struct media_params *media)
 {
     int fd = -1;
     int fds[2];
@@ -62,7 +62,7 @@ static int vf_open(struct device_ctx *dc, const char *dev)
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = vc->width;
     dc->media.video.height = vc->height;
-    //dc->media.video.pix_fmt = YUV420;
+    dc->media.video.pix_fmt = YUV420;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe\n");
         goto failed;
@@ -106,7 +106,7 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
         return -1;
     }
     logd("read frame is %d bytes, but buffer len is %d\n", flen, len);
-#if 1
+#if 0
     memcpy(buf, tmp, flen);
 #else
     conv_yuv420to422p(buf, tmp, vc->width, vc->height, flen);
@@ -138,9 +138,9 @@ static void vf_close(struct device_ctx *dc)
 
 
 struct device aq_vdevfake_device = {
-    .name = "vdevfake",
-    .open = vf_open,
-    .read = vf_read,
+    .name  = "vdevfake",
+    .open  = vf_open,
+    .read  = vf_read,
     .write = vf_write,
     .ioctl = NULL,
     .close = vf_close,

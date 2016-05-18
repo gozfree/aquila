@@ -13,6 +13,7 @@
 #include <libgzf.h>
 #include <libgevent.h>
 #include "common.h"
+#include "config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +33,7 @@ struct filter_ctx {
     struct media_params media;
     const char *url;
     void *priv;
+    void *config;
 };
 
 
@@ -47,7 +49,7 @@ struct filter {
 
 void filter_register_all(void);
 
-struct filter_ctx *filter_create(const char *name,
+struct filter_ctx *filter_create(struct filter_conf *c,
                                  struct queue *q_src, struct queue *q_snk);
 int filter_dispatch(struct filter_ctx *ctx, int block);
 void filter_destroy(struct filter_ctx *ctx);

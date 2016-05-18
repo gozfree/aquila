@@ -8,34 +8,63 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#include <libconfig.h>
+#include "common.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct videocap_conf {
+    struct ikey_cvalue type;
+    char device[256];
+    char format[32];
+    struct media_params param;
+    char *url;
+};
+
+struct vencode_conf {
+    struct ikey_cvalue type;
+    char *url;
+};
+
+struct playback_conf {
+    struct ikey_cvalue type;
+    char device[256];
+    char format[32];
+    struct media_params param;
+    char *url;
+};
+
+struct filter_conf {
+    struct ikey_cvalue type;
+    char *url;
+    union {
+        struct videocap_conf videocap;
+        struct vencode_conf vencode;
+        struct playback_conf playback;
+    } conf;
+};
+
+struct graph_conf {
+    char source[32];
+    char sink[32];
+};
+
+
 struct aq_config {
-    struct {
-        char type[32];
-        int width;
-        int height;
-    } videocap;
+    struct config *config;
+    struct videocap_conf videocap;
+    struct vencode_conf vencode;
+    struct playback_conf playback;
 
-    struct {
-        char type[32];
-    } vencode;
-
-    struct {
-        char type[32];
-    } playback;
-
-    struct {
-        char source[32];
-        char sink[32];
-    } filter[4];
-
+    int filter_num;
+    struct filter_conf *filter;
+    int graph_num;
+    struct graph_conf *graph;
 };
 
 int load_conf();
-void unload_conf();
 
 
 #ifdef __cplusplus

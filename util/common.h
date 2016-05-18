@@ -16,20 +16,48 @@
 extern "C" {
 #endif
 
+enum conf_map_index {
+    ALSA = 0,
+    MJPEG,
+    PLAYBACK,
+    SDL,
+    SNKFAKE,
+    V4L2,
+    VDEVFAKE,
+    VENCODE,
+    VIDEOCAP,
+    X264,
+    YUV420,
+    YUV422,
+    UNKNOWN = -1
+};
+
+struct ikey_cvalue {
+    int val;
+    char str[32];
+};
+
+
 struct frame {
     struct iovec buf;
     int index;
 };
 
+struct video_param {
+    int width;
+    int height;
+    int pix_fmt;
+};
+
+struct audio_param {
+
+};
 
 struct media_params {
-    struct {
-        int width;
-        int height;
-        int pix_fmt;
-    } video;
-    struct {
-    } audio;
+    union {
+        struct video_param video;
+        struct audio_param audio;
+    };
 };
 
 #ifdef __cplusplus

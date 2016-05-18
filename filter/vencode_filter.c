@@ -18,7 +18,7 @@
 #include "codec.h"
 #include "filter.h"
 
-#define CODEC_FILTER_ENC_MJPEG  "mjpeg"
+extern struct ikey_cvalue conf_map_table[];
 
 struct venc_ctx {
     struct codec_ctx *encoder;
@@ -44,12 +44,9 @@ static int on_venc_read(void *arg, void *in_data, int in_len, void **out_data, i
 
 static int venc_open(struct filter_ctx *fc)
 {
-    const char *name = CODEC_FILTER_ENC_MJPEG;
-    int width = fc->media.video.width;
-    int height = fc->media.video.height;
-    struct codec_ctx *encoder = codec_open(name, width, height);
+    struct codec_ctx *encoder = codec_open(fc->url, &fc->media);
     if (!encoder) {
-        loge("open codec %s failed!\n", name);
+        loge("open codec %s failed!\n", fc->url);
         return -1;
     }
     struct venc_ctx *vc = CALLOC(1, struct venc_ctx);

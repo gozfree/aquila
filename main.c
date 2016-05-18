@@ -17,42 +17,61 @@
 
 struct aquila {
     struct aq_config config;
-    struct filter_ctx *videocap_filter;
-    struct filter_ctx *vencode_filter;
-    struct filter_ctx *playback_filter;
+    struct queue **queue;
+    struct filter_ctx **filter;
 };
 
 static struct aquila aq_instance;
 
 int aquila_init(struct aquila *aq)
 {
-    load_conf(&aq->config);
-    struct queue *q1 = queue_create();
-    struct queue *q2 = queue_create();
+    struct aq_config *c = &aq->config;
+    struct queue *q_src, *q_snk;
+    int i;//, j;
+    if (-1 == load_conf(c)) {
+        loge("load_conf failed!\n");
+        return -1;
+    }
+    if (c->filter_num <= 0) {
+        logi("filter graph should not be empty\n");
+        return -1;
+    }
+    aq->queue = CALLOC(c->filter_num, struct queue *);
+    if (!aq->queue) {
+        loge("malloc queue failed!\n");
+        return -1;
+    }
+    for (i = 0; i < c->filter_num - 1; i++) {
+        aq->queue[i] = queue_create();
+    }
+    aq->filter = CALLOC(c->filter_num, struct filter_ctx *);
+    if (!aq->filter) {
+        loge("malloc filter failed!\n");
+        return -1;
+    }
 
-    aq->videocap_filter = filter_create("videocap", NULL, q1);
-    if (!aq->videocap_filter) {
-        loge("filter videocap create failed!\n");
-        return -1;
-    }
-    aq->vencode_filter = filter_create("vencode", q1, q2);
-    if (!aq->vencode_filter) {
-        loge("filter vencode create failed!\n");
-        return -1;
-    }
-    aq->playback_filter = filter_create("playback", q2, NULL);
-    if (!aq->playback_filter) {
-        loge("filter playback create failed!\n");
-        return -1;
+    for (i = 0; i < c->filter_num; i++) {
+        if (i == 0) {
+            q_src = NULL;
+            q_snk = aq->queue[i];
+        } else if (i < c->filter_num) {
+            q_src = aq->queue[i-1];
+            q_snk = aq->queue[i];
+        } else {
+            q_src = aq->queue[i];
+            q_snk = NULL;
+        }
+        aq->filter[i] = filter_create(&c->filter[i], q_src, q_snk);
     }
     return 0;
 }
 
 int aquila_dispatch(struct aquila *aq)
 {
-    filter_dispatch(aq->videocap_filter, 0);
-    filter_dispatch(aq->vencode_filter, 0);
-    filter_dispatch(aq->playback_filter, 0);
+    int i;
+    for (i = 0; i < aq->config.filter_num; i++) {
+        filter_dispatch(aq->filter[i], 0);
+    }
     while (1) {
         sleep(2);
     }
@@ -61,8 +80,10 @@ int aquila_dispatch(struct aquila *aq)
 
 void aquila_deinit(struct aquila *aq)
 {
-    filter_destroy(aq->videocap_filter);
-    filter_destroy(aq->playback_filter);
+    int i;
+    for (i = 0; i < aq->config.filter_num; i++) {
+        filter_destroy(aq->filter[i]);
+    }
 }
 
 

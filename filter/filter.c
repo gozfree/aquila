@@ -91,7 +91,7 @@ static void on_filter_write(int fd, void *arg)
     }
 }
 
-struct filter_ctx *filter_ctx_new(const char *name)
+struct filter_ctx *filter_ctx_new(struct filter_conf *c)
 {
     struct filter *p;
     struct filter_ctx *fc = CALLOC(1, struct filter_ctx);
@@ -100,25 +100,27 @@ struct filter_ctx *filter_ctx_new(const char *name)
         return NULL;
     }
     for (p = first_filter; p != NULL; p = p->next) {
-        if (!strcmp(name, p->name))
+        if (!strcmp(c->type.str, p->name))
             break;
     }
     if (p == NULL) {
-        loge("%s protocol is not support!\n", name);
+        loge("%s protocol is not support!\n", c->type.str);
         return NULL;
     }
-    logi("\t[filter module] <%s> loaded\n", name);
+    logi("\t[filter module] <%s> loaded\n", c->type.str);
 
     fc->ops = p;
-    fc->name = name;
+    fc->name = c->type.str;
+    fc->url = c->url;
+    fc->config = c;
     return fc;
 }
 
-struct filter_ctx *filter_create(const char *name,
+struct filter_ctx *filter_create(struct filter_conf *c,
                                  struct queue *q_src, struct queue *q_snk)
 {
     int fd;
-    struct filter_ctx *ctx = filter_ctx_new(name);
+    struct filter_ctx *ctx = filter_ctx_new(c);
     if (!ctx) {
         return NULL;
     }
@@ -132,7 +134,7 @@ struct filter_ctx *filter_create(const char *name,
             memcpy(&q_snk->media, &q_src->media, sizeof(q_src->media));
         }
         logd("%s, media.video: %d*%d\n",
-             name, ctx->media.video.width, ctx->media.video.height);
+             c->type, ctx->media.video.width, ctx->media.video.height);
     }
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;

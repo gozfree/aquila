@@ -22,7 +22,6 @@
 #include "device.h"
 #include "device_io.h"
 #include "common.h"
-#include "imgconvert.h"
 
 #define MAX_V4L_BUF         (32)
 #define MAX_V4L_REQBUF_CNT  (256)
@@ -352,7 +351,7 @@ static int v4l2_buf_dequeue(struct v4l2_ctx *vc, struct frame *f)
     return f->buf.iov_len;
 }
 
-static int v4l2_open(struct device_ctx *dc, const char *dev)
+static int v4l2_open(struct device_ctx *dc, const char *dev, struct media_params *media)
 {
     int fd = -1;
     int fds[2] = {0};
@@ -375,13 +374,9 @@ static int v4l2_open(struct device_ctx *dc, const char *dev)
         goto failed;
     }
     vc->fd = fd;
-    vc->width = 320;//XXX
-    vc->height = 240;//XXX
+    vc->width = media->video.width;
+    vc->height = media->video.height;
 
-    if (-1 == v4l2_get_info(vc)) {
-        loge("v4l2_get_info failed\n");
-        goto failed;
-    }
     if (-1 == v4l2_set_format(vc)) {
         loge("v4l2_set_format failed\n");
         goto failed;
@@ -394,6 +389,7 @@ static int v4l2_open(struct device_ctx *dc, const char *dev)
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = vc->width;
     dc->media.video.height = vc->height;
+    dc->media.video.pix_fmt = YUV422;
     dc->priv = vc;
     return 0;
 
@@ -415,7 +411,6 @@ static int v4l2_read(struct device_ctx *dc, void *buf, int len)
 {
     struct v4l2_ctx *vc = (struct v4l2_ctx *)dc->priv;
     struct frame f;
-    struct iovec tmp;
     int i, flen;
     char notify;
 
@@ -437,20 +432,9 @@ static int v4l2_read(struct device_ctx *dc, void *buf, int len)
         loge("error occur!\n");
         return -1;
     }
-#if 1
-    tmp.iov_len = f.buf.iov_len;
-    tmp.iov_base = calloc(1, tmp.iov_len);
-    conv_yuv422to420p(tmp.iov_base, f.buf.iov_base, vc->width, vc->height);
     for (i = 0; i < (int)f.buf.iov_len; i++) {//8 byte copy
-        *((char *)buf + i) = *((char *)tmp.iov_base + i);
-    }
-    free(tmp.iov_base);
-#else
-
-    for (i = 0; i < f.buf.iov_len; i++) {//8 byte copy
         *((char *)buf + i) = *((char *)f.buf.iov_base + i);
     }
-#endif
     return f.buf.iov_len;
 }
 
@@ -533,15 +517,16 @@ static int v4l2_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len)
         v4l2_set_control(vc, vctrl->cmd, vctrl->val);
         break;
     default:
+        v4l2_get_info(vc);
         break;
     }
     return 0;
 }
 
 struct device aq_v4l2_device = {
-    .name = "v4l2",
-    .open = v4l2_open,
-    .read = v4l2_read,
+    .name  = "v4l2",
+    .open  = v4l2_open,
+    .read  = v4l2_read,
     .write = v4l2_write,
     .ioctl = v4l2_ioctl,
     .close = v4l2_close,

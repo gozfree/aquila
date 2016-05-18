@@ -57,7 +57,7 @@ void codec_register_all()
 #endif
 }
 
-struct codec_ctx *codec_open(const char *name, int width, int height)
+struct codec_ctx *codec_open(const char *url, struct media_params *media)
 {
     struct codec *p;
     struct codec_ctx *c = CALLOC(1, struct codec_ctx);
@@ -65,12 +65,16 @@ struct codec_ctx *codec_open(const char *name, int width, int height)
         loge("malloc codec context failed!\n");
         return NULL;
     }
+    if (-1 == url_parse(&c->url, url)) {
+        loge("url_parse failed!\n");
+        return NULL;
+    }
     for (p = first_codec; p != NULL; p = p->next) {
-        if (!strcmp(name, p->name))
+        if (!strcmp(c->url.head, p->name))
             break;
     }
     if (p == NULL) {
-        loge("%s codec is not support!\n", name);
+        loge("%s codec is not support!\n", c->url.head);
         goto failed;
     }
     logi("\t[codec module] <%s> loaded\n", p->name);
@@ -79,8 +83,8 @@ struct codec_ctx *codec_open(const char *name, int width, int height)
         loge("codec open ops can't be null\n");
         goto failed;
     }
-    if (0 != c->ops->open(c, width, height)) {
-        loge("open %s codec failed!\n", name);
+    if (0 != c->ops->open(c, media)) {
+        loge("open %s codec failed!\n", c->url.head);
         goto failed;
     }
     return c;

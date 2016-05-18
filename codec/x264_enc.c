@@ -26,7 +26,7 @@ struct x264_ctx {
     x264_nal_t *nal;
 };
 
-static int x264_open(struct codec_ctx *cc, int width, int height)
+static int x264_open(struct codec_ctx *cc, struct media_params *media)
 {
     int m_frameRate = 25;
     //int m_bitRate = 1000;
@@ -47,8 +47,8 @@ static int x264_open(struct codec_ctx *cc, int width, int height)
     }
     x264_param_default_preset(c->param, "ultrafast" , "zerolatency");
 
-    c->param->i_width = width;
-    c->param->i_height = height;
+    c->param->i_width = media->video.width;
+    c->param->i_height = media->video.height;
     c->param->b_repeat_headers = 1;  // repeat SPS/PPS before i frame
     c->param->b_cabac = 1;
     c->param->i_threads = 1;
