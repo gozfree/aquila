@@ -39,6 +39,7 @@ void filter_register_all(void)
 
     REGISTER_FILTER(videocap);
     REGISTER_FILTER(vencode);
+    REGISTER_FILTER(vdecode);
     REGISTER_FILTER(playback);
 }
 
@@ -46,10 +47,9 @@ static void on_filter_read(int fd, void *arg)
 {
     struct filter_ctx *ctx = (struct filter_ctx *)arg;
     struct queue_item *in_item = NULL;
-    void *in_data = NULL;
-    void *out_data = NULL;
-    int in_len = 0;
-    int out_len = 0;
+    struct iovec in;
+    struct iovec out;
+    int ret;
     int last = 0;
     if (ctx->q_src) {
         in_item = queue_pop(ctx->q_src, fd, &last);
@@ -58,15 +58,20 @@ static void on_filter_read(int fd, void *arg)
             return;
         }
         //logd("ctx = %p queue_pop %p, last=%d\n", ctx, in_item, last);
-        in_data = in_item->data;
-        in_len = in_item->len;
+        memset(&in, 0, sizeof(struct iovec));
+        memset(&out, 0, sizeof(struct iovec));
+        in.iov_base = in_item->data;
+        in.iov_len = in_item->len;
     }
     pthread_mutex_lock(&ctx->lock);
-    ctx->ops->on_read(ctx->priv, in_data, in_len, &out_data, &out_len);
-    logd("filter[%s] out_data = %p, out_len = %d\n", ctx->name, out_data, out_len);
-    if (out_data) {
+    ret = ctx->ops->on_read(ctx, &in, &out);
+    if (ret == -1) {
+        //loge("filter %s on_read failed!\n", ctx->name);
+    }
+    logd("filter[%s] out_data = %p, out_len = %d\n", ctx->name, out.iov_base, out.iov_len);
+    if (out.iov_base) {
         //memory create
-        struct queue_item *out_item = queue_item_new(out_data, out_len);
+        struct queue_item *out_item = queue_item_new(out.iov_base, out.iov_len);
         //logd("fd = %d queue_push %p\n", fd, out_item);
         if (-1 == queue_push(ctx->q_snk, out_item)) {
             loge("buffer_push failed!\n");
@@ -76,8 +81,8 @@ static void on_filter_read(int fd, void *arg)
     if (ctx->q_src) {
         //logd("ctx = %p queue_item_free %p, last=%d\n", ctx, in_item, last);
         if (last) {
-            usleep(100000);//FIXME
-            queue_item_free(in_item);
+            //usleep(200000);//FIXME
+            //queue_item_free(in_item);//FIXME: double free
         }
     }
     pthread_mutex_unlock(&ctx->lock);

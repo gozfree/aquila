@@ -40,9 +40,8 @@ struct filter_ctx {
 struct filter {
     const char *name;
     int (*open)(struct filter_ctx *c);
-    int (*on_read)(void *arg, void *in_data, int in_len,
-                     void **out_data, int *out_len);
-    int (*on_write)(void *arg);
+    int (*on_read)(struct filter_ctx *c, struct iovec *in, struct iovec *out);
+    int (*on_write)(struct filter_ctx *c);
     void (*close)(struct filter_ctx *c);
     struct filter *next;
 };

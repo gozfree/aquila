@@ -52,6 +52,7 @@ void codec_register_all()
 
     REGISTER_ENCODER(x264);
     REGISTER_ENCODER(mjpeg);
+    REGISTER_DECODER(h264dec);
 #if 0
     REGISTER_DECODER(avcodec);
 #endif

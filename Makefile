@@ -87,7 +87,8 @@ ALGO_OBJS :=
 CODEC_OBJS := 			\
     codec/codec.o 		\
     codec/x264_enc.o		\
-    codec/mjpeg_enc.o
+    codec/mjpeg_enc.o		\
+    codec/h264_dec.o
 
 DEVICE_OBJS := 			\
     device/device.o 		\
@@ -98,6 +99,7 @@ FILTER_OBJS := 			\
     filter/filter.o 		\
     filter/videocap_filter.o 	\
     filter/vencode_filter.o 	\
+    filter/vdecode_filter.o 	\
     filter/playback_filter.o
 
 

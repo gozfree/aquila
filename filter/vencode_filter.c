@@ -14,7 +14,6 @@
 #include <assert.h>
 #include <liblog.h>
 
-#include "queue.h"
 #include "codec.h"
 #include "filter.h"
 
@@ -24,22 +23,14 @@ struct venc_ctx {
     struct codec_ctx *encoder;
 };
 
-static int on_venc_read(void *arg, void *in_data, int in_len, void **out_data, int *out_len)
+static int on_venc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
-    struct venc_ctx *xa = (struct venc_ctx *)arg;
-    struct codec_ctx *encoder = xa->encoder;
-    struct iovec in, out;
-    in.iov_base = in_data;
-    in.iov_len = in_len;
-    *out_len = codec_encode(encoder, &in, &out);
-    if (*out_len == -1) {
+    struct venc_ctx *vc = (struct venc_ctx *)fc->priv;
+    int ret = codec_encode(vc->encoder, in, out);
+    if (-1 == ret) {
         loge("encode failed!\n");
     }
-    *out_data = out.iov_base;
-    *out_len = out.iov_len;
-
-    //logd("%s:%d len = %d\n", __func__, __LINE__, *out_len);
-    return *out_len;
+    return ret;
 }
 
 static int venc_open(struct filter_ctx *fc)
@@ -79,9 +70,9 @@ static void venc_close(struct filter_ctx *fc)
 }
 
 struct filter aq_vencode_filter = {
-    .name = "vencode",
-    .open = venc_open,
-    .on_read = on_venc_read,
+    .name     = "vencode",
+    .open     = venc_open,
+    .on_read  = on_venc_read,
     .on_write = NULL,
-    .close = venc_close,
+    .close    = venc_close,
 };

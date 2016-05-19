@@ -31,10 +31,11 @@ struct ikey_cvalue conf_map_table[] = {
     {V4L2,     "v4l2"},
     {VDEVFAKE, "vdevfake"},
     {VENCODE,  "vencode"},
+    {VDECODE,  "vdecode"},
     {VIDEOCAP, "videocap"},
     {X264,     "x264"},
     {YUV420,   "yuv420"},
-    {YUV422,   "yuv422"},
+    {YUV422P,   "yuv422p"},
     {UNKNOWN,  "unknown"},
 };
 
@@ -59,6 +60,8 @@ static int string_to_enum(char *str)
         ret = V4L2;
     } else if (!strcasecmp(str, "vencode")) {
         ret = VENCODE;
+    } else if (!strcasecmp(str, "vdecode")) {
+        ret = VDECODE;
     } else if (!strcasecmp(str, "vdevfake")) {
         ret = VDEVFAKE;
     } else if (!strcasecmp(str, "videocap")) {
@@ -116,6 +119,20 @@ static void load_vencode(struct aq_config *aqc)
     logi("[vencode][url] = %s\n", aqc->vencode.url);
 }
 
+static void load_vdecode(struct aq_config *aqc)
+{
+    struct config *c = aqc->config;
+    strcpy(aqc->vdecode.type.str, conf_get_string(c, "vdecode", "type"));
+    aqc->vdecode.type.val = string_to_enum(aqc->vdecode.type.str);
+    aqc->vdecode.url = CALLOC(strlen(aqc->vdecode.type.str) + strlen("://"), char);
+    strcat(aqc->vdecode.url, aqc->vdecode.type.str);
+    strcat(aqc->vdecode.url, "://");
+
+    logi("[vdecode][type] = %s\n", aqc->vdecode.type.str);
+    logi("[vdecode][url] = %s\n", aqc->vdecode.url);
+}
+
+
 static void load_playback(struct aq_config *aqc)
 {
     struct config *c = aqc->config;
@@ -163,6 +180,9 @@ static void load_filter(struct aq_config *aqc)
         case VENCODE:
             aqc->filter[i].url = aqc->vencode.url;
             break;
+        case VDECODE:
+            aqc->filter[i].url = aqc->vdecode.url;
+            break;
         default :
             loge("unsupport filter type %s\n", aqc->filter[i].type.str)
             break;
@@ -203,6 +223,7 @@ int load_conf(struct aq_config *aqc)
 
     load_videocap(aqc);
     load_vencode(aqc);
+    load_vdecode(aqc);
     load_playback(aqc);
     load_filter(aqc);
     load_graph(aqc);

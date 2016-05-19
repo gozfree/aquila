@@ -155,7 +155,7 @@ static int mjpeg_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
 
     jpeg_set_quality(encoder, quality, TRUE /* limit to baseline-JPEG values */);
     jpeg_start_compress(encoder, TRUE);
-    if (mc->input_format == YUV422) {
+    if (mc->input_format == YUV422P) {
         struct iovec in_tmp;
         in_tmp.iov_len = in->iov_len;
         in_tmp.iov_base = calloc(1, in->iov_len);

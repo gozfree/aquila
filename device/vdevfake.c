@@ -112,6 +112,7 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
     conv_yuv420to422p(buf, tmp, vc->width, vc->height, flen);
 #endif
     free(tmp);
+    usleep(200*1000);
 
     return flen;
 }

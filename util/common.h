@@ -25,11 +25,20 @@ enum conf_map_index {
     V4L2,
     VDEVFAKE,
     VENCODE,
+    VDECODE,
     VIDEOCAP,
     X264,
     YUV420,
-    YUV422,
+    YUV422P,
     UNKNOWN = -1
+};
+
+enum yuv_format {
+    YUV420_IYUV = 0,	// YYYYYYYYUUVV
+    YUV420_YV12 = 1,	// YYYYYYYYVVUU
+    YUV420_NV12 = 2,	// YYYYYYYYUVUV
+    YUV422_YU16 = 3,	// YYYYYYYYUUUUVVVV
+    YUV422_YV16 = 4,	// YYYYYYYYVVVVUUUU
 };
 
 struct ikey_cvalue {

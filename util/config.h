@@ -28,6 +28,11 @@ struct vencode_conf {
     char *url;
 };
 
+struct vdecode_conf {
+    struct ikey_cvalue type;
+    char *url;
+};
+
 struct playback_conf {
     struct ikey_cvalue type;
     char device[256];
@@ -42,6 +47,7 @@ struct filter_conf {
     union {
         struct videocap_conf videocap;
         struct vencode_conf vencode;
+        struct vdecode_conf vdecode;
         struct playback_conf playback;
     } conf;
 };
@@ -56,6 +62,7 @@ struct aq_config {
     struct config *config;
     struct videocap_conf videocap;
     struct vencode_conf vencode;
+    struct vdecode_conf vdecode;
     struct playback_conf playback;
 
     int filter_num;

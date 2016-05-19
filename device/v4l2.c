@@ -389,7 +389,7 @@ static int v4l2_open(struct device_ctx *dc, const char *dev, struct media_params
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = vc->width;
     dc->media.video.height = vc->height;
-    dc->media.video.pix_fmt = YUV422;
+    dc->media.video.pix_fmt = YUV422P;
     dc->priv = vc;
     return 0;
 

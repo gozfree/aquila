@@ -30,16 +30,15 @@ struct videocap_ctx {
     struct videocap_conf *conf;
 };
 
-static int on_videocap_read(void *arg, void *in_data, int in_len,
-                            void **out_data, int *out_len)
+static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
-    struct videocap_ctx *ctx = (struct videocap_ctx *)arg;
+    struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
     struct media_params *param = &ctx->dev->media;
     int flen = 2 * (param->video.width) * (param->video.height);//YUV422 2*w*h
     void *frm = calloc(1, flen);
 
-    *out_len = device_read(ctx->dev, frm, flen);
-    if (*out_len == -1) {
+    int ret = device_read(ctx->dev, frm, flen);
+    if (ret == -1) {
         loge("device_read failed!\n");
         free(frm);
         if (-1 == device_write(ctx->dev, NULL, 0)) {
@@ -50,10 +49,11 @@ static int on_videocap_read(void *arg, void *in_data, int in_len,
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
     }
-    *out_data = frm;
+    out->iov_base = frm;
+    out->iov_len = ret;
     ctx->seq++;
-    logv("seq = %d, len = %d\n", ctx->seq, *out_len);
-    return *out_len;
+    logv("seq = %d, len = %d\n", ctx->seq, ret);
+    return ret;
 }
 
 static int videocap_open(struct filter_ctx *fc)

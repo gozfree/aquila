@@ -29,17 +29,17 @@ struct playback_filter_ctx {
     struct playback_conf *conf;
 };
 
-static int on_playback_read(void *arg, void *in_data, int in_len,
-                             void **out_data, int *out_len)
+static int on_playback_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
-    struct playback_filter_ctx *da = (struct playback_filter_ctx *)arg;
-    *out_len = playback_write(da->pc, in_data, in_len);
-    if (*out_len == -1) {
+    struct playback_filter_ctx *da = (struct playback_filter_ctx *)fc->priv;
+    int ret = playback_write(da->pc, in->iov_base, in->iov_len);
+    if (ret == -1) {
         //loge("playback failed!\n");
     }
     da->seq++;
-    logv("seq = %d, len = %d\n", da->seq, *out_len);
-    return *out_len;
+    out->iov_len = ret;
+    logv("seq = %d, len = %d\n", da->seq, ret);
+    return ret;
 }
 
 static int playback_filter_open(struct filter_ctx *fc)
