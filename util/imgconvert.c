@@ -5,6 +5,8 @@
  * created: 2016-05-08 23:14
  * updated: 2016-05-08 23:14
  ******************************************************************************/
+#include <stdlib.h>
+#include <stdio.h>
 #include "imgconvert.h"
 
 void conv_yuv422to420p(void *yuv420p, void *yuv422, int width, int height)
@@ -27,10 +29,12 @@ void conv_yuv422to420p(void *yuv420p, void *yuv422, int width, int height)
     dst2 = dst + (width * height) / 4;
     for (i = height / 2; i > 0; i--) {
         for (j = width / 2; j > 0; j--) {
+            //Copy U
             *dst = ((int) *src + (int) *src2) / 2;
             src += 2;
             src2 += 2;
             dst++;
+            //Copy V
             *dst2 = ((int) *src + (int) *src2) / 2;
             src += 2;
             src2 += 2;
@@ -41,10 +45,9 @@ void conv_yuv422to420p(void *yuv420p, void *yuv422, int width, int height)
     }
 }
 
-
 void conv_yuv420pto422(void *yuv422, void *yuv420p, int width, int height)
 {
-    uint8_t *src, *dst, *src2, *dst2;
+    uint8_t *src, *dst, *src2, *dst2, *xxx, *xxx2;
     int i, j;
 
     /* Create the Y plane. */
@@ -58,56 +61,33 @@ void conv_yuv420pto422(void *yuv422, void *yuv420p, int width, int height)
     /* Create U and V planes. */
     src = (uint8_t *)yuv420p + width * height;
     src2 = src + (width * height) / 4;
-    dst = (uint8_t *)yuv422 + 1;
+    dst = (uint8_t *)yuv422 + 1;//u
     dst2 = (uint8_t *)dst + width * 2 + 1;
-    //for (i = height / 2; i > 0; i--) {
-    for (i = height / 4; i > 0; i--) {
-        for (j = width / 4; j > 0; j--) {
+    xxx = (uint8_t *)yuv422 + 3;//v
+    xxx2 = (uint8_t *)xxx + width * 2 + 1;
+    for (i = height / 2; i > 0; i--) {
+        for (j = width / 2; j > 0; j--) {
+            //Copy U
             *dst = *src;
-            *(dst+1) = *src2;
+            *dst2 = *src;
             src += 1;
+            dst += 4;
+            dst2 += 4;
+            //Copy V
+            *xxx = *src2;
+            *xxx2 = *src2;
             src2 += 1;
-            dst += 2;
-            //
-            *dst2 =  *src;
-            *(dst2+1) = *src2;
-            src += 1;
-            src2 += 1;
-            dst2 += 2;
+            xxx += 4;
+            xxx2 += 4;
         }
-        src += width * 2;
-        src2 += width * 2;
+        dst += width * 2;
+        dst2 += width * 2;
+        xxx += width * 2;
+        xxx2 += width * 2;
     }
 }
 
-void conv_yuv420to422p(void *dst, void *src, int width, int height, int len)
-{
-    int y;
-    //亮度信号Y复制
-    int Ylen = width*height;
-    unsigned char *pU422 = dst + Ylen; //指向U的位置
-    int Uwidth = width>>1; //422色度信号U宽度
-    int Uheight = height>>1; //422色度信号U高度
 
-    void *yuv420_0 = src;
-    void *yuv420_1 = src + Ylen;
-    void *yuv420_2 = src + Uwidth*Uheight;
-    memcpy(dst, yuv420_0, Ylen);
-    //色度信号U复制
-
-    for (y = 0; y < Uheight; y++) {
-        memcpy(pU422 + y*width, yuv420_1 + y*Uwidth, Uwidth);
-        memcpy(pU422 + y*width + Uwidth, yuv420_1 + y*Uwidth, Uwidth);
-    }
-    //色度信号V复制
-    unsigned char *pV422 = dst + Ylen + (Ylen>>1); //指向V的位置
-    int Vwidth = Uwidth; //422色度信号V宽度
-    int Vheight = Uheight; //422色度信号U宽度
-    for (y = 0; y < Vheight; y++) {
-        memcpy(pV422 + y*width, yuv420_2 + y*Vwidth, Vwidth);
-        memcpy(pV422 + y*width + Vwidth, yuv420_2 + y*Vwidth, Vwidth);
-    }
-}
 void conv_uyvyto420p(void *dst, void *src, int width, int height)
 {
     uint8_t *pY = (uint8_t *)dst;

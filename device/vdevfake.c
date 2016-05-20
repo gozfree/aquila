@@ -89,13 +89,12 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
     struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
     int flen;
     char notify;
-    void *tmp = calloc(1, len);
 
     if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
         loge("Failed read from notify pipe");
     }
 
-    flen = read(vc->fd, tmp, len);
+    flen = read(vc->fd, buf, len);
     lseek(vc->fd, 0L, SEEK_SET);
     if (flen == -1) {
         loge("read failed!\n");
@@ -106,15 +105,9 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
         return -1;
     }
     logd("read frame is %d bytes, but buffer len is %d\n", flen, len);
-#if 0
-    memcpy(buf, tmp, flen);
-#else
-    conv_yuv420pto422(buf, tmp, vc->width, vc->height);
-#endif
-    free(tmp);
     usleep(200*1000);
 
-    return flen;
+    return len;
 }
 
 static int vf_write(struct device_ctx *dc, void *buf, int len)

@@ -1,6 +1,5 @@
-1. vdevfake->encode->decode->display
-2. audio module, A/V sync
-3. stream/record
-4. protocol
-5. porting to arm board
+o audio module, A/V sync
+o stream/record
+o protocol
+o porting to arm board
 ...

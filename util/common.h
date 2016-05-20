@@ -39,6 +39,7 @@ enum yuv_format {
     YUV420_NV12 = 2,	// YYYYYYYYUVUV
     YUV422_YU16 = 3,	// YYYYYYYYUUUUVVVV
     YUV422_YV16 = 4,	// YYYYYYYYVVVVUUUU
+    YUV422_YUYV = 5,	// YUYVYUYVYUYVYUYV
 };
 
 struct ikey_cvalue {

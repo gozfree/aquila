@@ -16,10 +16,13 @@
 
 #include "codec.h"
 #include "common.h"
+#include "imgconvert.h"
 
 struct x264_ctx {
     int width;
     int height;
+    int encode_format;
+    int input_format;
     x264_param_t *param;
     x264_t *handle;
     x264_picture_t *picture;
@@ -69,6 +72,10 @@ static int x264_open(struct codec_ctx *cc, struct media_params *media)
     }
     c->picture->img.i_csp = X264_CSP_I420;
     c->picture->img.i_plane = 3;
+    c->width = media->video.width;
+    c->height = media->video.height;
+    c->input_format = media->video.pix_fmt;
+    c->encode_format = YUV422P;
     cc->priv = c;
     return 0;
 
@@ -98,6 +105,17 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
     uint8_t *v = c->picture->img.plane[2];
 
     int widthStep422 = c->param->i_width * 2;
+
+    if (c->input_format == YUV420) {
+        struct iovec in_tmp;
+        in_tmp.iov_len = in->iov_len;
+        in_tmp.iov_base = calloc(1, in->iov_len);
+        conv_yuv420pto422(in_tmp.iov_base, in->iov_base, c->width, c->height);
+        for (i = 0; i < (int)in->iov_len; i++) {//8 byte copy
+            *((char *)in->iov_base + i) = *((char *)in_tmp.iov_base + i);
+        }
+        free(in_tmp.iov_base);
+    }
 
     for(i = 0; i < c->param->i_height; i += 2) {
         p422 = (uint8_t *)in->iov_base + i * widthStep422;
