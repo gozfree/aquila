@@ -109,7 +109,7 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
 #if 0
     memcpy(buf, tmp, flen);
 #else
-    conv_yuv420to422p(buf, tmp, vc->width, vc->height, flen);
+    conv_yuv420pto422(buf, tmp, vc->width, vc->height);
 #endif
     free(tmp);
     usleep(200*1000);

@@ -7,36 +7,76 @@
  ******************************************************************************/
 #include "imgconvert.h"
 
-void conv_yuv422to420p(void *dst, void *src, int width, int height)
+void conv_yuv422to420p(void *yuv420p, void *yuv422, int width, int height)
 {
-    uint8_t *y_src, *y_dst, *uv_src, *uv_dst;
+    uint8_t *src, *dst, *src2, *dst2;
     int i, j;
 
     /* Create the Y plane. */
-    y_src = (uint8_t *)src;
-    y_dst = (uint8_t *)dst;
+    src = (uint8_t *)yuv422;
+    dst = (uint8_t *)yuv420p;
     for (i = width * height; i > 0; i--) {
-        *y_dst++ = *y_src;
-        y_src += 2;
+        *dst = *src;
+        dst += 1;
+        src += 2;
     }
     /* Create U and V planes. */
-    y_src = (uint8_t *)src + 1;
-    uv_src = (uint8_t *)src + width * 2 + 1;
-    y_dst = (uint8_t *)dst + width * height;
-    uv_dst = y_dst + (width * height) / 4;
+    src = (uint8_t *)yuv422 + 1;
+    src2 = (uint8_t *)yuv422 + width * 2 + 1;
+    dst = (uint8_t *)yuv420p + width * height;
+    dst2 = dst + (width * height) / 4;
     for (i = height / 2; i > 0; i--) {
         for (j = width / 2; j > 0; j--) {
-            *y_dst = ((int) *y_src + (int) *uv_src) / 2;
-            y_src += 2;
-            uv_src += 2;
-            y_dst++;
-            *uv_dst = ((int) *y_src + (int) *uv_src) / 2;
-            y_src += 2;
-            uv_src += 2;
-            uv_dst++;
+            *dst = ((int) *src + (int) *src2) / 2;
+            src += 2;
+            src2 += 2;
+            dst++;
+            *dst2 = ((int) *src + (int) *src2) / 2;
+            src += 2;
+            src2 += 2;
+            dst2++;
         }
-        y_src += width * 2;
-        uv_src += width * 2;
+        src += width * 2;
+        src2 += width * 2;
+    }
+}
+
+
+void conv_yuv420pto422(void *yuv422, void *yuv420p, int width, int height)
+{
+    uint8_t *src, *dst, *src2, *dst2;
+    int i, j;
+
+    /* Create the Y plane. */
+    src = (uint8_t *)yuv420p;
+    dst = (uint8_t *)yuv422;
+    for (i = width * height; i > 0; i--) {
+        *dst = *src;
+        dst += 2;
+        src += 1;
+    }
+    /* Create U and V planes. */
+    src = (uint8_t *)yuv420p + width * height;
+    src2 = src + (width * height) / 4;
+    dst = (uint8_t *)yuv422 + 1;
+    dst2 = (uint8_t *)dst + width * 2 + 1;
+    //for (i = height / 2; i > 0; i--) {
+    for (i = height / 4; i > 0; i--) {
+        for (j = width / 4; j > 0; j--) {
+            *dst = *src;
+            *(dst+1) = *src2;
+            src += 1;
+            src2 += 1;
+            dst += 2;
+            //
+            *dst2 =  *src;
+            *(dst2+1) = *src2;
+            src += 1;
+            src2 += 1;
+            dst2 += 2;
+        }
+        src += width * 2;
+        src2 += width * 2;
     }
 }
 

@@ -18,6 +18,7 @@ extern "C" {
 
 
 void conv_yuv422to420p(void *dst, void *src, int width, int height);
+void conv_yuv420pto422(void *dst, void *src, int width, int height);
 void conv_yuv420to422p(void *yuv420, void *yuv422, int width, int height, int len);
 void conv_uyvyto420p(void *dst, void *src, int width, int height);
 void conv_rgb24toyuv420p(void *dst, void *src, int width, int height);
