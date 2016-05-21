@@ -69,6 +69,7 @@ LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -llog
 LDFLAGS	+= -lconfig
 LDFLAGS	+= -lgevent
+LDFLAGS	+= -ltime
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= -ljansson
 LDFLAGS	+= $(LDFLAGS_SDL)
@@ -115,7 +116,8 @@ UTIL_OBJS := 			\
     util/url.o 			\
     util/queue.o		\
     util/config.o		\
-    util/imgconvert.o
+    util/imgconvert.o		\
+    util/overlay.o
 
 OBJS := \
     $(ALGO_OBJS) 		\

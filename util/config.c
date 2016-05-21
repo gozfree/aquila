@@ -144,8 +144,8 @@ static void load_playback(struct aq_config *aqc)
     strcat(aqc->playback.url, aqc->playback.type.str);
     strcat(aqc->playback.url, "://");
     strcat(aqc->playback.url, aqc->playback.format);
-    aqc->playback.param.video.width = conf_get_int(c, "playback", "width");
-    aqc->playback.param.video.height = conf_get_int(c, "playback", "height");
+    //aqc->playback.param.video.width = conf_get_int(c, "playback", "width");
+    //aqc->playback.param.video.height = conf_get_int(c, "playback", "height");
 
     logi("[playback][type] = %s\n", aqc->playback.type.str);
     logi("[playback][url] = %s\n", aqc->playback.url);

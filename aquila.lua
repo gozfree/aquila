@@ -1,18 +1,18 @@
 aquila_global = {
         videocap = {
             --array0 = {
-                type = "vdevfake",
-                device = "YUV420P_720x480.yuv",
-                format = "YUV420P",
-                width = 720,
-                height = 480,
+                --type = "vdevfake",
+                --device = "YUV420P_720x480.yuv",
+                --format = "YUV420P",
+                --width = 720,
+                --height = 480,
             --},
             --array1 = {
-                --type = "v4l2",
-                --device = "/dev/video0",
-                --format = "YUV422P",
-                --width = 640,
-                --height = 480,
+                type = "v4l2",
+                device = "/dev/video0",
+                format = "YUV422P",
+                width = 640,
+                height = 480,
             --}
         },
         audiocap = {
@@ -29,6 +29,12 @@ aquila_global = {
                 type = "h264dec",
         },
 
+        overlay = {
+                type = "timestamp",
+                offsetx = 0,
+                offsety = 0,
+                switch = "on",
+        },
 
         playback = {
                 -- type supported sdl/snkfake

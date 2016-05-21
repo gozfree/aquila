@@ -133,14 +133,17 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
+    //filter types:
+    //1. src filter: <NULL, snk>
+    //2. mid fitler: <src, snk>
+    //3. snk filter: <src, NULL>
     if (ctx->q_src) {//not sink filter
         memcpy(&ctx->media, &q_src->media, sizeof(q_src->media));
         if (ctx->q_snk) {
             memcpy(&q_snk->media, &q_src->media, sizeof(q_src->media));
         }
-        logd("%s, media.video: %d*%d\n",
-             c->type, ctx->media.video.width, ctx->media.video.height);
     }
+    logd("%s, media.video: %d*%d\n", c->type.str, ctx->media.video.width, ctx->media.video.height);
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;
     }

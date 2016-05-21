@@ -51,7 +51,7 @@ static int playback_filter_open(struct filter_ctx *fc)
         return -1;
     }
     pfc->conf = &fconf->conf.playback;
-    struct playback_ctx *pc = playback_open(fc->url, &pfc->conf->param);
+    struct playback_ctx *pc = playback_open(fc->url, &fc->media);
     if (!pc) {
         loge("open %s failed!\n", fc->url);
         goto failed;

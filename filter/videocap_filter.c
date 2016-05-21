@@ -12,15 +12,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <liblog.h>
+#include <libtime.h>
 
 #include "device.h"
 #include "filter.h"
 #include "config.h"
-
-#define VIDEOCAP_V4L2       "v4l2:///dev/video0"
-#define VIDEOCAP_VDEVFAKE   "vdevfake:////home/gongzf/github/snowball.repo/aquila/720x480.yuv"
-
-#define VIDEOCAP_FILTER_URL VIDEOCAP_V4L2
+#include "overlay.h"
 
 extern struct ikey_cvalue conf_map_table[];
 
@@ -36,6 +33,7 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
     struct media_params *param = &ctx->dev->media;
     int flen = 2 * (param->video.width) * (param->video.height);//YUV422 2*w*h
     void *frm = calloc(1, flen);
+    char tmp_tm[32];
 
     int ret = device_read(ctx->dev, frm, flen);
     if (ret == -1) {
@@ -46,6 +44,9 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
         }
         return -1;
     }
+
+    time_get_string(tmp_tm, sizeof(tmp_tm));
+    overlay_draw_text(frm, 0, 0, param->video.width, tmp_tm);
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
     }
@@ -83,6 +84,7 @@ static int videocap_open(struct filter_ctx *fc)
     fc->media.video.height = vc->dev->media.video.height;
     fc->media.video.pix_fmt = vc->dev->media.video.pix_fmt;
     fc->priv = vc;
+    overlay_init();
     return 0;
 
 failed:
