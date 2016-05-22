@@ -76,7 +76,6 @@ static int videocap_open(struct filter_ctx *fc)
 
     logi("vc->conf->width = %d\n", vc->conf->param.video.width);
     logi("vc->conf->fomat = %s\n", vc->conf->format);
-    loge("vc->conf->fomat = %s\n", conf_map_table[vc->dev->media.video.pix_fmt].str);
 
     fc->rfd = vc->dev->fd;
     fc->wfd = -1;

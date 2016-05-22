@@ -70,6 +70,9 @@ LDFLAGS	+= -llog
 LDFLAGS	+= -lconfig
 LDFLAGS	+= -lgevent
 LDFLAGS	+= -ltime
+LDFLAGS	+= -ldict
+LDFLAGS	+= -lskt
+LDFLAGS	+= -lthread
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= -ljansson
 LDFLAGS	+= $(LDFLAGS_SDL)
@@ -101,6 +104,7 @@ FILTER_OBJS := 			\
     filter/videocap_filter.o 	\
     filter/vencode_filter.o 	\
     filter/vdecode_filter.o 	\
+    filter/upstream_filter.o 	\
     filter/playback_filter.o
 
 
@@ -110,7 +114,10 @@ PLAYBACK_OBJS := 		\
     playback/sdl.o		\
     playback/snkfake.o
 
-PROTOCOL_OBJS :=
+PROTOCOL_OBJS :=		\
+    protocol/protocol.o		\
+    protocol/rtsp.o
+
 
 UTIL_OBJS := 			\
     util/url.o 			\

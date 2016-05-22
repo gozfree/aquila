@@ -41,6 +41,7 @@ void filter_register_all(void)
     REGISTER_FILTER(vencode);
     REGISTER_FILTER(vdecode);
     REGISTER_FILTER(playback);
+    REGISTER_FILTER(upstream);
 }
 
 static void on_filter_read(int fd, void *arg)

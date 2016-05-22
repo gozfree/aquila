@@ -22,6 +22,7 @@ enum conf_map_index {
     PLAYBACK,
     SDL,
     SNKFAKE,
+    UPSTREAM,
     V4L2,
     VDEVFAKE,
     VENCODE,

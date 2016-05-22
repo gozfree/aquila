@@ -28,6 +28,7 @@ struct ikey_cvalue conf_map_table[] = {
     {PLAYBACK, "playback"},
     {SDL,      "sdl"},
     {SNKFAKE,  "snkfake"},
+    {UPSTREAM, "upstream"},
     {V4L2,     "v4l2"},
     {VDEVFAKE, "vdevfake"},
     {VENCODE,  "vencode"},
@@ -56,6 +57,8 @@ static int string_to_enum(char *str)
         ret = SDL;
     } else if (!strcasecmp(str, "snkfake")) {
         ret = SNKFAKE;
+    } else if (!strcasecmp(str, "upstream")) {
+        ret = UPSTREAM;
     } else if (!strcasecmp(str, "v4l2")) {
         ret = V4L2;
     } else if (!strcasecmp(str, "vencode")) {
@@ -132,6 +135,22 @@ static void load_vdecode(struct aq_config *aqc)
     logi("[vdecode][url] = %s\n", aqc->vdecode.url);
 }
 
+static void load_upstream(struct aq_config *aqc)
+{
+    struct config *c = aqc->config;
+    strcpy(aqc->upstream.type.str, conf_get_string(c, "upstream", "type"));
+    aqc->upstream.type.val = string_to_enum(aqc->upstream.type.str);
+    aqc->upstream.url = CALLOC(strlen(aqc->upstream.type.str) + strlen("://"), char);
+    aqc->upstream.port = conf_get_int(c, "upstream", "port");
+    strcat(aqc->upstream.url, aqc->upstream.type.str);
+    strcat(aqc->upstream.url, "://");
+
+    logi("[upstream][type] = %s\n", aqc->upstream.type.str);
+    logi("[upstream][url] = %s\n", aqc->upstream.url);
+    logi("[upstream][port] = %d\n", aqc->upstream.port);
+}
+
+
 
 static void load_playback(struct aq_config *aqc)
 {
@@ -183,6 +202,9 @@ static void load_filter(struct aq_config *aqc)
         case VDECODE:
             aqc->filter[i].url = aqc->vdecode.url;
             break;
+        case UPSTREAM:
+            aqc->filter[i].url = aqc->upstream.url;
+            break;
         default :
             loge("unsupport filter type %s\n", aqc->filter[i].type.str)
             break;
@@ -224,6 +246,7 @@ int load_conf(struct aq_config *aqc)
     load_videocap(aqc);
     load_vencode(aqc);
     load_vdecode(aqc);
+    load_upstream(aqc);
     load_playback(aqc);
     load_filter(aqc);
     load_graph(aqc);

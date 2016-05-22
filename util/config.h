@@ -33,6 +33,12 @@ struct vdecode_conf {
     char *url;
 };
 
+struct upstream_conf {
+    struct ikey_cvalue type;
+    char *url;
+    uint16_t port;
+};
+
 struct playback_conf {
     struct ikey_cvalue type;
     char device[256];
@@ -48,6 +54,7 @@ struct filter_conf {
         struct videocap_conf videocap;
         struct vencode_conf vencode;
         struct vdecode_conf vdecode;
+        struct upstream_conf upstream;
         struct playback_conf playback;
     } conf;
 };
@@ -63,6 +70,7 @@ struct aq_config {
     struct videocap_conf videocap;
     struct vencode_conf vencode;
     struct vdecode_conf vdecode;
+    struct upstream_conf upstream;
     struct playback_conf playback;
 
     int filter_num;

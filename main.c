@@ -11,6 +11,7 @@
 #include "device.h"
 #include "codec.h"
 #include "playback.h"
+#include "protocol.h"
 #include "filter.h"
 #include "queue.h"
 #include "config.h"
@@ -100,14 +101,19 @@ void signal_init()
     signal(SIGINT, sigint_handler);
 }
 
-
-int main(int argc, char **argv)
+void registre_class()
 {
-    signal_init();
     device_register_all();
     playback_register_all();
     codec_register_all();
     filter_register_all();
+    protocol_register_all();
+}
+
+int main(int argc, char **argv)
+{
+    signal_init();
+    registre_class();
 
     memset(&aq_instance, 0, sizeof(aq_instance));
     if (-1 == aquila_init(&aq_instance)) {

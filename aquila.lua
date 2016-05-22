@@ -1,18 +1,18 @@
 aquila_global = {
         videocap = {
             --array0 = {
-                --type = "vdevfake",
-                --device = "YUV420P_720x480.yuv",
-                --format = "YUV420P",
-                --width = 720,
-                --height = 480,
+                type = "vdevfake",
+                device = "YUV420P_720x480.yuv",
+                format = "YUV420P",
+                width = 720,
+                height = 480,
             --},
             --array1 = {
-                type = "v4l2",
-                device = "/dev/video0",
-                format = "YUV422P",
-                width = 640,
-                height = 480,
+                --type = "v4l2",
+                --device = "/dev/video0",
+                --format = "YUV422P",
+                --width = 640,
+                --height = 480,
             --}
         },
         audiocap = {
@@ -46,12 +46,20 @@ aquila_global = {
                 width = 720,
                 height = 480,
         },
+
+        upstream = {
+                type = "rtsp",
+		port = 554;
+        },
+
+
         filter = {
                 num = 4,
                 type0 = "videocap",
                 type1 = "vencode",
                 type2 = "vdecode",
-                type3 = "playback",
+                --type3 = "playback",
+                type3 = "upstream",
         },
 
         graph = {
