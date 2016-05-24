@@ -44,6 +44,7 @@ void protocol_register_all()
     registered = 1;
 
     REGISTER_PROTOCOL(rtsp);
+    REGISTER_PROTOCOL(rtp);
 }
 
 struct protocol_ctx *protocol_open(const char *url, struct media_params *media)

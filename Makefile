@@ -71,6 +71,7 @@ LDFLAGS	+= -lconfig
 LDFLAGS	+= -lgevent
 LDFLAGS	+= -ltime
 LDFLAGS	+= -ldict
+LDFLAGS	+= -lvector
 LDFLAGS	+= -lskt
 LDFLAGS	+= -lthread
 LDFLAGS	+= -lpthread -lrt
@@ -116,7 +117,9 @@ PLAYBACK_OBJS := 		\
 
 PROTOCOL_OBJS :=		\
     protocol/protocol.o		\
-    protocol/rtsp.o
+    protocol/rtsp.o		\
+    protocol/rtp.o		\
+    protocol/rtp_h264.o
 
 
 UTIL_OBJS := 			\
