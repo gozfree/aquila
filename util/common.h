@@ -43,6 +43,12 @@ enum yuv_format {
     YUV422_YUYV = 5,	// YUYVYUYVYUYVYUYV
 };
 
+enum media_type {
+    META_DATA = 0,
+    AUDIO_TYPE,
+    VIDEO_TYPE,
+};
+
 struct ikey_cvalue {
     int val;
     char str[32];
@@ -58,6 +64,7 @@ struct video_param {
     int width;
     int height;
     int pix_fmt;
+    uint64_t timestamp;
 };
 
 struct audio_param {
@@ -65,6 +72,7 @@ struct audio_param {
 };
 
 struct media_params {
+    int type;
     union {
         struct video_param video;
         struct audio_param audio;

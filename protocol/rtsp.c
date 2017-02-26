@@ -46,6 +46,8 @@ typedef struct rtsp_ctx {
     struct protocol_ctx *rtp_ctx;
     uint16_t server_rtp_port;
     uint16_t server_rtcp_port;
+    struct thread *master_thread;
+    struct thread *worker_thread;
 } rtsp_ctx_t;
 
 typedef enum stream_mode {
@@ -841,27 +843,19 @@ static void *rtsp_thread_event(struct thread *t, void *arg)
     return NULL;
 }
 
-static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_params *media)
+static int create_master_thread(struct rtsp_ctx *rc)
 {
-    int fd;
     const char *ip = RTSP_SERVER_IP;
-    int port = RTSP_SERVER_PORT;
     char *stream_name = "test.ts";
-    struct rtsp_ctx *rc = CALLOC(1, struct rtsp_ctx);
-    if (!rc) {
-        loge("malloc rtsp_ctx failed!\n");
-        return -1;
-    }
-    fd = skt_tcp_bind_listen(NULL, port);
+    int port = RTSP_SERVER_PORT;
+    int fd = skt_tcp_bind_listen(NULL, port);
     if (fd == -1) {
         goto failed;
     }
-    logi("rtsp_ctx addr = %p\n", rc);
     rc->host.port = port;
     rc->dict_client_session = dict_new();
     rc->dict_media_session = dict_new();
     media_session_create(rc, stream_name, sizeof(stream_name));
-    logi("rtsp url = %s listen port = %d\n", url, port);
     rc->listen_fd = fd;
     rc->evbase = gevent_base_create();
     if (!rc->evbase) {
@@ -873,13 +867,59 @@ static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_para
         gevent_destroy(e);
     }
     logi("rtsp://%s:%d/test.ts\n", ip, port);
-    thread_create(rtsp_thread_event, rc);
-    pc->priv = rc;
+    rc->master_thread = thread_create(rtsp_thread_event, rc);
+    if (!rc->master_thread) {
+        loge("thread_create failed!\n");
+        goto failed;
+    }
     return 0;
+
 failed:
+    if (e) {
+        gevent_destroy(e);
+    }
     if (fd != -1) {
         skt_close(fd);
     }
+    return -1;
+}
+
+static void destroy_master_thread()
+{
+
+}
+
+
+static int create_worker_thread()
+{
+    return 0;
+}
+
+static void destroy_worker_thread()
+{
+
+}
+
+static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_params *media)
+{
+    struct rtsp_ctx *rc = CALLOC(1, struct rtsp_ctx);
+    if (!rc) {
+        loge("malloc rtsp_ctx failed!\n");
+        goto failed;
+    }
+    if (-1 == create_master_thread(rc)) {
+        loge("create_master_thread failed!\n");
+        goto failed;
+    }
+    if (-1 == create_worker_thread(rc)) {
+        loge("create_worker_thread failed!\n");
+        goto failed;
+    }
+
+    pc->priv = rc;
+    return 0;
+
+failed:
     if (rc) {
         free(rc);
     }
@@ -910,6 +950,8 @@ static void rtsp_close(struct protocol_ctx *pc)
 {
     struct rtsp_ctx *rc = (struct rtsp_ctx *)pc->priv;
     media_session_destroy(rc, NULL);
+    destroy_worker_thread(rc);
+    destroy_master_thread(rc);
     free(rc);
 }
 

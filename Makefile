@@ -78,6 +78,7 @@ LDFLAGS	+= -lthread
 LDFLAGS	+= -llock
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= -ljansson
+LDFLAGS	+= -lrtmp
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
 LDFLAGS += $(LDFLAGS_ALSA)
@@ -119,6 +120,7 @@ PLAYBACK_OBJS := 		\
 
 PROTOCOL_OBJS :=		\
     protocol/protocol.o		\
+    protocol/rtmp.o		\
     protocol/rtsp.o		\
     protocol/rtp.o		\
     protocol/rtp_h264.o

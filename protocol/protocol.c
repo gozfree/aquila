@@ -43,6 +43,7 @@ void protocol_register_all()
         return;
     registered = 1;
 
+    REGISTER_PROTOCOL(rtmp);
     REGISTER_PROTOCOL(rtsp);
     REGISTER_PROTOCOL(rtp);
 }

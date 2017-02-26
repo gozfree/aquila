@@ -49,8 +49,8 @@ aquila_global = {
                 type0 = "videocap",
                 type1 = "vencode",
                 type2 = "vdecode",
-                type3 = "playback",
-                --type3 = "upstream",
+                --type3 = "playback",
+                type3 = "upstream",
         },
 
         graph = {
@@ -61,7 +61,7 @@ aquila_global = {
                 },
                 graph1 = {
                         source = "vencode",
-                        sink = "playback",
+                        sink = "upstream",
                 },
         },
 }
