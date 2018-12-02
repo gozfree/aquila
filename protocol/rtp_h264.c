@@ -1,13 +1,24 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    rtp_h264.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-24 22:48
- * updated: 2016-05-24 22:48
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <libmacro.h>
 #include <liblog.h>
 #include <libvector.h>
@@ -101,11 +112,12 @@ char *base64_encode(const uint8_t *data, uint32_t data_len)
 }
 
 
+extern "C" {
 int h264_find_nalu(void *buf, size_t len)
 {
     struct vector *nalu_list;
     nalu_list = vector_create(struct h264_nalu);
-    uint8_t *bs = buf;
+    uint8_t *bs = (uint8_t *)buf;
     //char *m_sps;
     //char *m_pps;
     uint8_t *end = bs + len - 4;
@@ -169,4 +181,5 @@ int h264_find_nalu(void *buf, size_t len)
     }
     logi("finished find nalu\n");
     return 0;
+}
 }

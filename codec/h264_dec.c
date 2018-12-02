@@ -1,17 +1,29 @@
 /******************************************************************************
- * Copyright (C) 2014-2016
- * file:    h264_dec.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-20 00:38
- * updated: 2016-05-20 00:38
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/common.h>
@@ -19,6 +31,9 @@
 #include <libavutil/mathematics.h>
 #include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
+#ifdef __cplusplus
+}
+#endif
 
 #include <libmacro.h>
 #include <liblog.h>
@@ -95,7 +110,7 @@ static void frame_conv(struct h264dec_ctx *c)
 
 static int h264dec_decode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
 {
-    struct h264dec_ctx *c = cc->priv;
+    struct h264dec_ctx *c = (struct h264dec_ctx *)cc->priv;
     int got_pic = 0;
     AVPacket avpkt;
     memset(&avpkt, 0, sizeof(AVPacket));
@@ -106,9 +121,26 @@ static int h264dec_decode(struct codec_ctx *cc, struct iovec *in, struct iovec *
     if (got_pic) {
         frame_conv(c);
     }
-    out->iov_base = (void *)c->cvt_avfrm;
-    out->iov_len = got_pic;
-    return got_pic;
+    out->iov_len = c->cvt_avfrm->linesize[0] + c->cvt_avfrm->linesize[1] + c->cvt_avfrm->linesize[2];
+#if 0
+    out->iov_base = CALLOC(out->iov_len, void);
+    memcpy(out->iov_base, c->cvt_avfrm->data[0], c->cvt_avfrm->linesize[0]);
+    memcpy((void *)((uint8_t *)out->iov_base + c->cvt_avfrm->linesize[0]),
+                          c->cvt_avfrm->data[1], c->cvt_avfrm->linesize[1]);
+    memcpy((void *)((uint8_t *)out->iov_base + c->cvt_avfrm->linesize[0] + c->cvt_avfrm->linesize[1]),
+                          c->cvt_avfrm->data[2], c->cvt_avfrm->linesize[2]);
+    //DUMP_BUFFER(out->iov_base, c->cvt_avfrm->linesize[0]);
+    //DUMP_BUFFER((uint8_t *)out->iov_base + c->cvt_avfrm->linesize[0], c->cvt_avfrm->linesize[1]);
+    //DUMP_BUFFER((uint8_t *)out->iov_base + c->cvt_avfrm->linesize[0] + c->cvt_avfrm->linesize[1], c->cvt_avfrm->linesize[2]);
+#else
+    out->iov_base = c->cvt_avfrm;
+    //DUMP_BUFFER(c->cvt_avfrm->data[0], c->cvt_avfrm->linesize[0]);
+    //DUMP_BUFFER(c->cvt_avfrm->data[1], c->cvt_avfrm->linesize[1]);
+    //DUMP_BUFFER(c->cvt_avfrm->data[2], c->cvt_avfrm->linesize[2]);
+#endif
+    loge("after decode %d, %d, %d\n", c->cvt_avfrm->linesize[0], c->cvt_avfrm->linesize[1], c->cvt_avfrm->linesize[2]);
+
+    return out->iov_len;
 }
 
 static void h264dec_close(struct codec_ctx *cc)

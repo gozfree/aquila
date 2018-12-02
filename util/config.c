@@ -1,11 +1,20 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    config.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-16 11:24
- * updated: 2016-05-16 11:24
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +26,7 @@
 #include <unistd.h>
 #include <libmacro.h>
 #include <liblog.h>
-#include <libconfig.h>
+#include <libgconfig/libgconfig.h>
 #include "common.h"
 #include "config.h"
 
@@ -34,9 +43,11 @@ struct ikey_cvalue conf_map_table[] = {
     {VENCODE,  "vencode"},
     {VDECODE,  "vdecode"},
     {VIDEOCAP, "videocap"},
+    {RECORD,   "record"},
     {X264,     "x264"},
+    {H264ENC,  "h264enc"},
     {YUV420,   "yuv420"},
-    {YUV422P,   "yuv422p"},
+    {YUV422P,  "yuv422p"},
     {UNKNOWN,  "unknown"},
 };
 
@@ -69,8 +80,12 @@ static int string_to_enum(char *str)
         ret = VDEVFAKE;
     } else if (!strcasecmp(str, "videocap")) {
         ret = VIDEOCAP;
+    } else if (!strcasecmp(str, "record")) {
+        ret = RECORD;
     } else if (!strcasecmp(str, "x264")) {
         ret = X264;
+    } else if (!strcasecmp(str, "h264enc")) {
+        ret = H264ENC;
     } else {
         ret = UNKNOWN;
     }
@@ -87,174 +102,160 @@ static char *enum_to_string(int key)
 }
 #endif
 
-static void load_videocap(struct aq_config *aqc)
+static void load_videocap(struct aq_config *c)
 {
-    struct config *c = aqc->config;
-
-    strcpy(aqc->videocap.type.str, conf_get_string(c, "videocap", "type"));
-    aqc->videocap.type.val = string_to_enum(aqc->videocap.type.str);
-    strcpy(aqc->videocap.device, conf_get_string(c, "videocap", "device"));
-    aqc->videocap.url = CALLOC(strlen(aqc->videocap.type.str)+ strlen(aqc->videocap.device) + strlen("://"), char);
-    strcat(aqc->videocap.url, aqc->videocap.type.str);
-    strcat(aqc->videocap.url, "://");
-    strcat(aqc->videocap.url, aqc->videocap.device);
-    aqc->videocap.param.video.width = conf_get_int(c, "videocap", "width");
-    aqc->videocap.param.video.height = conf_get_int(c, "videocap", "height");
-    strcpy(aqc->videocap.format, conf_get_string(c, "videocap", "format"));
-    aqc->videocap.param.video.pix_fmt = string_to_enum(aqc->videocap.format);
-    logi("[videocap][type] = %s\n", aqc->videocap.type.str);
-    logi("[videocap][device] = %s\n", aqc->videocap.device);
-    logi("[videocap][url] = %s\n", aqc->videocap.url);
-    logi("[videocap][format] = %s\n", aqc->videocap.format);
-    logi("[videocap][width] = %d\n", aqc->videocap.param.video.width);
-    logi("[videocap][height] = %d\n", aqc->videocap.param.video.height);
+    strcpy(c->videocap.type.str, (*c->conf)["videocap"]["type"].get<string>("").c_str());
+    c->videocap.type.val = string_to_enum(c->videocap.type.str);
+    strcpy(c->videocap.device, (*c->conf)["videocap"]["device"].get<string>("").c_str());
+    c->videocap.url = CALLOC(strlen(c->videocap.type.str)+ strlen(c->videocap.device) + strlen("://"), char);
+    strcat(c->videocap.url, c->videocap.type.str);
+    strcat(c->videocap.url, "://");
+    strcat(c->videocap.url, c->videocap.device);
+    c->videocap.param.video.width = (*c->conf)["videocap"]["width"].get<int>(0);
+    c->videocap.param.video.height = (*c->conf)["videocap"]["height"].get<int>(0);
+    strcpy(c->videocap.format, (*c->conf)["videocap"]["format"].get<string>("").c_str());
+    c->videocap.param.video.pix_fmt = string_to_enum(c->videocap.format);
+    logi("[videocap][type] = %s\n", c->videocap.type.str);
+    logi("[videocap][device] = %s\n", c->videocap.device);
+    logi("[videocap][url] = %s\n", c->videocap.url);
+    logi("[videocap][format] = %s\n", c->videocap.format);
+    logi("[videocap][w*h] = %d*%d\n", c->videocap.param.video.width, c->videocap.param.video.height);
 }
 
-static void load_vencode(struct aq_config *aqc)
+static void load_vencode(struct aq_config *c)
 {
-    struct config *c = aqc->config;
-    strcpy(aqc->vencode.type.str, conf_get_string(c, "vencode", "type"));
-    aqc->vencode.type.val = string_to_enum(aqc->vencode.type.str);
-    aqc->vencode.url = CALLOC(strlen(aqc->vencode.type.str) + strlen("://"), char);
-    strcat(aqc->vencode.url, aqc->vencode.type.str);
-    strcat(aqc->vencode.url, "://");
+    strcpy(c->vencode.type.str, (*c->conf)["vencode"]["type"].get<string>("").c_str());
+    c->vencode.type.val = string_to_enum(c->vencode.type.str);
+    c->vencode.url = CALLOC(strlen(c->vencode.type.str) + strlen("://"), char);
+    strcat(c->vencode.url, c->vencode.type.str);
+    strcat(c->vencode.url, "://");
 
-    logi("[vencode][type] = %s\n", aqc->vencode.type.str);
-    logi("[vencode][url] = %s\n", aqc->vencode.url);
+    logi("[vencode][type] = %s\n", c->vencode.type.str);
 }
 
-static void load_vdecode(struct aq_config *aqc)
+static void load_vdecode(struct aq_config *c)
 {
-    struct config *c = aqc->config;
-    strcpy(aqc->vdecode.type.str, conf_get_string(c, "vdecode", "type"));
-    aqc->vdecode.type.val = string_to_enum(aqc->vdecode.type.str);
-    aqc->vdecode.url = CALLOC(strlen(aqc->vdecode.type.str) + strlen("://"), char);
-    strcat(aqc->vdecode.url, aqc->vdecode.type.str);
-    strcat(aqc->vdecode.url, "://");
+    strcpy(c->vdecode.type.str, (*c->conf)["vdecode"]["type"].get<string>("").c_str());
+    c->vdecode.type.val = string_to_enum(c->vdecode.type.str);
+    c->vdecode.url = CALLOC(strlen(c->vdecode.type.str) + strlen("://"), char);
+    strcat(c->vdecode.url, c->vdecode.type.str);
+    strcat(c->vdecode.url, "://");
 
-    logi("[vdecode][type] = %s\n", aqc->vdecode.type.str);
-    logi("[vdecode][url] = %s\n", aqc->vdecode.url);
+    logi("[vdecode][type] = %s\n", c->vdecode.type.str);
 }
 
-static void load_upstream(struct aq_config *aqc)
+static void load_upstream(struct aq_config *c)
 {
-    struct config *c = aqc->config;
-    strcpy(aqc->upstream.type.str, conf_get_string(c, "upstream", "type"));
-    aqc->upstream.type.val = string_to_enum(aqc->upstream.type.str);
-    aqc->upstream.url = CALLOC(strlen(aqc->upstream.type.str) + strlen("://"), char);
-    aqc->upstream.port = conf_get_int(c, "upstream", "port");
-    strcat(aqc->upstream.url, aqc->upstream.type.str);
-    strcat(aqc->upstream.url, "://");
+    strcpy(c->upstream.type.str, (*c->conf)["upstream"]["type"].get<string>("").c_str());
+    c->upstream.url = strdup((*c->conf)["upstream"]["url"].get<string>("").c_str());
+    c->upstream.type.val = string_to_enum(c->upstream.type.str);
+    c->upstream.port = (*c->conf)["upstream"]["port"].get<int>(0);
+    logi("[upstream][type] = %s\n", c->upstream.type.str);
+    logi("[upstream][url] = %s\n", c->upstream.url);
+}
 
-    logi("[upstream][type] = %s\n", aqc->upstream.type.str);
-    logi("[upstream][url] = %s\n", aqc->upstream.url);
-    logi("[upstream][port] = %d\n", aqc->upstream.port);
+static void load_record(struct aq_config *c)
+{
+    strcpy(c->record.type.str, (*c->conf)["record"]["type"].get<string>("").c_str());
+    c->record.type.val = string_to_enum(c->record.type.str);
+    strcat(c->record.url, c->record.type.str);
+    strcat(c->record.url, "://");
+    strcat(c->record.url, (*c->conf)["record"]["file"].get<string>("").c_str());
+    logi("[record][type] = %s\n", c->record.type.str);
+    logi("[record][url] = %s\n", c->record.url);
 }
 
 
-
-static void load_playback(struct aq_config *aqc)
+static void load_playback(struct aq_config *c)
 {
-    struct config *c = aqc->config;
-    strcpy(aqc->playback.type.str, conf_get_string(c, "playback", "type"));
-    aqc->playback.type.val = string_to_enum(aqc->playback.type.str);
-    strcpy(aqc->playback.device, conf_get_string(c, "playback", "device"));
-    strcpy(aqc->playback.format, conf_get_string(c, "playback", "format"));
-    aqc->playback.url = CALLOC(strlen(aqc->playback.type.str) + strlen(aqc->playback.format) + strlen("://"), char);
-    strcat(aqc->playback.url, aqc->playback.type.str);
-    strcat(aqc->playback.url, "://");
-    strcat(aqc->playback.url, aqc->playback.format);
-    //aqc->playback.param.video.width = conf_get_int(c, "playback", "width");
-    //aqc->playback.param.video.height = conf_get_int(c, "playback", "height");
+    strcpy(c->playback.type.str, (*c->conf)["playback"]["type"].get<string>("").c_str());
+    c->playback.type.val = string_to_enum(c->playback.type.str);
+    strcpy(c->playback.device, (*c->conf)["playback"]["device"].get<string>("").c_str());
+    strcpy(c->playback.format, (*c->conf)["playback"]["format"].get<string>("").c_str());
+    c->playback.url = CALLOC(strlen(c->playback.type.str) + strlen(c->playback.format) + strlen("://"), char);
+    strcat(c->playback.url, c->playback.type.str);
+    strcat(c->playback.url, "://");
+    strcat(c->playback.url, c->playback.format);
+    //c->playback.param.video.width = conf_get_int(c, "playback", "width");
+    //c->playback.param.video.height = conf_get_int(c, "playback", "height");
 
-    logi("[playback][type] = %s\n", aqc->playback.type.str);
-    logi("[playback][url] = %s\n", aqc->playback.url);
-    logi("[playback][width] = %d\n", aqc->playback.param.video.width);
-    logi("[playback][height] = %d\n", aqc->playback.param.video.height);
+    logi("[playback][type] = %s\n", c->playback.type.str);
+    logi("[playback][url] = %s\n", c->playback.url);
+    logi("[playback][w*h] = %d*%d\n", c->playback.param.video.width, c->playback.param.video.height);
 }
 
-static void load_filter(struct aq_config *aqc)
+static void load_filter(struct aq_config *c)
 {
     int i;
-    char filter[32];
-    struct config *c = aqc->config;
-    aqc->filter_num = conf_get_int(c, "filter", "num");
-    aqc->filter = CALLOC(aqc->filter_num, struct filter_conf);
+    c->filter_num = (*c->conf)["filters"].length();
+    c->filter = CALLOC(c->filter_num, struct filter_conf);
 
-    logi("[filter][num] = %d\n", aqc->filter_num);
-    for (i = 0; i < aqc->filter_num; i++) {
-        memset(&filter, 0, sizeof(filter));
-        snprintf(filter, sizeof(filter), "type%d", i);
-        strcpy(aqc->filter[i].type.str, conf_get_string(c, "filter", filter));
-        aqc->filter[i].type.val = string_to_enum(aqc->filter[i].type.str);
-        logi("[filter][%d][type] = %s\n", i, aqc->filter[i].type.str);
-        switch (aqc->filter[i].type.val) {
+    for (i = 0; i < c->filter_num; i++) {
+        strcpy(c->filter[i].type.str, (*c->conf)["filters"][i+1].get<string>("").c_str());
+        c->filter[i].type.val = string_to_enum(c->filter[i].type.str);
+        logi("[filter][%d][type] = %s\n", i, c->filter[i].type.str);
+        switch (c->filter[i].type.val) {
         case VIDEOCAP:
-            aqc->filter[i].url = aqc->videocap.url;
-            memcpy(&aqc->filter[i].conf.videocap, &aqc->videocap, sizeof(struct videocap_conf));
+            c->filter[i].url = c->videocap.url;
+            memcpy(&c->filter[i].conf.videocap, &c->videocap, sizeof(struct videocap_conf));
             break;
         case PLAYBACK:
-            aqc->filter[i].url = aqc->playback.url;
-            memcpy(&aqc->filter[i].conf.playback, &aqc->playback, sizeof(struct playback_conf));
+            c->filter[i].url = c->playback.url;
+            memcpy(&c->filter[i].conf.playback, &c->playback, sizeof(struct playback_conf));
             break;
         case VENCODE:
-            aqc->filter[i].url = aqc->vencode.url;
+            c->filter[i].url = c->vencode.url;
             break;
         case VDECODE:
-            aqc->filter[i].url = aqc->vdecode.url;
+            c->filter[i].url = c->vdecode.url;
             break;
         case UPSTREAM:
-            aqc->filter[i].url = aqc->upstream.url;
+            c->filter[i].url = c->upstream.url;
+            break;
+        case RECORD:
+            c->filter[i].url = c->record.url;
             break;
         default :
-            loge("unsupport filter type %s\n", aqc->filter[i].type.str)
+            loge("unsupport filter type %s\n", c->filter[i].type.str);
             break;
         }
     }
-
 }
 
-static void load_graph(struct aq_config *aqc)
+static void load_graph(struct aq_config *c)
 {
     int i;
-    char graphn[32];
-    struct config *c = aqc->config;
-    aqc->graph_num = conf_get_int(c, "graph", "num");
-    aqc->graph = CALLOC(aqc->graph_num, struct graph_conf);
+    c->graph_num = (*c->conf)["graphs"].length();
+    c->graph = CALLOC(c->graph_num, struct graph_conf);
 
-    logi("[graph][num] = %d\n", aqc->graph_num);
-    for (i = 0; i < aqc->graph_num; i++) {
-        memset(&graphn, 0, sizeof(graphn));
-        snprintf(graphn, sizeof(graphn), "graph%d", i);
-        strcpy(aqc->graph[i].source, conf_get_string(c, "graph", graphn, "source"));
-        strcpy(aqc->graph[i].sink, conf_get_string(c, "graph", graphn, "sink"));
-        logi("[graph][%d][source] = %s\n", i, aqc->graph[i].source);
-        logi("[graph][%d][sink] = %s\n", i, aqc->graph[i].sink);
+    logi("[graph][num] = %d\n", c->graph_num);
+    for (i = 0; i < c->graph_num; i++) {
+        strcpy(c->graph[i].source, (*c->conf)["graphs"][i+1]["source"].get<string>("").c_str());
+        strcpy(c->graph[i].sink, (*c->conf)["graphs"][i+1]["sink"].get<string>("").c_str());
+        logi("[graph][%d][source] = %s\n", i, c->graph[i].source);
+        logi("[graph][%d][sink] = %s\n", i, c->graph[i].sink);
     }
 }
 
-int load_conf(struct aq_config *aqc)
+int load_conf(struct aq_config *c)
 {
-    struct config *c = NULL;
-    c = aqc->config = conf_load(CONFIG_LUA, DEFAULT_CONFIG_FILE);
-    if (!c) {
+    c->conf = Config::create(DEFAULT_CONFIG_FILE);
+    if (!c->conf) {
         loge("failed to conf_load %s\n", DEFAULT_CONFIG_FILE);
         return -1;
     }
-
-    load_videocap(aqc);
-    load_vencode(aqc);
-    load_vdecode(aqc);
-    load_upstream(aqc);
-    load_playback(aqc);
-    load_filter(aqc);
-    load_graph(aqc);
+    load_videocap(c);
+    load_vencode(c);
+    load_vdecode(c);
+    load_record(c);
+    load_upstream(c);
+    load_playback(c);
+    load_filter(c);
+    load_graph(c);
     return 0;
 }
 
-void unload_conf(struct aq_config *aqc)
+void unload_conf(struct aq_config *c)
 {
-    if (aqc->config) {
-        conf_unload(aqc->config);
-    }
+    c->conf->destroy();
 }

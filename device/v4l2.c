@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    v4l2.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-04-21 22:49
- * updated: 2016-04-21 22:49
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,27 +33,37 @@
 #include "device_io.h"
 #include "common.h"
 
+/*
+ * refer to ffmpeg/libavdevice/v4l2 and motion/v4l2
+ */
+
 #define MAX_V4L_BUF         (32)
 #define MAX_V4L_REQBUF_CNT  (256)
 
-//suppose v4l2 control cmds
-#define MAX_V4L2_CID        (9)
-static const uint32_t queried_ctrls[] = {
+/*
+ * refer to /usr/include/linux/v4l2-controls.h
+ * supported v4l2 control cmds
+ */
+static const uint32_t v4l2_cid_supported[] = {
     V4L2_CID_BRIGHTNESS,
     V4L2_CID_CONTRAST,
     V4L2_CID_SATURATION,
     V4L2_CID_HUE,
-    V4L2_CID_RED_BALANCE,
-    V4L2_CID_BLUE_BALANCE,
+    V4L2_CID_AUTO_WHITE_BALANCE,
     V4L2_CID_GAMMA,
-    V4L2_CID_EXPOSURE,
-    V4L2_CID_AUTOGAIN,
-    V4L2_CID_GAIN
+    V4L2_CID_POWER_LINE_FREQUENCY,
+    V4L2_CID_WHITE_BALANCE_TEMPERATURE,
+    V4L2_CID_SHARPNESS,
+    V4L2_CID_BACKLIGHT_COMPENSATION,
+    V4L2_CID_LASTP1
 };
+
+#define MAX_V4L2_CID        (sizeof(v4l2_cid_supported)/sizeof(uint32_t))
 
 
 struct v4l2_ctx {
     int fd;
+    char *name;
     int on_read_fd;
     int on_write_fd;
     int width;
@@ -72,12 +92,12 @@ static int v4l2_get_input(struct v4l2_ctx *vc)
         return -1;
     }
 
-    logi("V4L2 Input information:\n");
-    logi("\tinput.name: \t\"%s\"\n", input.name);
+    logd("V4L2 Input information:\n");
+    logd("\tinput.name: \t\"%s\"\n", input.name);
     if (input.type & V4L2_INPUT_TYPE_TUNER)
-        logi("\t\t- TUNER\n");
+        logd("\t\t- TUNER\n");
     if (input.type & V4L2_INPUT_TYPE_CAMERA)
-        logi("\t\t- CAMERA\n");
+        logd("\t\t- CAMERA\n");
 
     if (ioctl(vc->fd, VIDIOC_G_STD, &std_id) == -1) {
         logd("Device doesn't support VIDIOC_G_STD\n");
@@ -93,6 +113,7 @@ static int v4l2_get_input(struct v4l2_ctx *vc)
     }
     return 0;
 }
+
 static int v4l2_get_cap(struct v4l2_ctx *vc)
 {
     struct v4l2_fmtdesc fmtdesc;
@@ -102,97 +123,94 @@ static int v4l2_get_cap(struct v4l2_ctx *vc)
         return -1;
     }
 
-    logi("V4L2 Capability information:\n");
-    logi("\tcap.driver: \t\"%s\"\n", vc->cap.driver);
-    logi("\tcap.card: \t\"%s\"\n", vc->cap.card);
-    logi("\tcap.bus_info: \t\"%s\"\n", vc->cap.bus_info);
-    logi("\tcap.capabilities:\n", vc->cap.capabilities);
+    logd("V4L2 Capability information:\n");
+    logd("\tcap.driver: \t\"%s\"\n", vc->cap.driver);
+    logd("\tcap.card: \t\"%s\"\n", vc->cap.card);
+    logd("\tcap.bus_info: \t\"%s\"\n", vc->cap.bus_info);
+    logd("\tcap.version: \t\"%d\"\n", vc->cap.version);
+    logd("\tcap.capabilities:\n");
     if (vc->cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)
-        logi("\t\t- VIDEO_CAPTURE\n");
+        logd("\t\t- VIDEO_CAPTURE\n");
     if (vc->cap.capabilities & V4L2_CAP_VIDEO_OUTPUT)
-        logi("\t\t- VIDEO_OUTPUT\n");
+        logd("\t\t- VIDEO_OUTPUT\n");
     if (vc->cap.capabilities & V4L2_CAP_VIDEO_OVERLAY)
-        logi("\t\t- VIDEO_OVERLAY\n");
+        logd("\t\t- VIDEO_OVERLAY\n");
     if (vc->cap.capabilities & V4L2_CAP_VBI_CAPTURE)
-        logi("\t\t- VBI_CAPTURE\n");
+        logd("\t\t- VBI_CAPTURE\n");
     if (vc->cap.capabilities & V4L2_CAP_VBI_OUTPUT)
-        logi("\t\t- VBI_OUTPUT\n");
+        logd("\t\t- VBI_OUTPUT\n");
     if (vc->cap.capabilities & V4L2_CAP_RDS_CAPTURE)
-        logi("\t\t- RDS_CAPTURE\n");
+        logd("\t\t- RDS_CAPTURE\n");
     if (vc->cap.capabilities & V4L2_CAP_TUNER)
-        logi("\t\t- TUNER\n");
+        logd("\t\t- TUNER\n");
     if (vc->cap.capabilities & V4L2_CAP_AUDIO)
-        logi("\t\t- AUDIO\n");
+        logd("\t\t- AUDIO\n");
     if (vc->cap.capabilities & V4L2_CAP_READWRITE)
-        logi("\t\t- READWRITE\n");
+        logd("\t\t- READWRITE\n");
     if (vc->cap.capabilities & V4L2_CAP_ASYNCIO)
-        logi("\t\t- ASYNCIO\n");
+        logd("\t\t- ASYNCIO\n");
     if (vc->cap.capabilities & V4L2_CAP_STREAMING)
-        logi("\t\t- STREAMING\n");
+        logd("\t\t- STREAMING\n");
     if (vc->cap.capabilities & V4L2_CAP_TIMEPERFRAME)
-        logi("\t\t- TIMEPERFRAME\n");
-
+        logd("\t\t- TIMEPERFRAME\n");
     if (!(vc->cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
-        loge("s: Device does not support capturing.\n");
+        loge("Device does not support capturing.\n");
         return -1;
     }
 
-    logi("V4L2 Support Format:\n");
+    logd("V4L2 Support Format:\n");
     fmtdesc.index = 0;
     fmtdesc.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     while (-1 != ioctl(vc->fd, VIDIOC_ENUM_FMT, &fmtdesc)) {
-        logi("\t%d. %s\n", fmtdesc.index, fmtdesc.description);
+        logd("\t%d. %s\n", fmtdesc.index, fmtdesc.description);
         ++fmtdesc.index;
     }
     return 0;
 }
 
-static int v4l2_scan_controls(struct v4l2_ctx *vc)
+static void v4l2_get_cid(struct v4l2_ctx *vc)
 {
     int i;
     struct v4l2_queryctrl *qctrl;
     struct v4l2_control control;
 
-    for (i = 0; queried_ctrls[i]; i++) {
+    logd("V4L2 Supported Control:\n");
+    for (i = 0; v4l2_cid_supported[i] != V4L2_CID_LASTP1; i++) {
         qctrl = &vc->controls[i];
-        qctrl->id = queried_ctrls[i];
-        if (ioctl(vc->fd, VIDIOC_QUERYCTRL, qctrl))
+        qctrl->id = v4l2_cid_supported[i];
+        if (-1 == ioctl(vc->fd, VIDIOC_QUERYCTRL, qctrl)) {
+            logw("\t%s is not supported!\n", qctrl->name);
             continue;
+        }
         vc->ctrl_flags |= 1 << i;
-    }
-
-    logi("V4L2 Supported Control:\n");
-    for (i = 0; queried_ctrls[i]; i++) {
-        if (!(vc->ctrl_flags & (1 << i))) {
+        memset(&control, 0, sizeof (control));
+        control.id = v4l2_cid_supported[i];
+        if (-1 == ioctl(vc->fd, VIDIOC_G_CTRL, &control)) {
+            loge("ioctl VIDIOC_G_CTRL %s failed!\n", qctrl->name);
             continue;
         }
 
-        qctrl->id = queried_ctrls[i];
-        if (ioctl(vc->fd, VIDIOC_QUERYCTRL, qctrl))
-            continue;
-        memset(&control, 0, sizeof (control));
-        control.id = queried_ctrls[i];
-        ioctl(vc->fd, VIDIOC_G_CTRL, &control);
-
-        logi("\t%s, %s range: [%d, %d], default: %d, current: %d\n",
+        logd("\t%s, %s range: [%d, %d], default: %d, current: %d\n",
              qctrl->name,
              qctrl->flags & V4L2_CTRL_FLAG_DISABLED ? "!DISABLED!" : "",
              qctrl->minimum, qctrl->maximum,
              qctrl->default_value, control.value);
     }
-    return 0;
 }
 
-static int v4l2_set_control(struct v4l2_ctx *vc, uint32_t cid, int value);
 static int v4l2_get_info(struct v4l2_ctx *vc)
 {
-    v4l2_scan_controls(vc);
-
-    v4l2_get_cap(vc);
-    v4l2_get_input(vc);
+    logd("================ V4L2 \"%s\" info start ================\n", vc->name);
+    if (v4l2_get_cap(vc) == -1) {
+        return -1;
+    }
+    v4l2_get_cid(vc);
+    if (v4l2_get_input(vc) == -1) {
+        return -1;
+    }
+    logd("================ V4L2 \"%s\" info end ================\n", vc->name);
     return 0;
 }
-
 
 static int v4l2_set_format(struct v4l2_ctx *vc)
 {
@@ -229,7 +247,7 @@ static int v4l2_set_format(struct v4l2_ctx *vc)
         return -1;
     }
 
-    logi("Using palette %c%c%c%c (%dx%d) bytesperlines %d sizeimage %d colorspace %08x\n",
+    logd("Using palette %c%c%c%c (%dx%d) bytesperlines %d sizeimage %d colorspace %08x\n",
          fmt.fmt.pix.pixelformat >> 0,
          fmt.fmt.pix.pixelformat >> 8,
          fmt.fmt.pix.pixelformat >> 16,
@@ -373,9 +391,14 @@ static int v4l2_open(struct device_ctx *dc, const char *dev, struct media_params
         loge("open %s failed: %s\n", dev, strerror(errno));
         goto failed;
     }
+    vc->name = strdup(dev);
     vc->fd = fd;
     vc->width = media->video.width;
     vc->height = media->video.height;
+    if (v4l2_get_info(vc) < 0) {
+        loge("v4l2_get_info failed!\n");
+        goto failed;
+    }
 
     if (-1 == v4l2_set_format(vc)) {
         loge("v4l2_set_format failed\n");
@@ -396,6 +419,9 @@ static int v4l2_open(struct device_ctx *dc, const char *dev, struct media_params
 failed:
     if (fd != -1) {
         close(fd);
+    }
+    if (vc->name) {
+        free(vc->name);
     }
     if (vc) {
         free(vc);
@@ -458,6 +484,7 @@ static void v4l2_close(struct device_ctx *dc)
     for (i = 0; i < vc->req_count; i++) {
         munmap(vc->buf[i].iov_base, vc->buf[i].iov_len);
     }
+    free(vc->name);
     close(vc->fd);
     close(vc->on_read_fd);
     close(vc->on_write_fd);
@@ -469,18 +496,18 @@ static int v4l2_set_control(struct v4l2_ctx *vc, uint32_t cid, int value)
     int i;
     struct v4l2_control control;
     int ret = -1;
-    for (i = 0; queried_ctrls[i]; i++) {
+    for (i = 0; v4l2_cid_supported[i]; i++) {
         if (!(vc->ctrl_flags & (1 << i))) {
             continue;
         }
-        if (cid != queried_ctrls[i]) {
+        if (cid != v4l2_cid_supported[i]) {
             continue;
         }
         struct v4l2_queryctrl *ctrl = &vc->controls[i];
 
 
         memset(&control, 0, sizeof (control));
-        control.id = queried_ctrls[i];
+        control.id = v4l2_cid_supported[i];
 
         switch (ctrl->type) {
         case V4L2_CTRL_TYPE_INTEGER://0~255

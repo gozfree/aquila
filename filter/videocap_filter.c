@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    videocap_filter.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-04-30 16:02
- * updated: 2016-04-30 16:02
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,13 +23,12 @@
 #include <errno.h>
 #include <liblog.h>
 #include <libtime.h>
+#include <libmacro.h>
 
 #include "device.h"
 #include "filter.h"
 #include "config.h"
 #include "overlay.h"
-
-extern struct ikey_cvalue conf_map_table[];
 
 struct videocap_ctx {
     int seq;
@@ -46,13 +55,14 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
     }
 
     time_get_msec_str(tmp_tm, sizeof(tmp_tm));
-    overlay_draw_text(frm, 0, 0, param->video.width, tmp_tm);
+    overlay_draw_text((unsigned char *)frm, 0, 0, param->video.width, tmp_tm);
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
     }
-    out->iov_base = frm;
+    out->iov_base = memdup(frm, ret);
     out->iov_len = ret;
     ctx->seq++;
+    free(frm);
     logv("seq = %d, len = %d\n", ctx->seq, ret);
     return ret;
 }
@@ -74,7 +84,7 @@ static int videocap_open(struct filter_ctx *fc)
     vc->dev = dc;
     vc->seq = 0;
 
-    logi("vc->conf->width = %d\n", vc->conf->param.video.width);
+    logd("vc->conf->width = %d\n", vc->conf->param.video.width);
     logi("vc->conf->fomat = %s\n", vc->conf->format);
 
     fc->rfd = vc->dev->fd;

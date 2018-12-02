@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    filter.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-04-30 16:02
- * updated: 2016-04-30 16:02
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <string.h>
 #include <errno.h>
@@ -44,48 +54,51 @@ void filter_register_all(void)
     REGISTER_FILTER(vdecode);
     REGISTER_FILTER(playback);
     REGISTER_FILTER(upstream);
+    REGISTER_FILTER(record);
 }
 
 static void on_filter_read(int fd, void *arg)
 {
     struct filter_ctx *ctx = (struct filter_ctx *)arg;
-    struct queue_item *in_item = NULL;
-    struct iovec in;
-    struct iovec out;
+    struct aitem *in_aitem = NULL;
+    struct iovec in = {NULL, 0};
+    struct iovec out = {NULL, 0};
     int ret;
     int last = 0;
     if (ctx->q_src) {
-        in_item = queue_pop(ctx->q_src, fd, &last);
-        if (!in_item) {
-            loge("fd = %d, queue_pop empty\n", fd);
+        //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
+        in_aitem = aqueue_pop(ctx->q_src, fd, &last);
+        if (!in_aitem) {
+            loge("fd = %d, aqueue_pop empty\n", fd);
             return;
         }
-        //logd("ctx = %p queue_pop %p, last=%d\n", ctx, in_item, last);
+        //logd("ctx = %p aqueue_pop %p, last=%d\n", ctx, in_aitem, last);
         memset(&in, 0, sizeof(struct iovec));
         memset(&out, 0, sizeof(struct iovec));
-        in.iov_base = in_item->data;
-        in.iov_len = in_item->len;
+        in.iov_base = in_aitem->data.iov_base;
+        in.iov_len = in_aitem->data.iov_len;
     }
+    //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     pthread_mutex_lock(&ctx->lock);
     ret = ctx->ops->on_read(ctx, &in, &out);
     if (ret == -1) {
         //loge("filter %s on_read failed!\n", ctx->name);
     }
-    logd("filter[%s] out_data = %p, out_len = %d\n", ctx->name, out.iov_base, out.iov_len);
+    //loge("filter[%s]: after on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     if (out.iov_base) {
         //memory create
-        struct queue_item *out_item = queue_item_new(out.iov_base, out.iov_len);
-        //logd("fd = %d queue_push %p\n", fd, out_item);
-        if (-1 == queue_push(ctx->q_snk, out_item)) {
+        struct aitem *out_aitem = aitem_alloc(ctx->q_snk, out.iov_base, out.iov_len);
+        //logd("fd = %d aqueue_push %p\n", fd, out_aitem);
+        if (-1 == aqueue_push(ctx->q_snk, out_aitem)) {
             loge("buffer_push failed!\n");
         }
     }
 
     if (ctx->q_src) {
-        //logd("ctx = %p queue_item_free %p, last=%d\n", ctx, in_item, last);
+        //logd("ctx = %p aqueue_aitem_free %p, last=%d\n", ctx, in_aitem, last);
         if (last) {
             //usleep(200000);//FIXME
-            //queue_item_free(in_item);//FIXME: double free
+            //aqueue_aitem_free(in_aitem);//FIXME: double free
         }
     }
     pthread_mutex_unlock(&ctx->lock);
@@ -95,7 +108,7 @@ static void on_filter_write(int fd, void *arg)
 {
     struct filter_ctx *ctx = (struct filter_ctx *)arg;
     if (ctx->ops->on_write) {
-        ctx->ops->on_write(ctx->priv);
+        ctx->ops->on_write(ctx);
     }
 }
 
@@ -108,14 +121,14 @@ struct filter_ctx *filter_ctx_new(struct filter_conf *c)
         return NULL;
     }
     for (p = first_filter; p != NULL; p = p->next) {
-        if (!strcmp(c->type.str, p->name))
+        if (!strcasecmp(c->type.str, p->name))
             break;
     }
     if (p == NULL) {
         loge("%s protocol is not support!\n", c->type.str);
         return NULL;
     }
-    logi("\t[filter module] <%s> loaded\n", c->type.str);
+    logd("\t[filter module] <%s> loaded\n", c->type.str);
 
     fc->ops = p;
     fc->name = c->type.str;
@@ -125,14 +138,15 @@ struct filter_ctx *filter_ctx_new(struct filter_conf *c)
 }
 
 struct filter_ctx *filter_create(struct filter_conf *c,
-                                 struct queue *q_src, struct queue *q_snk)
+                                 struct aqueue *q_src, struct aqueue *q_snk)
 {
     int fd;
     struct filter_ctx *ctx = filter_ctx_new(c);
     if (!ctx) {
         return NULL;
     }
-    queue_add_ref(q_src);
+    loge("enter %s\n", ctx->name);
+    aqueue_add_ref(q_src);
     pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
@@ -141,21 +155,23 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     //2. mid fitler: <src, snk>
     //3. snk filter: <src, NULL>
     if (ctx->q_src) {//not sink filter
-        memcpy(&ctx->media, &q_src->media, sizeof(q_src->media));
+        memcpy(&ctx->media, q_src->opaque.iov_base, q_src->opaque.iov_len);
         if (ctx->q_snk) {
-            memcpy(&q_snk->media, &q_src->media, sizeof(q_src->media));
+            q_snk->opaque.iov_base = q_src->opaque.iov_base;
+            q_snk->opaque.iov_len = q_src->opaque.iov_len;
         }
     }
-    logd("%s, media.video: %d*%d\n", c->type.str, ctx->media.video.width, ctx->media.video.height);
+    logi("%s, media.video: %d*%d\n", c->type.str, ctx->media.video.width, ctx->media.video.height);
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;
     }
     if (ctx->q_src) {//middle filter
-        fd = queue_get_available_fd(q_src);
+        fd = aqueue_get_available_fd(q_src);
     } else {//device source filter
         fd = ctx->rfd;
         if (ctx->q_snk) {
-            memcpy(&q_snk->media, &ctx->media, sizeof(ctx->media));
+            q_snk->opaque.iov_base = &ctx->media;
+            q_snk->opaque.iov_len = sizeof(ctx->media);
         }
     }
 
@@ -181,6 +197,7 @@ struct filter_ctx *filter_create(struct filter_conf *c,
         goto failed;
     }
     }
+    loge("leave %s\n", ctx->name);
 
     return ctx;
 
@@ -230,6 +247,8 @@ void filter_destroy(struct filter_ctx *ctx)
     if (!ctx)
         return;
 
+    loge("enter %s\n", ctx->name);
+    ctx->ops->close(ctx);
     gevent_base_loop_break(ctx->ev_base);
 
     gevent_del(ctx->ev_base, ctx->ev_read);

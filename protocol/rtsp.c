@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2016
- * file:    rtsp.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-22 22:35
- * updated: 2016-05-22 22:35
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -150,7 +160,7 @@ static void print_rtsp_request(struct rtsp_request *req)
 
 static int parse_rtsp_request(struct rtsp_request *req)
 {
-    char *str = req->iobuf->iov_base;
+    char *str = (char *)req->iobuf->iov_base;
     int len = req->iobuf->iov_len;
     uint32_t content_len = 0;
     int cmd_len = sizeof(req->cmd);
@@ -344,7 +354,7 @@ static int parse_transport(struct transport_header *hdr, char *buf, int len)
     // Then, run through each of the fields, looking for ones we handle:
     char const* fields = buf + 10;
     while (*fields == ' ') ++fields;
-    char* field = calloc(1, strlen(fields)+1);
+    char* field = (char *)calloc(1, strlen(fields)+1);
     while (sscanf(fields, "%[^;\r\n]", field) == 1) {
         if (strcmp(field, "RTP/AVP/TCP") == 0) {
             hdr->mode = RTP_TCP;
@@ -498,7 +508,7 @@ static char *get_sdp(struct media_session *ms)
     int sdp_len = 0;
     char sdp_filter[128];
     char sdp_range[128];
-    char *sdp_media = "m=video 0 RTP/AVP 33\r\nc=IN IP4 0.0.0.0\r\nb=AS:5000\r\na=control:track1";
+    const char *sdp_media = "m=video 0 RTP/AVP 33\r\nc=IN IP4 0.0.0.0\r\nb=AS:5000\r\na=control:track1";
 
     float dur = duration();
     if (dur == 0.0) {
@@ -536,7 +546,7 @@ static char *get_sdp(struct media_session *ms)
       + strlen(ms->info)
       + strlen(sdp_media);
     logd("sdp_len = %d\n", sdp_len);
-    sdp = calloc(1, sdp_len);
+    sdp = (char *)calloc(1, sdp_len);
 
     // Generate the SDP prefix (session-level lines):
     snprintf(sdp, sdp_len, sdp_prefix_fmt,
@@ -607,7 +617,7 @@ static struct client_session *client_session_lookup(struct rtsp_ctx *rc, struct 
 
 static int handle_setup(struct rtsp_request *req, char *buf, uint32_t size)
 {
-    char *mode_string = NULL;
+    const char *mode_string = NULL;
     const char *dst_ip = RTSP_SERVER_IP;
     const char *client_ip = RTSP_SERVER_IP;
     struct rtsp_ctx *rc = req->rtsp_ctx;
@@ -616,7 +626,7 @@ static int handle_setup(struct rtsp_request *req, char *buf, uint32_t size)
     int port_rtp = rc->server_rtp_port;
     int port_rtcp =  rc->server_rtcp_port;
 
-    parse_transport(&req->hdr, req->iobuf->iov_base, req->iobuf->iov_len);
+    parse_transport(&req->hdr, (char *)req->iobuf->iov_base, req->iobuf->iov_len);
     struct client_session *cs = client_session_lookup(rc, req);
     if (!cs) {
         loge("client_session_lookup find nothting\n");
@@ -798,14 +808,6 @@ static void on_error(int fd, void *arg)
     loge("error: %d\n", errno);
 }
 
-static struct iovec *iovec_create(size_t len)
-{
-    struct iovec *vec = CALLOC(1, struct iovec);
-    vec->iov_len = len;
-    vec->iov_base = calloc(1, len);
-    return vec;
-}
-
 static void rtsp_connect_create(struct rtsp_ctx *rtsp, int fd, uint32_t ip, uint16_t port)
 {
     struct rtsp_request *req = CALLOC(1, struct rtsp_request);
@@ -846,7 +848,8 @@ static void *rtsp_thread_event(struct thread *t, void *arg)
 static int create_master_thread(struct rtsp_ctx *rc)
 {
     const char *ip = RTSP_SERVER_IP;
-    char *stream_name = "test.ts";
+    const char *stream_name = "test.ts";
+    struct gevent *e = NULL;
     int port = RTSP_SERVER_PORT;
     int fd = skt_tcp_bind_listen(NULL, port);
     if (fd == -1) {
@@ -855,13 +858,13 @@ static int create_master_thread(struct rtsp_ctx *rc)
     rc->host.port = port;
     rc->dict_client_session = dict_new();
     rc->dict_media_session = dict_new();
-    media_session_create(rc, stream_name, sizeof(stream_name));
+    media_session_create(rc, (char *)stream_name, sizeof(stream_name));
     rc->listen_fd = fd;
     rc->evbase = gevent_base_create();
     if (!rc->evbase) {
         goto failed;
     }
-    struct gevent *e = gevent_create(fd, on_connect, NULL, on_error, (void *)rc);
+    e = gevent_create(fd, on_connect, NULL, on_error, (void *)rc);
     if (-1 == gevent_add(rc->evbase, e)) {
         loge("event_add failed!\n");
         gevent_destroy(e);
@@ -884,18 +887,18 @@ failed:
     return -1;
 }
 
-static void destroy_master_thread()
+static void destroy_master_thread(struct rtsp_ctx *rc)
 {
 
 }
 
 
-static int create_worker_thread()
+static int create_worker_thread(struct rtsp_ctx *rc)
 {
     return 0;
 }
 
-static void destroy_worker_thread()
+static void destroy_worker_thread(struct rtsp_ctx *rc)
 {
 
 }

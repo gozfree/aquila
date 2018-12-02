@@ -21,10 +21,12 @@ ifeq ($(ARCH_INC), $(wildcard $(ARCH_INC)))
 include $(ARCH_INC)
 endif
 
-CC	= $(CROSS_PREFIX)gcc
+CC	= $(CROSS_PREFIX)g++
 CXX	= $(CROSS_PREFIX)g++
 LD	= $(CROSS_PREFIX)ld
 AR	= $(CROSS_PREFIX)ar
+
+USE_RTMPCLIENT=0
 
 ifeq ($(COLOR_INC), $(wildcard $(COLOR_INC)))
 include $(COLOR_INC)
@@ -50,17 +52,27 @@ LDFLAGS_X264	= -lx264
 LDFLAGS_ALSA	= -lasound
 LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
 LDFLAGS_JPEG	= -ljpeg
-LDFLAGS_LUA	= -llua5.2
+LDFLAGS_LUA 	= -llua5.2
+LDFLAGS_JSON	= `pkg-config --libs jsoncpp`
 
-CFLAGS	:= -g -Wall -Werror
+CFLAGS	:= -g -Wall
+# -Werror
 CFLAGS	+= -I$(OUTPUT)/include -I./
 CFLAGS	+= -I./algo
 CFLAGS	+= -I./codec
 CFLAGS	+= -I./device
 CFLAGS	+= -I./filter
+CFLAGS	+= -I./muxer
 CFLAGS	+= -I./playback
 CFLAGS	+= -I./protocol
 CFLAGS	+= -I./util
+
+ifeq ($(USE_RTMPCLIENT), 1)
+CFLAGS	+= -I./protocol/rtmpclient
+CFLAGS	+= -DUSE_RTMPCLIENT
+else
+CFLAGS	+= -Wl,-rpath=/usr/loca/lib
+endif
 CFLAGS	+= $(CFLAGS_SDL)
 
 LDFLAGS	:=
@@ -68,7 +80,7 @@ LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -ldebug
 LDFLAGS	+= -llog
-LDFLAGS	+= -lconfig
+LDFLAGS	+= -lgconfig
 LDFLAGS	+= -lgevent
 LDFLAGS	+= -ltime
 LDFLAGS	+= -ldict
@@ -76,15 +88,22 @@ LDFLAGS	+= -lvector
 LDFLAGS	+= -lskt
 LDFLAGS	+= -lthread
 LDFLAGS	+= -llock
+LDFLAGS	+= -lmacro
+ifeq ($(USE_RTMPCLIENT), 1)
+LDFLAGS	+= -lrtmp
+else
+LDFLAGS	+= -L/usr/local/lib/ -lrtmp
+LDFLAGS	+= -lqueue
+endif
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= -ljansson
-LDFLAGS	+= -lrtmp
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
 LDFLAGS += $(LDFLAGS_ALSA)
 LDFLAGS += $(LDFLAGS_FFMPEG)
 LDFLAGS += $(LDFLAGS_JPEG)
 LDFLAGS	+= $(LDFLAGS_LUA)
+LDFLAGS	+= $(LDFLAGS_JSON)
 
 .PHONY : all clean
 
@@ -92,11 +111,10 @@ TGT	:= $(TGT_NAME)
 
 ALGO_OBJS :=
 
-CODEC_OBJS := 			\
-    codec/codec.o 		\
+CODEC_OBJS := 			    \
+    codec/codec.o 		    \
     codec/x264_enc.o		\
-    codec/mjpeg_enc.o		\
-    codec/h264_dec.o
+    codec/mjpeg_enc.o
 
 DEVICE_OBJS := 			\
     device/device.o 		\
@@ -109,8 +127,13 @@ FILTER_OBJS := 			\
     filter/vencode_filter.o 	\
     filter/vdecode_filter.o 	\
     filter/upstream_filter.o 	\
+    filter/record_filter.o 	    \
     filter/playback_filter.o
 
+MUXER_OBJS :=			\
+    muxer/muxer.o		\
+    muxer/mp4.o			\
+    muxer/flv.o
 
 
 PLAYBACK_OBJS := 		\
@@ -125,6 +148,16 @@ PROTOCOL_OBJS :=		\
     protocol/rtp.o		\
     protocol/rtp_h264.o
 
+ifeq ($(USE_RTMPCLIENT), 1)
+RTMP_OBJ :=            \
+    protocol/rtmpclient/rtmp_active_object.o \
+    protocol/rtmpclient/rtmp_buffer.o \
+    protocol/rtmpclient/rtmp_get_h264_info.o \
+    protocol/rtmpclient/rtmpclient.o \
+    protocol/rtmpclient/rtmp_queue.o
+else
+RTMP_OBJ :=
+endif
 
 UTIL_OBJS := 			\
     util/url.o 			\
@@ -138,8 +171,10 @@ OBJS := \
     $(CODEC_OBJS) 		\
     $(DEVICE_OBJS) 		\
     $(FILTER_OBJS) 		\
+    $(MUXER_OBJS) 		\
     $(PLAYBACK_OBJS) 		\
     $(PROTOCOL_OBJS) 		\
+    $(RTMP_OBJ) 		\
     $(UTIL_OBJS) 		\
     main.o
 
@@ -147,6 +182,13 @@ all: $(TGT)
 
 %.o:%.c
 	$(CC_V) -c $(CFLAGS) $< -o $@
+
+%.o:%.cc
+	$(CC_V) -c $(CFLAGS) $< -o $@
+
+%.o:%.cpp
+	$(CC_V) -c $(CFLAGS) $< -o $@
+
 
 $(TGT_NAME): $(OBJS)
 	$(CC_V) -o $@ $^ $(LDFLAGS)

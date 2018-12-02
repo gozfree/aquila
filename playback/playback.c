@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    playback.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-02 19:08
- * updated: 2016-05-02 19:08
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,7 +70,7 @@ struct playback_ctx *playback_open(const char *url, struct media_params *format)
     }
 
     for (p = first_playback; p != NULL; p = p->next) {
-        if (!strcmp(pc->url.head, p->name))
+        if (!strcasecmp(pc->url.head, p->name))
             break;
     }
     if (p == NULL) {

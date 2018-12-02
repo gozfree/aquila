@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    sdl.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-02 19:18
- * updated: 2016-05-02 19:18
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -165,18 +175,31 @@ static int rgb_surface_update(struct sdl_ctx *c, void *buf)
     return 0;
 }
 
-static int yuv_surface_update(struct sdl_ctx *c, void *in)
+static int yuv_surface_update(struct sdl_ctx *c, void *in, int len)
 {
-    AVFrame *avfrm = (AVFrame *)in;
     SDL_Rect rect;
     SDL_Overlay *overlay = c->yuv->overlay;
     SDL_LockYUVOverlay(overlay);
+#if 0
+    uint8_t *avfrm = (uint8_t *)in;
+    memcpy(overlay->pixels[0], avfrm, len/2);//->data[0];
+    memcpy(overlay->pixels[2], avfrm + len/2, len/4);//->data[1];
+    memcpy(overlay->pixels[1], avfrm + len*3/4, len/4);//->data[2];
+    overlay->pitches[0] = len/2;//avfrm->linesize[0];
+    overlay->pitches[2] = len/4;//avfrm->linesize[1];
+    overlay->pitches[1] = len/4;//avfrm->linesize[2];
+#else
+    AVFrame *avfrm = (AVFrame *)in;
     overlay->pixels[0] = avfrm->data[0];
     overlay->pixels[2] = avfrm->data[1];
     overlay->pixels[1] = avfrm->data[2];
     overlay->pitches[0] = avfrm->linesize[0];
     overlay->pitches[2] = avfrm->linesize[1];
     overlay->pitches[1] = avfrm->linesize[2];
+#endif
+    //DUMP_BUFFER(overlay->pixels[0], overlay->pitches[0]);
+    //DUMP_BUFFER(overlay->pixels[1], overlay->pitches[1]);
+    //DUMP_BUFFER(overlay->pixels[2], overlay->pitches[2]);
     rect.x = 0;
     rect.y = 0;
     rect.w = c->width;
@@ -354,10 +377,10 @@ static int sdl_open(struct playback_ctx *pc, const char *type, struct media_para
         loge("malloc sdl_ctx failed!\n");
         return -1;
     }
-    if (!strcmp(type, "rgb")) {
+    if (!strcasecmp(type, "rgb")) {
         c->type = DATA_TYPE_RGB;
         logd("use RGB surface\n");
-    } else if (!strcmp(type, "yuv")) {
+    } else if (!strcasecmp(type, "yuv")) {
         c->type = DATA_TYPE_YUV;
         logd("use YUV surface\n");
     } else {
@@ -397,7 +420,7 @@ static int sdl_write(struct playback_ctx *pc, void *buf, int len)
     if (c->type == DATA_TYPE_RGB) {
         rgb_surface_update(c, buf);
     } else if (c->type == DATA_TYPE_YUV) {
-        yuv_surface_update(c, buf);
+        yuv_surface_update(c, buf, len);
     }
     SDL_UnlockMutex(c->mutex);
 

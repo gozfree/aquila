@@ -1,32 +1,47 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    queue.h
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-01 15:15
- * updated: 2016-05-01 15:15
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #ifndef _QUEUE_H_
 #define _QUEUE_H_
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <sys/uio.h>
 #include <pthread.h>
 #include <libmacro.h>
-#include "common.h"
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+enum aqueue_mode {
+    QUEUE_FULL_FLUSH = 0,
+    QUEUE_FULL_RING,
+};
+
+
 /*
- * QUEUE is a multi reader single writer queue, like "Y"
+ * QUEUE is a multi reader single writer aqueue, like "Y"
  * reader number is fixed
  */
 
-struct queue_item {
+struct aitem {
+    struct iovec data;
     struct list_head entry;
-    void *data;
-    int len;
+    struct iovec opaque;
     volatile int ref_cnt;
 };
 
@@ -37,29 +52,37 @@ struct pipe_fds {
     struct list_head entry;
 };
 
-struct queue {
+typedef void *(alloc_hook)(void *data, size_t len);
+typedef void (free_hook)(void *data);
+
+struct aqueue {
     struct list_head head;
-    pthread_mutex_t lock;
-    int ref_cnt;//every item ref_cnt is fixed
-    int depth;//current depth
+    int depth;
     int max_depth;
+    pthread_mutex_t lock;
+    pthread_cond_t cond;
+    enum aqueue_mode mode;
+    alloc_hook *alloc_hook;
+    free_hook *free_hook;
+    int ref_cnt;//every aitem ref_cnt is fixed
     struct list_head pipe_list;
-    struct media_params media;
-    char src_filter[32];
-    char snk_filter[32];
+    struct iovec opaque;
 };
 
-struct queue_item *queue_item_new(void *data, int len);
-void queue_item_free(struct queue_item *item);
+struct aitem *aitem_alloc(struct aqueue *q, void *data, size_t len);
+void aitem_free(struct aqueue *q, struct aitem *aitem);
 
-struct queue *queue_create();
-int queue_add_ref(struct queue *q);
-int queue_get_available_fd(struct queue *q);
-int queue_push(struct queue *q, struct queue_item *item);
-struct queue_item *queue_pop(struct queue *q, int fd, int *last);
-int queue_depth(struct queue *q);
-void queue_destroy(struct queue *q);
-
+struct aqueue *aqueue_create();
+void aqueue_destroy(struct aqueue *q);
+int aqueue_set_depth(struct aqueue *q, int depth);
+int aqueue_get_depth(struct aqueue *q);
+int aqueue_set_mode(struct aqueue *q, enum aqueue_mode mode);
+int aqueue_set_hook(struct aqueue *q, alloc_hook *alloc_cb, free_hook *free_cb);
+struct aitem *aqueue_pop(struct aqueue *q, int fd, int *last);
+int aqueue_add_ref(struct aqueue *q);
+int aqueue_get_available_fd(struct aqueue *q);
+int aqueue_push(struct aqueue *q, struct aitem *aitem);
+int aqueue_flush(struct aqueue *q);
 
 #ifdef __cplusplus
 }

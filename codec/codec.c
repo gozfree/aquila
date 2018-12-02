@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2016
- * file:    codec.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-04 00:37
- * updated: 2016-05-04 00:37
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -52,8 +62,9 @@ void codec_register_all()
 
     REGISTER_ENCODER(x264);
     REGISTER_ENCODER(mjpeg);
-    REGISTER_DECODER(h264dec);
 #if 0
+    REGISTER_ENCODER(h264enc);
+    REGISTER_DECODER(h264dec);
     REGISTER_DECODER(avcodec);
 #endif
 }
@@ -71,7 +82,7 @@ struct codec_ctx *codec_open(const char *url, struct media_params *media)
         return NULL;
     }
     for (p = first_codec; p != NULL; p = p->next) {
-        if (!strcmp(c->url.head, p->name))
+        if (!strcasecmp(c->url.head, p->name))
             break;
     }
     if (p == NULL) {

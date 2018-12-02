@@ -39,27 +39,23 @@ aquila_global = {
         },
 
         upstream = {
-                type = "rtsp",
-		port = 554;
+                type = "rtmp",
+		url = "rtmp://send3.douyu.com/live/5864578rN1HM8geH?wsSecret=a67935210b620acb5561bb7dfbe2e9fb&wsTime=5bdee212&wsSeek=off&wm=0&tw=0",
         },
 
 
-        filter = {
-                num = 4,
-                type0 = "videocap",
-                type1 = "vencode",
-                type2 = "vdecode",
-                --type3 = "playback",
-                type3 = "upstream",
+        filters = {
+                "videocap",
+                "vencode",
+                "upstream",
         },
 
-        graph = {
-                num = 2,
-                graph0 = {
+        graphs = {
+                {
                         source = "videocap",
                         sink = "vencode",
                 },
-                graph1 = {
+                {
                         source = "vencode",
                         sink = "upstream",
                 },

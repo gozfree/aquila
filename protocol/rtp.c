@@ -1,9 +1,19 @@
 /******************************************************************************
- * Copyright (C) 2014-2015
- * file:    rtp.c
- * author:  gozfree <gozfree@163.com>
- * created: 2016-05-24 20:45
- * updated: 2016-05-24 20:45
+ * Copyright (C) 2014-2018 Zhifeng Gong <gozfree@163.com>
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with libraries; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -89,15 +99,6 @@ enum rtp_payload_type {
 #define RTP_PACKET_BUF_LEN_MAX	(1024)
 
 
-static struct iovec *iovec_create(size_t len)
-{
-    struct iovec *vec = CALLOC(1, struct iovec);
-    vec->iov_len = len;
-    vec->iov_base = calloc(1, len);
-    return vec;
-}
-
-
 static void on_recv_rtp(int fd, void *arg)
 {
     int rlen;
@@ -137,15 +138,15 @@ static void on_error(int fd, void *arg)
 
 static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_params *media)
 {
-    struct rtp_ctx *c = sc->priv;
+    struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     skt_addr_list_t *tmp;
     char str[MAX_ADDR_STRING];
     char ip[64];
     int len;
     char *p;
-    char *tag = ":";
+    const char *tag = ":";
     logi("url = %s\n", url);
-    p = strstr(url, tag);
+    p = strstr((char *)url, tag);
     if (!p) {
         loge("rtp url is invalid\n");
         return -1;
@@ -229,7 +230,7 @@ static int rtp_packet_assemble(int32_t pts, void *buf, size_t len)
 
 static int rtp_packet_send(struct rtp_ctx *c, void *buf, size_t len)
 {
-    uint8_t *data = buf;
+    uint8_t *data = (uint8_t *)buf;
     h264_find_nalu(buf, len);
     rtp_packet_assemble(0, buf, len);
 #if 1
@@ -247,7 +248,7 @@ static int rtp_packet_send(struct rtp_ctx *c, void *buf, size_t len)
 
 static int rtp_write(struct protocol_ctx *sc, void *buf, int len)
 {
-    struct rtp_ctx *c = sc->priv;
+    struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     int ret = rtp_packet_send(c, buf, len);
     logi("skt_sendto len = %d\n", ret);
     return ret;
@@ -255,7 +256,7 @@ static int rtp_write(struct protocol_ctx *sc, void *buf, int len)
 
 static void rtp_close(struct protocol_ctx *sc)
 {
-    struct rtp_ctx *c = sc->priv;
+    struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     skt_close(c->rtp_fd);
     skt_close(c->rtcp_fd);
 }
