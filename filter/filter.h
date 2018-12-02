@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <libgevent.h>
 #include "common.h"
 #include "config.h"

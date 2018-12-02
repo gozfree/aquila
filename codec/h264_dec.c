@@ -20,7 +20,7 @@
 #include <libavutil/samplefmt.h>
 #include <libswscale/swscale.h>
 
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 #include "codec.h"
 #include "common.h"

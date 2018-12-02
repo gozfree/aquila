@@ -14,7 +14,7 @@
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <pthread.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <libskt.h>
 #include <libgevent.h>
 #include <liblog.h>
@@ -648,8 +648,8 @@ static int handle_setup(struct rtsp_request *req, char *buf, uint32_t size)
     default:
         break;
     }
-    skt_udp_bind(NULL, port_rtp, 1);
-    skt_udp_bind(NULL, port_rtcp, 1);
+    skt_udp_bind(NULL, port_rtp);
+    skt_udp_bind(NULL, port_rtcp);
 
     snprintf(buf, size, RESP_SETUP_FMT,
                  req->cseq,
@@ -852,7 +852,7 @@ static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_para
         loge("malloc rtsp_ctx failed!\n");
         return -1;
     }
-    fd = skt_tcp_bind_listen(NULL, port, 1);
+    fd = skt_tcp_bind_listen(NULL, port);
     if (fd == -1) {
         goto failed;
     }

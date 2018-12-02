@@ -5,6 +5,7 @@
  * created: 2016-04-17 19:04
  * updated: 2016-04-17 19:04
  ******************************************************************************/
+#include <string.h>
 #include <unistd.h>
 #include <signal.h>
 #include <libdebug.h>

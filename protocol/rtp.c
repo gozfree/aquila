@@ -10,7 +10,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/uio.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <libskt.h>
 #include <liblog.h>
 #include <libgevent.h>
@@ -165,7 +165,7 @@ static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_param
     strncpy(c->src_ip, str, MAX_ADDR_STRING);
 
     c->src_rtp_port = RTP_PORT;
-    c->rtp_fd = skt_udp_bind(c->src_ip, RTP_PORT, 0);//random port
+    c->rtp_fd = skt_udp_bind(c->src_ip, RTP_PORT);//random port
     if (c->rtp_fd == -1) {
         loge("bind %s failed\n", ip);
         return -1;
@@ -174,7 +174,7 @@ static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_param
     skt_set_reuse(c->rtp_fd, 1);
 
     c->src_rtcp_port = RTCP_PORT;
-    c->rtcp_fd = skt_udp_bind(c->src_ip, RTCP_PORT, 0);//random port
+    c->rtcp_fd = skt_udp_bind(c->src_ip, RTCP_PORT);//random port
     if (c->rtcp_fd == -1) {
         loge("bind %s failed\n", ip);
         return -1;

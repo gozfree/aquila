@@ -16,7 +16,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 #include "device.h"
 #include "imgconvert.h"

@@ -11,7 +11,7 @@
 #include <SDL/SDL.h>
 #include <SDL_thread.h>
 #include <libavformat/avformat.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 
 #include "playback.h"

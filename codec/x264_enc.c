@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <x264.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 
 #include "codec.h"

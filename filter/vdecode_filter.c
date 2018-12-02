@@ -12,7 +12,7 @@
 #include <errno.h>
 #include <assert.h>
 
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 
 #include "filter.h"

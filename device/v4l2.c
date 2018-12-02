@@ -17,7 +17,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <linux/videodev2.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 #include "device.h"
 #include "device_io.h"

@@ -5,7 +5,8 @@
  * created: 2016-04-21 22:23
  * updated: 2016-04-21 22:23
  ******************************************************************************/
-#include <libgzf.h>
+#include <string.h>
+#include <libmacro.h>
 #include <libatomic.h>
 #include <liblog.h>
 #include "device.h"

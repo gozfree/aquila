@@ -15,7 +15,7 @@
 #include <sys/types.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 #include <libconfig.h>
 #include "common.h"
@@ -90,6 +90,7 @@ static char *enum_to_string(int key)
 static void load_videocap(struct aq_config *aqc)
 {
     struct config *c = aqc->config;
+
     strcpy(aqc->videocap.type.str, conf_get_string(c, "videocap", "type"));
     aqc->videocap.type.val = string_to_enum(aqc->videocap.type.str);
     strcpy(aqc->videocap.device, conf_get_string(c, "videocap", "device"));
@@ -231,8 +232,6 @@ static void load_graph(struct aq_config *aqc)
         logi("[graph][%d][sink] = %s\n", i, aqc->graph[i].sink);
     }
 }
-
-
 
 int load_conf(struct aq_config *aqc)
 {

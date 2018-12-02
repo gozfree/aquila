@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include "common.h"
 
 #ifdef __cplusplus

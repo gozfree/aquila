@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include <sys/uio.h>
 #include <jpeglib.h>
-#include <libgzf.h>
+#include <libmacro.h>
 #include <liblog.h>
 
 #include "codec.h"

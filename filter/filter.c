@@ -5,6 +5,8 @@
  * created: 2016-04-30 16:02
  * updated: 2016-04-30 16:02
  ******************************************************************************/
+#include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <libatomic.h>
 #include <liblog.h>
