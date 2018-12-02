@@ -7,6 +7,7 @@
  ******************************************************************************/
 #include <unistd.h>
 #include <signal.h>
+#include <libdebug.h>
 #include <liblog.h>
 #include "device.h"
 #include "codec.h"
@@ -112,6 +113,7 @@ void registre_class()
 
 int main(int argc, char **argv)
 {
+    debug_backtrace_init();
     signal_init();
     registre_class();
 

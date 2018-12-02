@@ -45,7 +45,7 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
         return -1;
     }
 
-    time_get_string(tmp_tm, sizeof(tmp_tm));
+    time_get_msec_str(tmp_tm, sizeof(tmp_tm));
     overlay_draw_text(frm, 0, 0, param->video.width, tmp_tm);
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");

@@ -873,7 +873,7 @@ static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_para
         gevent_destroy(e);
     }
     logi("rtsp://%s:%d/test.ts\n", ip, port);
-    thread_create("rtsp_event_loop", rtsp_thread_event, rc);
+    thread_create(rtsp_thread_event, rc);
     pc->priv = rc;
     return 0;
 failed:

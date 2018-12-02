@@ -17,10 +17,10 @@
 #include "common.h"
 #include "protocol.h"
 
-#define REGISTER_PROTOCOL(x)                                                     \
+#define REGISTER_PROTOCOL(x)                                                   \
     {                                                                          \
-        extern struct protocol aq_##x##_protocol;                                  \
-            protocol_register(&aq_##x##_protocol);                                 \
+        extern struct protocol aq_##x##_protocol;                              \
+            protocol_register(&aq_##x##_protocol);                             \
     }
 
 

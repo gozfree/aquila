@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <libmacro.h>
 #include <liblog.h>
 #include <libvector.h>
 
@@ -61,7 +62,9 @@ typedef struct h264_FU_header {
 
 char *base64_encode(const uint8_t *data, uint32_t data_len)
 {
-    CHECK_INVALID_PARAMENT_WITH_RETURN(!data || data_len == 0, NULL);
+    if ((!data || data_len == 0)) {
+        return NULL;
+    }
     const char ptn[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     const uint32_t numOrig24BitValues = data_len / 3;
     int havePadding  = (data_len > (numOrig24BitValues * 3));
@@ -101,7 +104,7 @@ char *base64_encode(const uint8_t *data, uint32_t data_len)
 int h264_find_nalu(void *buf, size_t len)
 {
     struct vector *nalu_list;
-    nalu_list = vector_new(struct h264_nalu);
+    nalu_list = vector_create(struct h264_nalu);
     uint8_t *bs = buf;
     //char *m_sps;
     //char *m_pps;
@@ -126,12 +129,12 @@ int h264_find_nalu(void *buf, size_t len)
             tmp = vector_back(nalu_list, struct h264_nalu);
             logi("index = %d, nalu.type = %d, addr = %p\n", index, tmp->type, tmp->addr);
             if (index > 0) {
-                prev = vector_get_member(nalu_list, index - 1, struct h264_nalu);
+                prev = vector_at(nalu_list, index - 1, struct h264_nalu);
                 //vtmp = get_member(nalu_list, index - 1);
                 VERBOSE();
                 logi("index = %d, prev = %x, vtmp = %x\n", index, prev, vtmp);
                 logi("prev_nalu = %p\n", nalu_list->buf.iov_base);
-                curr = vector_get_member(nalu_list, index, struct h264_nalu);
+                curr = vector_at(nalu_list, index, struct h264_nalu);
                 /* calculate the previous NALU's size */
                 VERBOSE();
                 logi("prev_nalu.addr = %p\n", prev->addr);
