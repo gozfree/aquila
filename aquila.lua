@@ -48,6 +48,7 @@ aquila_global = {
                 "videocap",
                 "vencode",
                 "upstream",
+                "remotectrl",
         },
 
         graphs = {

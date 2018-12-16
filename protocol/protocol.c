@@ -56,6 +56,7 @@ void protocol_register_all()
     REGISTER_PROTOCOL(rtmp);
     REGISTER_PROTOCOL(rtsp);
     REGISTER_PROTOCOL(rtp);
+    REGISTER_PROTOCOL(rpcd);
 }
 
 struct protocol_ctx *protocol_open(const char *url, struct media_params *media)

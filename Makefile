@@ -78,17 +78,8 @@ CFLAGS	+= $(CFLAGS_SDL)
 LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
-LDFLAGS	+= -ldebug
-LDFLAGS	+= -llog
-LDFLAGS	+= -lgconfig
-LDFLAGS	+= -lgevent
-LDFLAGS	+= -ltime
-LDFLAGS	+= -ldict
-LDFLAGS	+= -lvector
-LDFLAGS	+= -lskt
-LDFLAGS	+= -lthread
-LDFLAGS	+= -llock
-LDFLAGS	+= -lmacro
+LDFLAGS	+= -ldebug -llog -lgconfig -lgevent -ltime -ldict -lvector -lskt
+LDFLAGS	+= -lthread -llock -lmacro -lrpc -lhash -lworkq
 ifeq ($(USE_RTMPCLIENT), 1)
 LDFLAGS	+= -lrtmp
 else
@@ -127,8 +118,9 @@ FILTER_OBJS := 			\
     filter/vencode_filter.o 	\
     filter/vdecode_filter.o 	\
     filter/upstream_filter.o 	\
-    filter/record_filter.o 	    \
-    filter/playback_filter.o
+    filter/record_filter.o 	\
+    filter/playback_filter.o 	\
+    filter/remotectrl_filter.o
 
 MUXER_OBJS :=			\
     muxer/muxer.o		\
@@ -146,7 +138,9 @@ PROTOCOL_OBJS :=		\
     protocol/rtmp.o		\
     protocol/rtsp.o		\
     protocol/rtp.o		\
-    protocol/rtp_h264.o
+    protocol/rtp_h264.o		\
+    protocol/rpcd.o 		\
+    protocol/rpcd_stub.o
 
 ifeq ($(USE_RTMPCLIENT), 1)
 RTMP_OBJ :=            \

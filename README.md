@@ -41,11 +41,12 @@ ffplay -f rawvideo -pix_fmt yuv422p -video_size 320x240 sample_yuv422p.yuv
 
 ## Framework
 
+```
 device ==> encode ==> decode ==> network ==> playback
 v4l2       x264       h264       rtsp        sdl
 fake       mjpeg                 rtmp
-
-
+                                 rpc/mqtt
+```
 
 
 ## Author & Contributing

@@ -55,6 +55,7 @@ void filter_register_all(void)
     REGISTER_FILTER(playback);
     REGISTER_FILTER(upstream);
     REGISTER_FILTER(record);
+    REGISTER_FILTER(remotectrl);
 }
 
 static void on_filter_read(int fd, void *arg)
