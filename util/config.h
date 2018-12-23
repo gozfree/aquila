@@ -62,6 +62,10 @@ struct record_conf {
     char url[128];
 };
 
+struct remotectrl_conf {
+    int port;
+};
+
 struct filter_conf {
     struct ikey_cvalue type;
     char *url;
@@ -72,6 +76,7 @@ struct filter_conf {
         struct record_conf record;
         struct upstream_conf upstream;
         struct playback_conf playback;
+        struct remotectrl_conf remotectrl;
     } conf;
 };
 
@@ -88,6 +93,7 @@ struct aq_config {
     struct record_conf record;
     struct upstream_conf upstream;
     struct playback_conf playback;
+    struct remotectrl_conf remotectrl;
 
     int filter_num;
     struct filter_conf *filter;

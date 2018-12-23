@@ -26,7 +26,7 @@ int url_parse(struct url *u, const char *input)
     char *p;
     size_t hlen, blen;
     if (!u || !input || strlen(input) <= strlen(URL_TAG)) {
-        loge("invalid paraments!\n");
+        loge("invalid paraments %s!\n", input);
         return -1;
     }
 

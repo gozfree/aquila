@@ -39,6 +39,7 @@ enum conf_map_index {
     VDECODE,
     VIDEOCAP,
     RECORD,
+    REMOTECTRL,
     X264,
     H264ENC,
     YUV420,

@@ -44,6 +44,7 @@ struct ikey_cvalue conf_map_table[] = {
     {VDECODE,  "vdecode"},
     {VIDEOCAP, "videocap"},
     {RECORD,   "record"},
+    {REMOTECTRL,"remotectrl"},
     {X264,     "x264"},
     {H264ENC,  "h264enc"},
     {YUV420,   "yuv420"},
@@ -58,36 +59,10 @@ static int string_to_enum(char *str)
     if (!str) {
         return -1;
     }
-    if (!strcasecmp(str, "alsa")) {
-        ret = ALSA;
-    } else if (!strcasecmp(str, "mjpeg")) {
-        ret = MJPEG;
-    } else if (!strcasecmp(str, "playback")) {
-        ret = PLAYBACK;
-    } else if (!strcasecmp(str, "sdl")) {
-        ret = SDL;
-    } else if (!strcasecmp(str, "snkfake")) {
-        ret = SNKFAKE;
-    } else if (!strcasecmp(str, "upstream")) {
-        ret = UPSTREAM;
-    } else if (!strcasecmp(str, "v4l2")) {
-        ret = V4L2;
-    } else if (!strcasecmp(str, "vencode")) {
-        ret = VENCODE;
-    } else if (!strcasecmp(str, "vdecode")) {
-        ret = VDECODE;
-    } else if (!strcasecmp(str, "vdevfake")) {
-        ret = VDEVFAKE;
-    } else if (!strcasecmp(str, "videocap")) {
-        ret = VIDEOCAP;
-    } else if (!strcasecmp(str, "record")) {
-        ret = RECORD;
-    } else if (!strcasecmp(str, "x264")) {
-        ret = X264;
-    } else if (!strcasecmp(str, "h264enc")) {
-        ret = H264ENC;
-    } else {
-        ret = UNKNOWN;
+    for (int i = 0; i < SIZEOF(conf_map_table); i++) {
+        if (!strcasecmp(str, conf_map_table[i].str)) {
+            return conf_map_table[i].val;
+        }
     }
     return ret;
 }
@@ -184,6 +159,13 @@ static void load_playback(struct aq_config *c)
     logi("[playback][w*h] = %d*%d\n", c->playback.param.video.width, c->playback.param.video.height);
 }
 
+static void load_remotectrl(struct aq_config *c)
+{
+    c->remotectrl.port = (*c->conf)["remotectrl"]["port"].get<int>(0);
+    logi("[remotectrl][port] = %s\n", c->record.type.str);
+}
+
+
 static void load_filter(struct aq_config *c)
 {
     int i;
@@ -214,6 +196,9 @@ static void load_filter(struct aq_config *c)
             break;
         case RECORD:
             c->filter[i].url = c->record.url;
+            break;
+        case REMOTECTRL:
+            c->filter[i].url = "rpcd://xxx";
             break;
         default :
             loge("unsupport filter type %s\n", c->filter[i].type.str);
@@ -250,6 +235,7 @@ int load_conf(struct aq_config *c)
     load_record(c);
     load_upstream(c);
     load_playback(c);
+    load_remotectrl(c);
     load_filter(c);
     load_graph(c);
     return 0;

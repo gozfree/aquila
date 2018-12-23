@@ -17,6 +17,7 @@
  ******************************************************************************/
 #include "protocol.h"
 #include <librpc.h>
+#include <librpc_stub.h>
 #include <libgevent.h>
 #include <libhash.h>
 #include <libworkq.h>
@@ -46,6 +47,30 @@ struct wq_arg {
 
 };
 
+
+static int on_shell_help(struct rpc *r, void *arg, int len)
+{
+    int ret;
+    char buf[1024];
+    char *cmd = (char *)arg;
+    logi("on_shell_help cmd = %s\n", cmd);
+    memset(buf, 0, sizeof(buf));
+    ret = system_with_result(cmd, buf, sizeof(buf));
+    loge("ret = %d, errno = %d\n", ret, errno);
+    logi("send len = %d, buf: %s\n", strlen(buf), buf);
+    rpc_send(r, buf, strlen(buf));
+    return 0;
+}
+
+BEGIN_RPC_MAP(BASIC_RPC_API)
+RPC_MAP(RPC_SHELL_HELP, on_shell_help)
+END_RPC_MAP()
+
+int rpcd_group_register()
+{
+    RPC_REGISTER_MSG_MAP(BASIC_RPC_API);
+    return 0;
+}
 static int create_uuid(char *uuid, int len, int fd, uint32_t ip, uint16_t port)
 {
     snprintf(uuid, MAX_UUID_LEN, "%08x%08x%04x", fd, ip, port);
@@ -254,7 +279,8 @@ static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_para
     rc->wq = wq_create();
     pc->priv = rc;
     loge("rpcd created!\n");
-    //rpcd_group_register();
+    rpcd_group_register();
+    gevent_base_loop_start(rc->evbase);
     return 0;
 }
 
@@ -270,6 +296,9 @@ static int rpcd_write(struct protocol_ctx *pc, void *buf, int len)
 
 static void rpcd_close(struct protocol_ctx *pc)
 {
+    struct rpcd *rc = (struct rpcd *)pc->priv;
+    gevent_base_loop_stop(rc->evbase);
+    gevent_base_destroy(rc->evbase);
 
 }
 

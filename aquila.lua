@@ -37,6 +37,9 @@ aquila_global = {
                 width = 640,
                 height = 480,
         },
+        remotectrl = {
+                port = 54321,
+        },
 
         upstream = {
                 type = "rtmp",
