@@ -1,5 +1,6 @@
-Aquila
-======
+Aquila [中文](README.cn.md)
+[![Build Status](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila) [![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases) [![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.LGPL)
+====
 
 Aquila is an app-level framework to process multimedia, aims to unify the
 different middleware SDK on generic level. It mainly support software encoding
