@@ -32,14 +32,6 @@ Meaning fast, robust, intelligent, and good eyesight.
 Aquila codebase is mainly LGPL-licensed with optional components licensed under
 GPL. Please refer to the LICENSE file for detailed information.
 
-## Usage
-
-generate 264/yuv file from mp4
-
-ffmpeg -i sample.mp4 -ss 0:0:00 -t 0:0:01  -vcodec h264 -s 320x240 -f m4v sample.264
-ffmpeg -i sample.264 -s 320x240 -pix_fmt yuv422p sample_yuv422p.yuv
-ffplay -f rawvideo -pix_fmt yuv422p -video_size 320x240 sample_yuv422p.yuv
-
 ## Framework
 
 ```
