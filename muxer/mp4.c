@@ -67,7 +67,7 @@ struct gear_audio_param {
 
 struct gear_frame {
     struct iovec data;
-    gear_frame_type type;
+    enum gear_frame_type type;
     uint64_t pts;
     union {
         struct gear_video_param video;

@@ -112,7 +112,9 @@ char *base64_encode(const uint8_t *data, uint32_t data_len)
 }
 
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 int h264_find_nalu(void *buf, size_t len)
 {
     struct vector *nalu_list;
@@ -182,4 +184,6 @@ int h264_find_nalu(void *buf, size_t len)
     logi("finished find nalu\n");
     return 0;
 }
+#ifdef __cplusplus
 }
+#endif

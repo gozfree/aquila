@@ -97,10 +97,12 @@ int aquila_dispatch(struct aquila *aq)
 void aquila_deinit(struct aquila *aq)
 {
     int i;
+    struct aq_config *c = &aq->config;
     for (i = 0; i < aq->config.filter_num; i++) {
         filter_destroy(aq->filter[i]);
     }
     aq->run = false;
+    unload_conf(c);
 }
 
 
@@ -134,13 +136,15 @@ int main(int argc, char **argv)
     memset(&aq_instance, 0, sizeof(aq_instance));
     if (-1 == aquila_init(&aq_instance)) {
         loge("aquila_init failed!\n");
-        return -1;
+        goto quit;
     }
     if (-1 == aquila_dispatch(&aq_instance)) {
         loge("aquila_dispatch failed!\n");
         return -1;
     }
     logi("quit\n");
+quit:
+    aquila_deinit(&aq_instance);
 
     return 0;
 }

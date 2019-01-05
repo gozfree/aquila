@@ -21,7 +21,7 @@ ifeq ($(ARCH_INC), $(wildcard $(ARCH_INC)))
 include $(ARCH_INC)
 endif
 
-CC	= $(CROSS_PREFIX)g++
+CC	= $(CROSS_PREFIX)gcc
 CXX	= $(CROSS_PREFIX)g++
 LD	= $(CROSS_PREFIX)ld
 AR	= $(CROSS_PREFIX)ar
@@ -53,7 +53,6 @@ LDFLAGS_ALSA	= -lasound
 LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
 LDFLAGS_JPEG	= -ljpeg
 LDFLAGS_LUA 	= -llua5.2
-LDFLAGS_JSON	= `pkg-config --libs jsoncpp`
 
 CFLAGS	:= -g -Wall
 # -Werror
@@ -78,7 +77,7 @@ CFLAGS	+= $(CFLAGS_SDL)
 LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
-LDFLAGS	+= -ldebug -llog -lgconfig -lgevent -ltime -ldict -lvector -lskt
+LDFLAGS	+= -ldebug -llog -lconfig -lgevent -ltime -ldict -lvector -lskt
 LDFLAGS	+= -lthread -llock -lmacro -lrpc -lhash -lworkq
 ifeq ($(USE_RTMPCLIENT), 1)
 LDFLAGS	+= -lrtmp
@@ -94,7 +93,6 @@ LDFLAGS += $(LDFLAGS_ALSA)
 LDFLAGS += $(LDFLAGS_FFMPEG)
 LDFLAGS += $(LDFLAGS_JPEG)
 LDFLAGS	+= $(LDFLAGS_LUA)
-LDFLAGS	+= $(LDFLAGS_JSON)
 
 .PHONY : all clean
 
@@ -139,8 +137,7 @@ PROTOCOL_OBJS :=		\
     protocol/rtsp.o		\
     protocol/rtp.o		\
     protocol/rtp_h264.o		\
-    protocol/rpcd.o 		\
-    protocol/rpcd_stub.o
+    protocol/rpcd.o
 
 ifeq ($(USE_RTMPCLIENT), 1)
 RTMP_OBJ :=            \

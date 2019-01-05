@@ -18,7 +18,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include <libgconfig/libgconfig.h>
+#include <libconfig.h>
 #include "common.h"
 
 #ifdef __cplusplus
@@ -99,10 +99,11 @@ struct aq_config {
     struct filter_conf *filter;
     int graph_num;
     struct graph_conf *graph;
-    LuaConfig *conf;
+    struct config *conf;
 };
 
 int load_conf(struct aq_config *c);
+void unload_conf(struct aq_config *c);
 
 
 #ifdef __cplusplus
