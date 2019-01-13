@@ -70,13 +70,11 @@ failed:
 
 static void venc_close(struct filter_ctx *fc)
 {
-    loge("enter\n");
     struct venc_ctx *vc = (struct venc_ctx *)fc->priv;
     if (vc->encoder) {
         codec_close(vc->encoder);
     }
     free(vc);
-    loge("leave\n");
 }
 
 struct filter aq_vencode_filter = {

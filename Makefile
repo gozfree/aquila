@@ -1,12 +1,4 @@
 ###############################################################################
-#  Copyright (C) 2014-2015
-#  file:    Makefile
-#  author:  gozfree <gozfree@163.com>
-#  created: 2016-04-17 18:37
-#  updated: 2016-04-17 18:37
-###############################################################################
-
-###############################################################################
 # common
 ###############################################################################
 #ARCH: linux/pi/android/ios/
@@ -56,7 +48,7 @@ LDFLAGS_LUA 	= -llua5.2
 
 CFLAGS	:= -g -Wall
 # -Werror
-CFLAGS	+= -I$(OUTPUT)/include -I./
+CFLAGS	+= -I./
 CFLAGS	+= -I./algo
 CFLAGS	+= -I./codec
 CFLAGS	+= -I./device
@@ -78,7 +70,7 @@ LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -ldebug -llog -lconfig -lgevent -ltime -ldict -lvector -lskt
-LDFLAGS	+= -lthread -llock -lmacro -lrpc -lhash -lworkq
+LDFLAGS	+= -lthread -lmacro -lrpc -lhash -lworkq
 ifeq ($(USE_RTMPCLIENT), 1)
 LDFLAGS	+= -lrtmp
 else
@@ -86,7 +78,6 @@ LDFLAGS	+= -L/usr/local/lib/ -lrtmp
 LDFLAGS	+= -lqueue
 endif
 LDFLAGS	+= -lpthread -lrt
-LDFLAGS	+= -ljansson
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
 LDFLAGS += $(LDFLAGS_ALSA)
@@ -103,6 +94,8 @@ ALGO_OBJS :=
 CODEC_OBJS := 			    \
     codec/codec.o 		    \
     codec/x264_enc.o		\
+    codec/h264_dec.o		\
+    codec/h264_enc.o		\
     codec/mjpeg_enc.o
 
 DEVICE_OBJS := 			\
@@ -175,10 +168,10 @@ all: $(TGT)
 	$(CC_V) -c $(CFLAGS) $< -o $@
 
 %.o:%.cc
-	$(CC_V) -c $(CFLAGS) $< -o $@
+	$(CXX_V) -c $(CFLAGS) $< -o $@
 
 %.o:%.cpp
-	$(CC_V) -c $(CFLAGS) $< -o $@
+	$(CXX_V) -c $(CFLAGS) $< -o $@
 
 
 $(TGT_NAME): $(OBJS)

@@ -76,7 +76,7 @@ static int h264enc_open(struct codec_ctx *cc, struct media_params *media)
         return -1;
     }
     avcodec_register_all();
-    AVCodec *avcdc = avcodec_find_encoder(CODEC_ID_H264);
+    AVCodec *avcdc = avcodec_find_encoder(AV_CODEC_ID_H264);
     if (!avcdc) {
         printf("avcodec_find_encoder failed!\n");
         return -1;
@@ -87,7 +87,7 @@ static int h264enc_open(struct codec_ctx *cc, struct media_params *media)
         return -1;
     }
 
-    avctx->pix_fmt = PIX_FMT_YUV420P;
+    avctx->pix_fmt = AV_PIX_FMT_YUV420P;
     avctx->width = media->video.width;
     avctx->height = media->video.height;
 

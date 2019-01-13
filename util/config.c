@@ -54,7 +54,6 @@ struct ikey_cvalue conf_map_table[] = {
 
 static int string_to_enum(char *str)
 {
-    int ret;
     if (!str) {
         return -1;
     }
@@ -63,7 +62,7 @@ static int string_to_enum(char *str)
             return conf_map_table[i].val;
         }
     }
-    return ret;
+    return -1;
 }
 
 #if 0
@@ -227,6 +226,7 @@ int load_conf(struct aq_config *c)
     c->conf = conf_load(DEFAULT_CONFIG_FILE);
     if (!c->conf) {
         loge("conf_load failed!\n");
+        return -1;
     }
     load_videocap(c);
     load_vencode(c);

@@ -146,7 +146,7 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     if (!ctx) {
         return NULL;
     }
-    loge("enter %s\n", ctx->name);
+    logd("enter %s\n", ctx->name);
     aqueue_add_ref(q_src);
     pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
@@ -162,7 +162,7 @@ struct filter_ctx *filter_create(struct filter_conf *c,
             q_snk->opaque.iov_len = q_src->opaque.iov_len;
         }
     }
-    logi("%s, media.video: %d*%d\n", c->type.str, ctx->media.video.width, ctx->media.video.height);
+    logd("%s, media.video: %d*%d\n", c->type.str, ctx->media.video.width, ctx->media.video.height);
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;
     }
@@ -198,7 +198,7 @@ struct filter_ctx *filter_create(struct filter_conf *c,
         goto failed;
     }
     }
-    loge("leave %s\n", ctx->name);
+    logd("leave %s\n", ctx->name);
 
     return ctx;
 
@@ -248,13 +248,11 @@ void filter_destroy(struct filter_ctx *ctx)
     if (!ctx)
         return;
 
-    loge("enter %s\n", ctx->name);
     ctx->ops->close(ctx);
     gevent_base_loop_break(ctx->ev_base);
 
     gevent_del(ctx->ev_base, ctx->ev_read);
     gevent_del(ctx->ev_base, ctx->ev_write);
     gevent_base_destroy(ctx->ev_base);
-    free(ctx->priv);
     free(ctx);
 }

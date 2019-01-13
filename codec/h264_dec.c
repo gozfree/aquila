@@ -61,7 +61,7 @@ static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
     c->ori_avfrm = (AVFrame *)av_mallocz(sizeof(AVFrame));
     c->cvt_avfrm = (AVFrame *)av_mallocz(sizeof(AVFrame));
     av_register_all();
-    AVCodec *avcdc = avcodec_find_decoder(CODEC_ID_H264);
+    AVCodec *avcdc = avcodec_find_decoder(AV_CODEC_ID_H264);
     if (!avcdc) {
         printf("avcodec_find_decoder failed!\n");
         return -1;
@@ -89,9 +89,9 @@ static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
     }
 
 /*preparation for frame convertion*/
-    pic_size = avpicture_get_size(PIX_FMT_YUV420P, avctx->width, avctx->height);
+    pic_size = avpicture_get_size(AV_PIX_FMT_YUV420P, avctx->width, avctx->height);
     out_buffer = (uint8_t *)calloc(1, pic_size);
-    avpicture_fill((AVPicture *)c->cvt_avfrm, out_buffer, PIX_FMT_YUV420P, avctx->width, avctx->height);
+    avpicture_fill((AVPicture *)c->cvt_avfrm, out_buffer, AV_PIX_FMT_YUV420P, avctx->width, avctx->height);
     c->width = media->video.width;
     c->height = media->video.height;
     c->avctx = avctx;
@@ -103,7 +103,7 @@ static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
 static void frame_conv(struct h264dec_ctx *c)
 {
     struct SwsContext *swsctx;
-    swsctx = sws_getContext(c->avctx->width, c->avctx->height, c->avctx->pix_fmt, c->avctx->width, c->avctx->height, PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+    swsctx = sws_getContext(c->avctx->width, c->avctx->height, c->avctx->pix_fmt, c->avctx->width, c->avctx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
     sws_scale(swsctx, (const uint8_t* const*)c->ori_avfrm->data, c->ori_avfrm->linesize, 0, c->avctx->height, c->cvt_avfrm->data, c->cvt_avfrm->linesize);
     sws_freeContext(swsctx);
 }
@@ -138,7 +138,7 @@ static int h264dec_decode(struct codec_ctx *cc, struct iovec *in, struct iovec *
     //DUMP_BUFFER(c->cvt_avfrm->data[1], c->cvt_avfrm->linesize[1]);
     //DUMP_BUFFER(c->cvt_avfrm->data[2], c->cvt_avfrm->linesize[2]);
 #endif
-    loge("after decode %d, %d, %d\n", c->cvt_avfrm->linesize[0], c->cvt_avfrm->linesize[1], c->cvt_avfrm->linesize[2]);
+    logd("after decode %d, %d, %d\n", c->cvt_avfrm->linesize[0], c->cvt_avfrm->linesize[1], c->cvt_avfrm->linesize[2]);
 
     return out->iov_len;
 }

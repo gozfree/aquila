@@ -87,7 +87,6 @@ static int x264_open(struct codec_ctx *cc, struct media_params *media)
     c->param->i_log_level = X264_LOG_NONE;
     x264_param_apply_profile(c->param, "high422");
     c->handle = x264_encoder_open(c->param);
-    loge("c->handle = %p\n", c->handle);
     if (c->handle == 0) {
         loge("x264_encoder_open failed!\n");
         goto failed;
