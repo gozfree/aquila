@@ -1,5 +1,5 @@
 Aquila [中文](README.cn.md)
-[![Build Status](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila) [![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases) [![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.LGPL)
+[![Build Status](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila) [![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases) [![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.MIT)
 ====
 
 Aquila is an app-level framework to process multimedia, aims to unify the
@@ -16,7 +16,7 @@ ipcam or drone.
 * `util`     utility
 
 ## Libraries
-This app is mostly based on [libraries](https://github.com/gozfree/libraries)
+This app is mostly based on [gear-lib](https://github.com/gozfree/gear-lib)
 
 ## Build
 How to build aquila, please refer to INSTALL.md.
@@ -29,8 +29,7 @@ Wiki: Aquila is the Latin and Romance languages word for eagle.
 Meaning fast, robust, intelligent, and good eyesight.
 
 ## License
-Aquila codebase is mainly LGPL-licensed with optional components licensed under
-GPL. Please refer to the LICENSE file for detailed information.
+Please refer to the LICENSE file for detailed information.
 
 ## Framework
 
