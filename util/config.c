@@ -57,7 +57,7 @@ static int string_to_enum(char *str)
     if (!str) {
         return -1;
     }
-    for (int i = 0; i < SIZEOF(conf_map_table); i++) {
+    for (int i = 0; i < ARRAY_SIZE(conf_map_table); i++) {
         if (!strcasecmp(str, conf_map_table[i].str)) {
             return conf_map_table[i].val;
         }

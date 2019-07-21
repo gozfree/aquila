@@ -24,7 +24,6 @@
 #include <assert.h>
 #include <liblog.h>
 
-#include "queue.h"
 #include "protocol.h"
 #include "filter.h"
 #include "common.h"

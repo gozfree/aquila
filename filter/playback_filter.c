@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <liblog.h>
 
-#include "queue.h"
 #include "playback.h"
 #include "filter.h"
 #include "common.h"

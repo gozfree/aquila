@@ -37,8 +37,8 @@ struct filter_ctx {
     struct gevent_base *ev_base;
     struct gevent *ev_read;
     struct gevent *ev_write;
-    struct aqueue *q_src;
-    struct aqueue *q_snk;
+    struct queue *q_src;
+    struct queue *q_snk;
     struct filter *ops;
     struct media_params media;
     const char *url;
@@ -59,7 +59,7 @@ struct filter {
 void filter_register_all(void);
 
 struct filter_ctx *filter_create(struct filter_conf *c,
-                                 struct aqueue *q_src, struct aqueue *q_snk);
+                                 struct queue *q_src, struct queue *q_snk);
 int filter_dispatch(struct filter_ctx *ctx, int block);
 void filter_destroy(struct filter_ctx *ctx);
 

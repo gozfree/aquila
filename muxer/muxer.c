@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <libatomic.h>
 #include <liblog.h>
-#include "queue.h"
+#include <libmacro.h>
 
 
 #include "common.h"

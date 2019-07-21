@@ -55,7 +55,7 @@ static int on_shell_help(struct rpc *r, void *arg, int len)
     char *cmd = (char *)arg;
     logi("on_shell_help cmd = %s\n", cmd);
     memset(buf, 0, sizeof(buf));
-    ret = system_with_result(cmd, buf, sizeof(buf));
+    ret = 0;//system_with_result(cmd, buf, sizeof(buf));
     loge("ret = %d, errno = %d\n", ret, errno);
     logi("send len = %d, buf: %s\n", strlen(buf), buf);
     rpc_send(r, buf, strlen(buf));

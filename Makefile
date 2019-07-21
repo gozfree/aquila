@@ -145,7 +145,6 @@ endif
 
 UTIL_OBJS := 			\
     util/url.o 			\
-    util/queue.o		\
     util/config.o		\
     util/imgconvert.o		\
     util/overlay.o

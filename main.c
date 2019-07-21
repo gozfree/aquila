@@ -26,12 +26,12 @@
 #include "protocol.h"
 #include "muxer.h"
 #include "filter.h"
-#include "queue.h"
+#include "libqueue.h"
 #include "config.h"
 
 struct aquila {
     struct aq_config config;
-    struct aqueue **aqueue;
+    struct queue **queue;
     struct filter_ctx **filter;
     bool run;
 };
@@ -41,7 +41,7 @@ static struct aquila aq_instance;
 int aquila_init(struct aquila *aq)
 {
     struct aq_config *c = &aq->config;
-    struct aqueue *q_src, *q_snk;
+    struct queue *q_src, *q_snk;
     int i;//, j;
     if (-1 == load_conf(c)) {
         loge("load_conf failed!\n");
@@ -51,13 +51,13 @@ int aquila_init(struct aquila *aq)
         logi("filter graph should not be empty\n");
         return -1;
     }
-    aq->aqueue = CALLOC(c->filter_num, struct aqueue *);
-    if (!aq->aqueue) {
-        loge("malloc aqueue failed!\n");
+    aq->queue = CALLOC(c->filter_num, struct queue *);
+    if (!aq->queue) {
+        loge("malloc queue failed!\n");
         return -1;
     }
     for (i = 0; i < c->filter_num - 1; i++) {
-        aq->aqueue[i] = aqueue_create();
+        aq->queue[i] = queue_create();
     }
     aq->filter = CALLOC(c->filter_num, struct filter_ctx *);
     if (!aq->filter) {
@@ -68,12 +68,12 @@ int aquila_init(struct aquila *aq)
     for (i = 0; i < c->filter_num; i++) {
         if (i == 0) {
             q_src = NULL;
-            q_snk = aq->aqueue[i];
+            q_snk = aq->queue[i];
         } else if (i < c->filter_num) {
-            q_src = aq->aqueue[i-1];
-            q_snk = aq->aqueue[i];
+            q_src = aq->queue[i-1];
+            q_snk = aq->queue[i];
         } else {
-            q_src = aq->aqueue[i];
+            q_src = aq->queue[i];
             q_snk = NULL;
         }
         aq->filter[i] = filter_create(&c->filter[i], q_src, q_snk);

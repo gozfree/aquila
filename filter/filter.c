@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <libatomic.h>
 #include <liblog.h>
-#include "queue.h"
+#include <libqueue.h>
 #include "filter.h"
 
 
@@ -61,23 +61,23 @@ void filter_register_all(void)
 static void on_filter_read(int fd, void *arg)
 {
     struct filter_ctx *ctx = (struct filter_ctx *)arg;
-    struct aitem *in_aitem = NULL;
+    struct item *in_item = NULL;
     struct iovec in = {NULL, 0};
     struct iovec out = {NULL, 0};
     int ret;
     int last = 0;
     if (ctx->q_src) {
         //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
-        in_aitem = aqueue_pop(ctx->q_src, fd, &last);
-        if (!in_aitem) {
+        in_item = queue_branch_pop(ctx->q_src, ctx->name);
+        if (!in_item) {
             loge("fd = %d, aqueue_pop empty\n", fd);
             return;
         }
         //logd("ctx = %p aqueue_pop %p, last=%d\n", ctx, in_aitem, last);
         memset(&in, 0, sizeof(struct iovec));
         memset(&out, 0, sizeof(struct iovec));
-        in.iov_base = in_aitem->data.iov_base;
-        in.iov_len = in_aitem->data.iov_len;
+        in.iov_base = in_item->data.iov_base;
+        in.iov_len = in_item->data.iov_len;
     }
     //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     pthread_mutex_lock(&ctx->lock);
@@ -88,18 +88,18 @@ static void on_filter_read(int fd, void *arg)
     //loge("filter[%s]: after on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     if (out.iov_base) {
         //memory create
-        struct aitem *out_aitem = aitem_alloc(ctx->q_snk, out.iov_base, out.iov_len);
-        //logd("fd = %d aqueue_push %p\n", fd, out_aitem);
-        if (-1 == aqueue_push(ctx->q_snk, out_aitem)) {
+        struct item *out_item = item_alloc(ctx->q_snk, out.iov_base, out.iov_len);
+        //logd("fd = %d aqueue_push %p\n", fd, out_item);
+        if (-1 == queue_push(ctx->q_snk, out_item)) {
             loge("buffer_push failed!\n");
         }
     }
 
     if (ctx->q_src) {
-        //logd("ctx = %p aqueue_aitem_free %p, last=%d\n", ctx, in_aitem, last);
+        //logd("ctx = %p aqueue_item_free %p, last=%d\n", ctx, in_item, last);
         if (last) {
             //usleep(200000);//FIXME
-            //aqueue_aitem_free(in_aitem);//FIXME: double free
+            //aqueue_item_free(in_item);//FIXME: double free
         }
     }
     pthread_mutex_unlock(&ctx->lock);
@@ -139,15 +139,15 @@ struct filter_ctx *filter_ctx_new(struct filter_conf *c)
 }
 
 struct filter_ctx *filter_create(struct filter_conf *c,
-                                 struct aqueue *q_src, struct aqueue *q_snk)
+                                 struct queue *q_src, struct queue *q_snk)
 {
     int fd;
+    struct queue_branch *qb;
     struct filter_ctx *ctx = filter_ctx_new(c);
     if (!ctx) {
         return NULL;
     }
-    logd("enter %s\n", ctx->name);
-    aqueue_add_ref(q_src);
+    queue_branch_add(q_src, ctx->name);
     pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
@@ -167,7 +167,8 @@ struct filter_ctx *filter_create(struct filter_conf *c,
         return NULL;
     }
     if (ctx->q_src) {//middle filter
-        fd = aqueue_get_available_fd(q_src);
+        qb = queue_branch_get(q_src, ctx->name);
+        fd = qb->RD_FD;
     } else {//device source filter
         fd = ctx->rfd;
         if (ctx->q_snk) {
