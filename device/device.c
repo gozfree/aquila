@@ -47,7 +47,7 @@ void device_register_all(void)
         return;
     registered = 1;
 
-    REGISTER_DEVICE(v4l2);
+    REGISTER_DEVICE(usbcam);
     REGISTER_DEVICE(vdevfake);
 }
 

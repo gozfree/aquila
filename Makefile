@@ -70,7 +70,7 @@ LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -ldebug -llog -lconfig -lgevent -ltime -ldict -lvector -lskt
-LDFLAGS	+= -lthread -lmacro -lrpc -lhash -lworkq
+LDFLAGS	+= -lthread -lmacro -lrpc -lhash -lworkq -luvc
 ifeq ($(USE_RTMPCLIENT), 1)
 LDFLAGS	+= -lrtmp
 else
@@ -100,7 +100,7 @@ CODEC_OBJS := 			    \
 
 DEVICE_OBJS := 			\
     device/device.o 		\
-    device/v4l2.o 		\
+    device/usbcam.o 		\
     device/vdevfake.o
 
 FILTER_OBJS := 			\

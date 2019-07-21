@@ -33,7 +33,7 @@ enum conf_map_index {
     SDL,
     SNKFAKE,
     UPSTREAM,
-    V4L2,
+    USBCAM,
     VDEVFAKE,
     VENCODE,
     VDECODE,

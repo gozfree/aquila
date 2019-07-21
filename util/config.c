@@ -37,7 +37,7 @@ struct ikey_cvalue conf_map_table[] = {
     {SDL,      "sdl"},
     {SNKFAKE,  "snkfake"},
     {UPSTREAM, "upstream"},
-    {V4L2,     "v4l2"},
+    {USBCAM,   "usbcam"},
     {VDEVFAKE, "vdevfake"},
     {VENCODE,  "vencode"},
     {VDECODE,  "vdecode"},
