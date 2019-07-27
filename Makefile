@@ -18,8 +18,6 @@ CXX	= $(CROSS_PREFIX)g++
 LD	= $(CROSS_PREFIX)ld
 AR	= $(CROSS_PREFIX)ar
 
-USE_RTMPCLIENT=0
-
 ifeq ($(COLOR_INC), $(wildcard $(COLOR_INC)))
 include $(COLOR_INC)
 else
@@ -58,12 +56,7 @@ CFLAGS	+= -I./playback
 CFLAGS	+= -I./protocol
 CFLAGS	+= -I./util
 
-ifeq ($(USE_RTMPCLIENT), 1)
-CFLAGS	+= -I./protocol/rtmpclient
-CFLAGS	+= -DUSE_RTMPCLIENT
-else
 CFLAGS	+= -Wl,-rpath=/usr/loca/lib
-endif
 CFLAGS	+= $(CFLAGS_SDL)
 
 LDFLAGS	:=
@@ -71,12 +64,8 @@ LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -ldebug -llog -lconfig -lgevent -ltime -ldict -lvector -lskt
 LDFLAGS	+= -lthread -lmacro -lrpc -lhash -lworkq -luvc
-ifeq ($(USE_RTMPCLIENT), 1)
-LDFLAGS	+= -lrtmp
-else
 LDFLAGS	+= -L/usr/local/lib/ -lrtmp
 LDFLAGS	+= -lqueue
-endif
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
@@ -132,17 +121,6 @@ PROTOCOL_OBJS :=		\
     protocol/rtp_h264.o		\
     protocol/rpcd.o
 
-ifeq ($(USE_RTMPCLIENT), 1)
-RTMP_OBJ :=            \
-    protocol/rtmpclient/rtmp_active_object.o \
-    protocol/rtmpclient/rtmp_buffer.o \
-    protocol/rtmpclient/rtmp_get_h264_info.o \
-    protocol/rtmpclient/rtmpclient.o \
-    protocol/rtmpclient/rtmp_queue.o
-else
-RTMP_OBJ :=
-endif
-
 UTIL_OBJS := 			\
     util/url.o 			\
     util/config.o		\
@@ -157,7 +135,6 @@ OBJS := \
     $(MUXER_OBJS) 		\
     $(PLAYBACK_OBJS) 		\
     $(PROTOCOL_OBJS) 		\
-    $(RTMP_OBJ) 		\
     $(UTIL_OBJS) 		\
     main.o
 
