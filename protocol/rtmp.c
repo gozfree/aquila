@@ -21,9 +21,9 @@
 #include <libmacro.h>
 #include <liblog.h>
 #include <libtime.h>
+#include <librtmp.h>
 
 #include "protocol.h"
-#include "librtmp.h"
 
 enum rtmp_status {
     RTMP_STATUS_IDLE,

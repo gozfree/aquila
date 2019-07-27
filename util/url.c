@@ -32,7 +32,7 @@ int url_parse(struct url *u, const char *input)
 
     p = (char *)strstr(input, URL_TAG);
     if (!p) {
-        loge("input is not url format\n");
+        loge("input %s is not url format\n", input);
         return -1;
     }
     hlen = p - input;

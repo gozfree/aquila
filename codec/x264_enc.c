@@ -43,6 +43,7 @@ struct x264_ctx {
     int encode_format;
     int input_format;
     struct iovec sei;
+    struct iovec pkt;
     x264_param_t *param;
     x264_t *handle;
     x264_picture_t *picture;
@@ -103,6 +104,8 @@ static int x264_open(struct codec_ctx *cc, struct media_params *media)
     c->height = media->video.height;
     c->input_format = media->video.pix_fmt;
     c->encode_format = YUV422P;
+    c->pkt.iov_len = 0;
+    c->pkt.iov_base = NULL;
 
     if (1) {//flags & AV_CODEC_FLAG_GLOBAL_HEADER) {
         x264_nal_t *nal;
@@ -158,10 +161,15 @@ static int encode_nals(struct x264_ctx *c, struct iovec *pkt,
     for (i = 0; i < nnal; i++)
         size += nals[i].i_payload;
 
-    p = (uint8_t *)calloc(1, size);
+    if (c->pkt.iov_len < size) {
+        c->pkt.iov_len = size;
+        c->pkt.iov_base = realloc(c->pkt.iov_base, size);
+    }
+    p = c->pkt.iov_base;
     if (!p) {
         return -1;
     }
+
     pkt->iov_base = p;
     pkt->iov_len = 0;
 
@@ -203,19 +211,6 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
     uint8_t *v = c->picture->img.plane[2];
 
     int widthStep422 = c->param->i_width * 2;
-
-#if 0
-    if (c->input_format == YUV420) {
-        struct iovec in_tmp;
-        in_tmp.iov_len = in->iov_len;
-        in_tmp.iov_base = calloc(1, in->iov_len);
-        conv_yuv420pto422(in_tmp.iov_base, in->iov_base, c->width, c->height);
-        for (i = 0; i < (int)in->iov_len; i++) {//8 byte copy
-            *((char *)in->iov_base + i) = *((char *)in_tmp.iov_base + i);
-        }
-        free(in_tmp.iov_base);
-    }
-#endif
 
     for(i = 0; i < c->param->i_height; i += 2) {
         p422 = (uint8_t *)in->iov_base + i * widthStep422;

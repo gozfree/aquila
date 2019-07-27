@@ -39,8 +39,9 @@ aquila_global = {
         },
 
         upstream = {
-                type = "rtmp",
-		url = "rtmp://localhost/live",
+                type = "rtsp",
+                port = 8554,
+                url = "rtsp://localhost/usbcam",
         },
 
 
