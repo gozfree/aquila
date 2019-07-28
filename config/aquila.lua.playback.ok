@@ -40,15 +40,19 @@ aquila_global = {
 
         upstream = {
                 type = "rtmp",
-		port = 554;
+		port = 554,
         },
 
+	remotectrl = {
+		port = 54321,
+	},
 
         filters = {
                 "videocap",
                 "vencode",
                 "vdecode",
                 "playback",
+                "remotectrl",
                 --"upstream",
         },
 

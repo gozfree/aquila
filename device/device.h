@@ -65,6 +65,7 @@ int device_read(struct device_ctx *dc, void *buf, int len);
 int device_write(struct device_ctx *dc, void *buf, int len);
 int device_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len);
 void device_close(struct device_ctx *dc);
+struct device_ctx *device_get();
 
 #ifdef __cplusplus
 }

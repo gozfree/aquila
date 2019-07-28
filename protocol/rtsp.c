@@ -149,7 +149,6 @@ static int rtsp_read(struct protocol_ctx *pc, void *buf, int len)
 
 static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
 {
-    struct rtsp_server *rc = pc->priv;
     struct media_source *ms = rtsp_media_source_lookup("proxy");
     if (!ms) {
         loge("rtsp_media_source_lookup proxy failed!\n");
