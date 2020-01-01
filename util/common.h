@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/uio.h>
+#include <libmedia-io.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -85,10 +86,15 @@ struct packet {
 };
 
 struct video_param {
-    int width;
-    int height;
-    int pix_fmt;
-    uint64_t timestamp;
+    enum video_format format;
+    uint32_t          width;
+    uint32_t          height;
+    uint64_t          timestamp;//ns
+    uint64_t          id;
+    uint32_t          fps_num;
+    uint32_t          fps_den;
+    uint8_t           **extended_data;
+    void              *opaque;
 };
 
 struct audio_param {

@@ -2,7 +2,6 @@ aquila_global = {
         videocap = {
                 type = "usbcam",
                 device = "/dev/video0",
-                format = "YUV422P",
                 width = 640,
                 height = 480,
         },
@@ -16,9 +15,9 @@ aquila_global = {
                 type = "x264",
         },
 
-        vdecode = {
-                type = "h264dec",
-        },
+        --vdecode = {
+         --       type = "h264dec",
+        --},
 
         overlay = {
                 type = "timestamp",
@@ -40,7 +39,7 @@ aquila_global = {
 
         upstream = {
                 type = "rtmp",
-		url = "rtmp://localhost/live",
+                url = "rtmp://127.0.0.1/live",
         },
 
 

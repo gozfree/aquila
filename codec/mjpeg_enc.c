@@ -59,7 +59,7 @@ static int mjpeg_open(struct codec_ctx *c, struct media_params *media)
     }
     mc->width = media->video.width;
     mc->height = media->video.height;
-    mc->input_format = media->video.pix_fmt;
+    mc->input_format = media->video.format;
     mc->encode_format = YUV420;
     mc->encoder.err = jpeg_std_error(&mc->errmgr);
     jpeg_create_compress(&mc->encoder);

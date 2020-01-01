@@ -66,8 +66,8 @@ static void on_filter_read(int fd, void *arg)
     struct iovec out = {NULL, 0};
     int ret;
     int last = 0;
+    logd("filtre[%s] enter\n", ctx->name);
     if (ctx->q_src) {
-        //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
         in_item = queue_branch_pop(ctx->q_src, ctx->name);
         if (!in_item) {
             loge("fd = %d, aqueue_pop empty\n", fd);
@@ -76,8 +76,10 @@ static void on_filter_read(int fd, void *arg)
         //logd("ctx = %p aqueue_pop %p, last=%d\n", ctx, in_aitem, last);
         memset(&in, 0, sizeof(struct iovec));
         memset(&out, 0, sizeof(struct iovec));
-        in.iov_base = in_item->data.iov_base;
-        in.iov_len = in_item->data.iov_len;
+        struct iovec *tmp_io = item_get_data(ctx->q_src, in_item);
+        in.iov_base = tmp_io->iov_base;
+        in.iov_len = tmp_io->iov_len;
+        logd("filter[%s]: queue_pop %p\n", ctx->name, in.iov_base);
     }
     //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     pthread_mutex_lock(&ctx->lock);
@@ -85,14 +87,14 @@ static void on_filter_read(int fd, void *arg)
     if (ret == -1) {
         //loge("filter %s on_read failed!\n", ctx->name);
     }
-    //loge("filter[%s]: after on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
+    logd("filter[%s]: after on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     if (out.iov_base) {
         //memory create
         struct item *out_item = item_alloc(ctx->q_snk, out.iov_base, out.iov_len);
-        //logd("fd = %d aqueue_push %p\n", fd, out_item);
         if (-1 == queue_push(ctx->q_snk, out_item)) {
             loge("buffer_push failed!\n");
         }
+        logd("filter[%s]: queue_push %p\n", ctx->name, out_item->opaque.iov_base);
     }
 
     if (ctx->q_src) {
@@ -103,6 +105,7 @@ static void on_filter_read(int fd, void *arg)
         }
     }
     pthread_mutex_unlock(&ctx->lock);
+    logd("filtre[%s] leave\n", ctx->name);
 }
 
 static void on_filter_write(int fd, void *arg)
@@ -138,6 +141,16 @@ struct filter_ctx *filter_ctx_new(struct filter_conf *c)
     return fc;
 }
 
+static void *q_alloc_cb(void *data, size_t len)
+{
+    return data;
+}
+
+static void *q_free_cb(void *data)
+{
+    return NULL;
+}
+
 struct filter_ctx *filter_create(struct filter_conf *c,
                                  struct queue *q_src, struct queue *q_snk)
 {
@@ -147,7 +160,7 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     if (!ctx) {
         return NULL;
     }
-    queue_branch_add(q_src, ctx->name);
+    queue_branch_new(q_src, ctx->name);
     pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
@@ -176,6 +189,8 @@ struct filter_ctx *filter_create(struct filter_conf *c,
             q_snk->opaque.iov_len = sizeof(ctx->media);
         }
     }
+    queue_set_hook(ctx->q_src, q_alloc_cb, q_free_cb);
+    queue_set_hook(ctx->q_snk, q_alloc_cb, q_free_cb);
 
     ctx->ev_base = gevent_base_create();
     if (!ctx->ev_base) {
@@ -255,5 +270,8 @@ void filter_destroy(struct filter_ctx *ctx)
     gevent_del(ctx->ev_base, ctx->ev_read);
     gevent_del(ctx->ev_base, ctx->ev_write);
     gevent_base_destroy(ctx->ev_base);
+
+    queue_branch_del(ctx->q_src, ctx->name);
+    queue_branch_del(ctx->q_snk, ctx->name);
     free(ctx);
 }

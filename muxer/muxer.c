@@ -60,7 +60,9 @@ void muxer_register_all()
     registered = 1;
 
     REGISTER_MUXER(flv);
+#if 0
     REGISTER_MUXER(mp4);
+#endif
 }
 
 

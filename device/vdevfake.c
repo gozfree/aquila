@@ -72,7 +72,7 @@ static int vf_open(struct device_ctx *dc, const char *dev, struct media_params *
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = vc->width;
     dc->media.video.height = vc->height;
-    dc->media.video.pix_fmt = YUV420;
+    dc->media.video.format = YUV420;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe\n");
         goto failed;

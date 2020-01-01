@@ -99,6 +99,17 @@ int device_read(struct device_ctx *dc, void *buf, int len)
     return dc->ops->read(dc, buf, len);
 }
 
+int device_query_buffer(struct device_ctx *dc, struct device_buffer *buf)
+{
+    if (dc->type == DEVICE_AUDIO_ENCODE || dc->type == DEVICE_VIDEO_ENCODE) {
+        dc->ops->query_packet(dc, buf->packet);
+    } else if (dc->type == DEVICE_AUDIO_DECODE || dc->type == DEVICE_VIDEO_DECODE) {
+        dc->ops->query_frame(dc, buf->frame);
+    }
+
+    return 0;
+}
+
 int device_write(struct device_ctx *dc, void *buf, int len)
 {
     if (!dc->ops->write)

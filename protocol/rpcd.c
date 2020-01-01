@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include "protocol.h"
+#include "device.h"
 #include <librpc.h>
 #include <librpc_stub.h>
 #include <libgevent.h>

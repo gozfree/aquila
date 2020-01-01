@@ -24,6 +24,7 @@
 #include <liblog.h>
 #include <libtime.h>
 #include <libmacro.h>
+#include <libmedia-io.h>
 
 #include "device.h"
 #include "filter.h"
@@ -40,14 +41,13 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
 {
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
     struct media_params *param = &ctx->dev->media;
-    int flen = 2 * (param->video.width) * (param->video.height);//YUV422 2*w*h
-    void *frm = calloc(1, flen);
     char tmp_tm[32];
+    struct video_frame frm;
+    video_frame_init(&frm, param->video.format, param->video.width, param->video.height, VFC_NONE);
 
-    int ret = device_read(ctx->dev, frm, flen);
+    int ret = device_read(ctx->dev, &frm, sizeof(frm));
     if (ret == -1) {
         loge("device_read failed!\n");
-        free(frm);
         if (-1 == device_write(ctx->dev, NULL, 0)) {
             loge("device_write failed!\n");
         }
@@ -55,15 +55,13 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
     }
 
     time_get_msec_str(tmp_tm, sizeof(tmp_tm));
-    overlay_draw_text((unsigned char *)frm, 0, 0, param->video.width, tmp_tm);
+    //overlay_draw_text((unsigned char *)frm, 0, 0, param->video.width, tmp_tm);
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
     }
-    out->iov_base = memdup(frm, ret);
+    out->iov_base = video_frame_create(param->video.format, param->video.width, param->video.height, VFC_ALLOC);
+    video_frame_copy(out->iov_base, &frm);
     out->iov_len = ret;
-    ctx->seq++;
-    free(frm);
-    logv("seq = %d, len = %d\n", ctx->seq, ret);
     return ret;
 }
 
@@ -91,7 +89,7 @@ static int videocap_open(struct filter_ctx *fc)
     fc->wfd = -1;
     fc->media.video.width = vc->dev->media.video.width;
     fc->media.video.height = vc->dev->media.video.height;
-    fc->media.video.pix_fmt = vc->dev->media.video.pix_fmt;
+    fc->media.video.format = vc->dev->media.video.format;
     fc->priv = vc;
     overlay_init();
     return 0;

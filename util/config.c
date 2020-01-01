@@ -87,7 +87,7 @@ static void load_videocap(struct aq_config *c)
     c->videocap.param.video.width = conf_get_int(c->conf, "videocap", "width");
     c->videocap.param.video.height = conf_get_int(c->conf, "videocap", "height");
     strcpy(c->videocap.format, conf_get_string(c->conf, "videocap", "format"));
-    c->videocap.param.video.pix_fmt = string_to_enum(c->videocap.format);
+    c->videocap.param.video.format = string_to_enum(c->videocap.format);
     logi("[videocap][type] = %s\n", c->videocap.type.str);
     logi("[videocap][device] = %s\n", c->videocap.device);
     logi("[videocap][url] = %s\n", c->videocap.url);

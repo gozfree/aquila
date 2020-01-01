@@ -63,7 +63,7 @@ LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -ldebug -llog -lconfig -lgevent -ltime -lrtsp -ldict -lfile -lvector -lskt
-LDFLAGS	+= -lthread -lmacro -lrpc -lhash -lworkq -luvc
+LDFLAGS	+= -lthread -lmacro -lrpc -lhash -lworkq -luvc -lmedia-io
 LDFLAGS	+= -L/usr/local/lib/ -lrtmp
 LDFLAGS	+= -lqueue
 LDFLAGS	+= -lpthread -lrt
@@ -80,12 +80,12 @@ TGT	:= $(TGT_NAME)
 
 ALGO_OBJS :=
 
-CODEC_OBJS := 			    \
-    codec/codec.o 		    \
+CODEC_OBJS :=			\
+    codec/codec.o		\
     codec/x264_enc.o		\
-    codec/h264_dec.o		\
-    codec/h264_enc.o		\
     codec/mjpeg_enc.o
+    #codec/h264_enc.o		\
+    #codec/h264_dec.o		\
 
 DEVICE_OBJS := 			\
     device/device.o 		\
@@ -104,8 +104,8 @@ FILTER_OBJS := 			\
 
 MUXER_OBJS :=			\
     muxer/muxer.o		\
-    muxer/mp4.o			\
     muxer/flv.o
+    #muxer/mp4.o			\
 
 
 PLAYBACK_OBJS := 		\

@@ -16,8 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <libuvc.h>
+#include <libmedia-io.h>
 #include <libmacro.h>
 #include <liblog.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -50,17 +52,16 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_para
     logd("pipe: rfd = %d, wfd = %d\n", vc->on_read_fd, vc->on_write_fd);
 
     vc->uvc = uvc_open(dev, media->video.width, media->video.height);
-
-    vc->name = strdup(dev);
-    if (uvc_print_info(vc->uvc) < 0) {
-        loge("uvc_print_info failed!\n");
+    if (uvc_start_stream(vc->uvc, NULL)) {
+        loge("uvc start stream failed!\n");
         goto failed;
     }
+    vc->name = strdup(dev);
 
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = media->video.width;
     dc->media.video.height = media->video.height;
-    dc->media.video.pix_fmt = YUV422P;
+    dc->media.video.format = vc->uvc->format;
     dc->priv = vc;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe: %s\n", strerror(errno));
@@ -86,14 +87,25 @@ static int usbcam_read(struct device_ctx *dc, void *buf, int len)
 {
     struct usbcam_ctx *vc = (struct usbcam_ctx *)dc->priv;
     char notify;
-    int ret;
+    struct video_frame *frm = buf;
 
     if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
         perror("Failed read from notify pipe");
     }
 
-    ret = uvc_read(vc->uvc, buf, len);
-    return ret;
+    return uvc_query_frame(vc->uvc, frm);
+}
+
+static int usbcam_query(struct device_ctx *dc, struct media_frame *frame)
+{
+    struct usbcam_ctx *vc = (struct usbcam_ctx *)dc->priv;
+    char notify;
+
+    if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
+        perror("Failed read from notify pipe");
+    }
+
+    return uvc_query_frame(vc->uvc, &frame->video);
 }
 
 static int usbcam_write(struct device_ctx *dc, void *buf, int len)
@@ -119,10 +131,10 @@ static void usbcam_close(struct device_ctx *dc)
 
 static int usbcam_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len)
 {
+#if 0
     struct usbcam_ctx *vc = (struct usbcam_ctx *)dc->priv;
     struct video_ctrl *vctrl;
     switch (cmd) {
-#if 0
     case DEV_VIDEO_GET_CAP:
         //usbcam_get_cap(vc);
         break;
@@ -130,19 +142,19 @@ static int usbcam_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len)
         vctrl = (struct video_ctrl *)buf;
         usbcam_set_control(vc, vctrl->cmd, vctrl->val);
         break;
-#endif
     default:
-        uvc_print_info(vc->uvc);
         break;
     }
+#endif
     return 0;
 }
 
 struct device aq_usbcam_device = {
-    "usbcam",
-    usbcam_open,
-    usbcam_read,
-    usbcam_write,
-    usbcam_ioctl,
-    usbcam_close,
+    .name = "usbcam",
+    .open = usbcam_open,
+    .read = usbcam_read,
+    .query_frame = usbcam_query,
+    .write = usbcam_write,
+    .ioctl = usbcam_ioctl,
+    .close = usbcam_close,
 };

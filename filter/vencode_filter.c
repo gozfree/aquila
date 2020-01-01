@@ -34,6 +34,8 @@ struct venc_ctx {
 static int on_venc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
     struct venc_ctx *vc = (struct venc_ctx *)fc->priv;
+    struct video_packet *pkt = (struct video_packet*)calloc(1, sizeof(struct video_packet));
+    out->iov_base = pkt;
     int ret = codec_encode(vc->encoder, in, out);
     if (-1 == ret) {
         loge("encode failed!\n");
