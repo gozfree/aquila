@@ -57,7 +57,8 @@ static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_para
     rc->status = RTMP_STATUS_IDLE;
     rc->client = rtmp_create(url);
     if(!rc->client) {
-        loge("failed to new RtmpClient\n");
+        loge("failed to connect %s, please make sure rtmp server exist\n", url);
+        goto failed;
     }
     logi("url = %s\n", url);
     rc->url = strdup(url);
@@ -76,23 +77,19 @@ static int rtmp_write(struct protocol_ctx *pc, void *buf, int len)
 {
     struct rtmp_ctx *rc = (struct rtmp_ctx *)pc->priv;
     int ret = 0;
-    struct video_packet *pkt = buf;
+    struct media_packet *pkt = buf;
 
     if (rc->status == RTMP_STATUS_IDLE) {
-        struct iovec data = {
-            .iov_base = pkt->data,
-            .iov_len = len,
-        };
-        if (rtmp_stream_add(rc->client, RTMP_DATA_H264, &data)) {
+        if (rtmp_stream_add(rc->client, pkt)) {
             loge("rtmp_stream_add failed!\n");
-            ret = -1;
+            ret = 0;
         } else {
             rtmp_stream_start(rc->client);
             rc->status = RTMP_STATUS_RUNNING;
             logi("get_extra_data success!\n");
         }
     } else if (rc->status == RTMP_STATUS_RUNNING) {
-        rtmp_send_data(rc->client, RTMP_DATA_H264, (uint8_t *)pkt->data, len, 0);
+        rtmp_send_packet(rc->client, pkt);
     }
     return ret;
 }

@@ -58,10 +58,14 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_para
     }
     vc->name = strdup(dev);
 
+    media->video.fps_num = vc->uvc->fps_num;
+    media->video.fps_den = vc->uvc->fps_den;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->media.video.width = media->video.width;
     dc->media.video.height = media->video.height;
     dc->media.video.format = vc->uvc->format;
+    dc->media.video.fps_num = vc->uvc->fps_num;
+    dc->media.video.fps_den = vc->uvc->fps_den;
     dc->priv = vc;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe: %s\n", strerror(errno));

@@ -44,8 +44,7 @@ LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
 LDFLAGS_JPEG	= -ljpeg
 LDFLAGS_LUA 	= -llua5.2
 
-CFLAGS	:= -g -Wall
-# -Werror
+CFLAGS	:= -g -Wall -Werror
 CFLAGS	+= -I./
 CFLAGS	+= -I./algo
 CFLAGS	+= -I./codec

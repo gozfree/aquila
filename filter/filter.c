@@ -90,7 +90,7 @@ static void on_filter_read(int fd, void *arg)
     logd("filter[%s]: after on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     if (out.iov_base) {
         //memory create
-        struct item *out_item = item_alloc(ctx->q_snk, out.iov_base, out.iov_len);
+        struct item *out_item = item_alloc(ctx->q_snk, out.iov_base, out.iov_len, NULL);
         if (-1 == queue_push(ctx->q_snk, out_item)) {
             loge("buffer_push failed!\n");
         }
@@ -141,14 +141,13 @@ struct filter_ctx *filter_ctx_new(struct filter_conf *c)
     return fc;
 }
 
-static void *q_alloc_cb(void *data, size_t len)
+static void *q_alloc_cb(void *data, size_t len, void *arg)
 {
     return data;
 }
 
-static void *q_free_cb(void *data)
+static void q_free_cb(void *data)
 {
-    return NULL;
 }
 
 struct filter_ctx *filter_create(struct filter_conf *c,

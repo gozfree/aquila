@@ -38,55 +38,37 @@ extern "C" {
 #include "imgconvert.h"
 
 struct x264_ctx {
-    uint32_t width;
-    uint32_t height;
-    uint32_t bitrate;
-    int input_format;
+    enum video_format input_format;
     struct iovec sei;
     x264_param_t param;
     x264_t *handle;
+    bool first_frame;
+    bool append_extra;
+    uint64_t cur_pts;
+    uint32_t timebase_num;
+    uint32_t timebase_den;
     struct iovec extradata;
     void *parent;
 };
 
 #define AV_INPUT_BUFFER_PADDING_SIZE 32
 
-static int set_default(struct x264_ctx *c, struct video_param *vp)
+static int video_format_to_x264_csp(enum video_format fmt)
 {
-    x264_param_default_preset(&c->param, "ultrafast" , "zerolatency");
-    c->param.rc.i_vbv_max_bitrate = 2500;
-    c->param.rc.i_vbv_buffer_size = 2500;
-    c->param.rc.i_bitrate = 2500;
-    c->param.rc.i_rc_method = X264_RC_ABR;
-    c->param.rc.b_filler = true;
-    c->param.i_keyint_max = 0;
-    //XXX b_repeat_headers 0: rtmp is ok; 1: playback is ok
-    c->param.b_repeat_headers = 0;  // repeat SPS/PPS before i frame
-    c->param.b_vfr_input = 0;
-    c->param.i_log_level = X264_LOG_WARNING;
-
-    switch (vp->format) {
+    switch (fmt) {
     case VIDEO_FORMAT_UYVY:
-        c->param.i_csp = X264_CSP_UYVY;
-        break;
+        return X264_CSP_UYVY;
     case VIDEO_FORMAT_YUY2:
-        c->param.i_csp = X264_CSP_YUYV;
-        break;
+        return X264_CSP_YUYV;
     case VIDEO_FORMAT_NV12:
-        c->param.i_csp = X264_CSP_NV12;
-        break;
+        return X264_CSP_NV12;
     case VIDEO_FORMAT_I420:
-        c->param.i_csp = X264_CSP_I420;
-        break;
+        return X264_CSP_I420;
     case VIDEO_FORMAT_I444:
-        c->param.i_csp = X264_CSP_I444;
-        break;
+        return X264_CSP_I444;
     default:
-        loge("unsupport video format %d\n", vp->format);
-        c->param.i_csp = X264_CSP_NONE;
-        break;
+        return X264_CSP_NONE;
     }
-    return 0;
 }
 
 static int init_header(struct x264_ctx *c)
@@ -122,7 +104,7 @@ static int init_header(struct x264_ctx *c)
     return 0;
 }
 
-static int x264_open(struct codec_ctx *cc, struct media_params *media)
+static int _x264_open(struct codec_ctx *cc, struct media_params *media)
 {
     struct x264_ctx *c = CALLOC(1, struct x264_ctx);
     if (!c) {
@@ -130,14 +112,26 @@ static int x264_open(struct codec_ctx *cc, struct media_params *media)
         return -1;
     }
 
-    set_default(c, &media->video);
+    x264_param_default_preset(&c->param, "ultrafast" , "zerolatency");
+    c->input_format = media->video.format;
 
-    media->video.fps_num = 25;
-    media->video.fps_den = 1;
+    c->param.rc.i_vbv_max_bitrate = 2500;
+    c->param.rc.i_vbv_buffer_size = 2500;
+    c->param.rc.i_bitrate = 2500;
+    c->param.rc.i_rc_method = X264_RC_ABR;
+    c->param.rc.b_filler = true;
+    c->param.i_keyint_max = 30;
+    //XXX b_repeat_headers 0: rtmp is ok; 1: playback is ok
+    c->param.b_repeat_headers = 0;  // repeat SPS/PPS before i frame
+    c->param.b_vfr_input = 0;
+    c->param.i_log_level = X264_LOG_INFO;
+    c->param.i_csp = video_format_to_x264_csp(c->input_format);
+
     c->param.i_width = media->video.width;
     c->param.i_height = media->video.height;
     c->param.i_fps_num = media->video.fps_num;
     c->param.i_fps_den = media->video.fps_den;
+
     x264_param_apply_profile(&c->param, NULL);
 
     c->handle = x264_encoder_open(&c->param);
@@ -146,9 +140,10 @@ static int x264_open(struct codec_ctx *cc, struct media_params *media)
         goto failed;
     }
 
-    c->width = media->video.width;
-    c->height = media->video.height;
-    c->input_format = media->video.format;
+    c->first_frame = true;
+    c->append_extra = false;
+    c->timebase_num = c->param.i_fps_den;
+    c->timebase_den = c->param.i_fps_num;
 
     init_header(c);
 
@@ -173,7 +168,6 @@ static int init_pic_data(struct x264_ctx *c, x264_picture_t *pic,
                 struct video_frame *frame)
 {
     x264_picture_init(pic);
-
     pic->i_pts = frame->timestamp;
     pic->img.i_csp = c->param.i_csp;
 
@@ -224,8 +218,7 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
     pkt->size = 0;
     p = pkt->data;
 
-    static bool append_extradata = false;
-    if (!append_extradata) {
+    if (!c->append_extra) {
         /* Write the extradata as part of the first frame. */
         if (c->extradata.iov_len > 0 && nal_cnt > 0) {
             if (c->extradata.iov_len > size) {
@@ -236,7 +229,7 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
             p += c->extradata.iov_len;
             pkt->size += c->extradata.iov_len;
         }
-        append_extradata = true;
+        c->append_extra = true;
     }
 
     for (i = 0; i < nal_cnt; i++){
@@ -247,12 +240,15 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
 
     pkt->pts = pic_out->i_pts;
     pkt->dts = pic_out->i_dts;
-    pkt->keyframe = pic_out->b_keyframe != 0;
+    pkt->timebase_num = c->param.i_fps_den;
+    pkt->timebase_den = c->param.i_fps_num;
+    pkt->key_frame = pic_out->b_keyframe != 0;
+    logd("pkt->pts=%zu, dts=%zu, keyframe=%d\n", pkt->pts, pkt->dts, pkt->key_frame);
 
     return pkt->size;
 }
 
-static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
+static int _x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
 {
     struct x264_ctx *c = (struct x264_ctx *)cc->priv;
     x264_picture_t pic_in, pic_out;
@@ -262,6 +258,11 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
     int nal_bytes = 0;
     struct video_frame *frm = in->iov_base;
     struct video_packet *pkt = out->iov_base;
+    if (c->first_frame) {
+        c->cur_pts = 0;
+        c->first_frame = false;
+    }
+    frm->timestamp = c->cur_pts;
 
     init_pic_data(c, &pic_in, frm);
 
@@ -276,11 +277,12 @@ static int x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out
         loge("fill_packet failed!\n");
         return -1;
     }
+    c->cur_pts += c->timebase_num;
     out->iov_len = ret;
     return ret;
 }
 
-static void x264_close(struct codec_ctx *cc)
+static void _x264_close(struct codec_ctx *cc)
 {
     struct x264_ctx *c = (struct x264_ctx *)cc->priv;
     if (c->handle) {
@@ -294,8 +296,8 @@ static void x264_close(struct codec_ctx *cc)
 
 struct codec aq_x264_encoder = {
     .name   = "x264",
-    .open   = x264_open,
-    .encode = x264_encode,
+    .open   = _x264_open,
+    .encode = _x264_encode,
     .decode = NULL,
-    .close  = x264_close,
+    .close  = _x264_close,
 };

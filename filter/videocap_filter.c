@@ -47,7 +47,6 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
 
     int ret = device_read(ctx->dev, &frm, sizeof(frm));
     if (ret == -1) {
-        loge("device_read failed!\n");
         if (-1 == device_write(ctx->dev, NULL, 0)) {
             loge("device_write failed!\n");
         }
@@ -90,6 +89,8 @@ static int videocap_open(struct filter_ctx *fc)
     fc->media.video.width = vc->dev->media.video.width;
     fc->media.video.height = vc->dev->media.video.height;
     fc->media.video.format = vc->dev->media.video.format;
+    fc->media.video.fps_num = vc->dev->media.video.fps_num;
+    fc->media.video.fps_den = vc->dev->media.video.fps_den;
     fc->priv = vc;
     overlay_init();
     return 0;

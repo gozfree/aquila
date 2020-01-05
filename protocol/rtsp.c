@@ -155,7 +155,7 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
     }
     if (ms->is_active) {
     struct proxy_source_ctx *c = (struct proxy_source_ctx *)ms->opaque;
-    struct item *it = item_alloc(c->q, buf, len);
+    struct item *it = item_alloc(c->q, buf, len, NULL);
     queue_push(c->q, it);
     }
     return 0;
