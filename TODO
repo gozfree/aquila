@@ -1,5 +1,5 @@
 o audio module, A/V sync
 o stream/record
 o protocol
-o porting to arm board
+o porting to arm board (amba/hisi/pi)
 ...

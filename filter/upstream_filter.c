@@ -46,7 +46,7 @@ static int on_upstream_read(struct filter_ctx *fc, struct iovec *in, struct iove
 
 static int upstream_open(struct filter_ctx *fc)
 {
-    struct protocol_ctx *proto = protocol_open(fc->url, &fc->media);
+    struct protocol_ctx *proto = protocol_open(fc->url, &fc->mp);
     if (!proto) {
         loge("open protocol %s failed!\n", fc->url);
         return -1;

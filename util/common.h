@@ -93,7 +93,7 @@ struct video_param {
     uint64_t          id;
     uint32_t          fps_num;
     uint32_t          fps_den;
-    uint8_t           **extended_data;
+    struct iovec      extradata;
     void              *opaque;
 };
 

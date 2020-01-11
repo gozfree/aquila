@@ -15,6 +15,7 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
+#include <libdarray.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -73,38 +74,38 @@ static int video_format_to_x264_csp(enum video_format fmt)
 
 static int init_header(struct x264_ctx *c)
 {
-    x264_nal_t *nal;
-    uint8_t *p;
+    x264_nal_t *nals;
     int nal_cnt, nal_bytes, i;
 
-    nal_bytes = x264_encoder_headers(c->handle, &nal, &nal_cnt);
+    DARRAY(uint8_t) extra;
+    DARRAY(uint8_t) sei;
+
+    da_init(extra);
+    da_init(sei);
+
+    nal_bytes = x264_encoder_headers(c->handle, &nals, &nal_cnt);
     if (nal_bytes < 0) {
         loge("x264_encoder_headers failed!\n");
         return -1;
     }
 
-    c->extradata.iov_base = p = (uint8_t *)calloc(1, nal_bytes + AV_INPUT_BUFFER_PADDING_SIZE);
-    if (!p)
-        return -1;
-
     for (i = 0; i < nal_cnt; i++) {
-        /* Don't put the SEI in extradata. */
-        if (nal[i].i_type == NAL_SEI) {
-            logd("%s\n", nal[i].p_payload+25);
-            c->sei.iov_len = nal[i].i_payload;
-            c->sei.iov_base = memdup(nal[i].p_payload, nal[i].i_payload);
-            if (!c->sei.iov_base)
-                return -1;
-        } else {
-            memcpy(p, nal[i].p_payload, nal[i].i_payload);
-            p += nal[i].i_payload;
-        }
+        x264_nal_t *nal = nals + i;
+        if (nal->i_type == NAL_SEI)
+            da_push_back_array(sei, nal->p_payload, nal->i_payload);
+        else
+            da_push_back_array(extra, nal->p_payload, nal->i_payload);
     }
-    c->extradata.iov_len = p - (uint8_t *)c->extradata.iov_base;
+
+    c->extradata.iov_base = extra.array;
+    c->extradata.iov_len = extra.num;
+    c->sei.iov_base = sei.array;
+    c->sei.iov_len = sei.num;
+
     return 0;
 }
 
-static int _x264_open(struct codec_ctx *cc, struct media_params *media)
+static int _x264_open(struct codec_ctx *cc, struct media_params *mp)
 {
     struct x264_ctx *c = CALLOC(1, struct x264_ctx);
     if (!c) {
@@ -113,24 +114,24 @@ static int _x264_open(struct codec_ctx *cc, struct media_params *media)
     }
 
     x264_param_default_preset(&c->param, "ultrafast" , "zerolatency");
-    c->input_format = media->video.format;
+    c->input_format = mp->video.format;
 
     c->param.rc.i_vbv_max_bitrate = 2500;
     c->param.rc.i_vbv_buffer_size = 2500;
     c->param.rc.i_bitrate = 2500;
     c->param.rc.i_rc_method = X264_RC_ABR;
     c->param.rc.b_filler = true;
-    c->param.i_keyint_max = 30;
+    c->param.i_keyint_max = 1;
     //XXX b_repeat_headers 0: rtmp is ok; 1: playback is ok
     c->param.b_repeat_headers = 0;  // repeat SPS/PPS before i frame
     c->param.b_vfr_input = 0;
     c->param.i_log_level = X264_LOG_INFO;
     c->param.i_csp = video_format_to_x264_csp(c->input_format);
 
-    c->param.i_width = media->video.width;
-    c->param.i_height = media->video.height;
-    c->param.i_fps_num = media->video.fps_num;
-    c->param.i_fps_den = media->video.fps_den;
+    c->param.i_width = mp->video.width;
+    c->param.i_height = mp->video.height;
+    c->param.i_fps_num = mp->video.fps_num;
+    c->param.i_fps_den = mp->video.fps_den;
 
     x264_param_apply_profile(&c->param, NULL);
 
@@ -142,13 +143,18 @@ static int _x264_open(struct codec_ctx *cc, struct media_params *media)
 
     c->first_frame = true;
     c->append_extra = false;
+
     c->timebase_num = c->param.i_fps_den;
     c->timebase_den = c->param.i_fps_num;
 
-    init_header(c);
+    if (init_header(c)) {
+        loge("init_header failed!\n");
+        goto failed;
+    }
 
-    cc->extradata.iov_base = c->extradata.iov_base;
-    cc->extradata.iov_len = c->extradata.iov_len;
+    mp->video.extradata.iov_base = c->extradata.iov_base;
+    mp->video.extradata.iov_len = c->extradata.iov_len;
+
     c->parent = cc;
     cc->priv = c;
     return 0;
@@ -218,6 +224,7 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
     pkt->size = 0;
     p = pkt->data;
 
+#if 1
     if (!c->append_extra) {
         /* Write the extradata as part of the first frame. */
         if (c->extradata.iov_len > 0 && nal_cnt > 0) {
@@ -231,6 +238,7 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
         }
         c->append_extra = true;
     }
+#endif
 
     for (i = 0; i < nal_cnt; i++){
         memcpy(p, nals[i].p_payload, nals[i].i_payload);
@@ -287,8 +295,8 @@ static void _x264_close(struct codec_ctx *cc)
     struct x264_ctx *c = (struct x264_ctx *)cc->priv;
     if (c->handle) {
         x264_encoder_close(c->handle);
-        free(cc->extradata.iov_base);
-        cc->extradata.iov_len = 0;
+        free(c->extradata.iov_base);
+        c->extradata.iov_len = 0;
     }
     free(c->sei.iov_base);
     free(c);

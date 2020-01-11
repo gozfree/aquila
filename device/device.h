@@ -59,7 +59,7 @@ struct device_ctx {
     struct url url;
     enum device_type type;
     struct device *ops;
-    struct media_params media;
+    //struct media_params media;
     void *priv;
 };
 

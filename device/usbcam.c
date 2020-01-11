@@ -34,7 +34,7 @@ struct usbcam_ctx {
     int on_write_fd;
 };
 
-static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_params *media)
+static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_params *mp)
 {
     int fds[2] = {0};
     char notify = '1';
@@ -51,21 +51,17 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_para
     vc->on_write_fd = fds[1];
     logd("pipe: rfd = %d, wfd = %d\n", vc->on_read_fd, vc->on_write_fd);
 
-    vc->uvc = uvc_open(dev, media->video.width, media->video.height);
+    vc->uvc = uvc_open(dev, mp->video.width, mp->video.height);
     if (uvc_start_stream(vc->uvc, NULL)) {
         loge("uvc start stream failed!\n");
         goto failed;
     }
     vc->name = strdup(dev);
 
-    media->video.fps_num = vc->uvc->fps_num;
-    media->video.fps_den = vc->uvc->fps_den;
+    mp->video.fps_num = vc->uvc->fps_num;
+    mp->video.fps_den = vc->uvc->fps_den;
+    mp->video.format = vc->uvc->format;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
-    dc->media.video.width = media->video.width;
-    dc->media.video.height = media->video.height;
-    dc->media.video.format = vc->uvc->format;
-    dc->media.video.fps_num = vc->uvc->fps_num;
-    dc->media.video.fps_den = vc->uvc->fps_den;
     dc->priv = vc;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe: %s\n", strerror(errno));

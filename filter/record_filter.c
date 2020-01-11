@@ -50,7 +50,7 @@ static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *ou
 
 static int rec_open(struct filter_ctx *fc)
 {
-    struct muxer_ctx *muxer = muxer_open(fc->url, &fc->media);
+    struct muxer_ctx *muxer = muxer_open(fc->url, &fc->mp);
     if (!muxer) {
         loge("open muxer %s failed!\n", fc->url);
         return -1;

@@ -4,6 +4,7 @@ aquila_global = {
                 device = "/dev/video0",
                 width = 640,
                 height = 480,
+                format = "YUY2",
         },
         audiocap = {
                 type = "alsa",
@@ -13,6 +14,7 @@ aquila_global = {
                 --type supported: mjpeg/x264
                 --type = "mjpeg",
                 type = "x264",
+                format = "NV12",
         },
 
         --vdecode = {

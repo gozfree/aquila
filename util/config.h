@@ -29,7 +29,7 @@ struct videocap_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_params param;
+    struct media_params mp;
     char *url;
 };
 
@@ -77,7 +77,7 @@ struct filter_conf {
         struct upstream_conf upstream;
         struct playback_conf playback;
         struct remotectrl_conf remotectrl;
-    } conf;
+    };
 };
 
 struct graph_conf {

@@ -31,29 +31,22 @@ enum rtmp_status {
     RTMP_STATUS_STOPPED,
 };
 
-typedef struct media_param {
-    int aac_bitrate;
-    int aac_samplerate;
-    int framerate;
-    int width;
-    int height;
-} media_param_t;
-
-
 typedef struct rtmp_ctx {
     enum rtmp_status status;
-    struct media_params media;
+    struct media_params mp;
     char *url;
     struct rtmp *client;
 } rtmp_ctx_t;
 
-static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_params *media)
+static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_params *mp)
 {
     struct rtmp_ctx *rc = CALLOC(1, struct rtmp_ctx);
     if (!rc) {
         loge("malloc rtmp_ctx failed!\n");
         goto failed;
     }
+    loge("xxxxxxx width=%d\n", mp->video.width);
+    loge("xxxxxxx extra.len=%d\n", mp->video.extradata.iov_len);
     rc->status = RTMP_STATUS_IDLE;
     rc->client = rtmp_create(url);
     if(!rc->client) {
@@ -62,7 +55,7 @@ static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_para
     }
     logi("url = %s\n", url);
     rc->url = strdup(url);
-    memcpy(&rc->media, media, sizeof(struct media_params));
+    memcpy(&rc->mp, mp, sizeof(struct media_params));
     pc->priv = rc;
     return 0;
 

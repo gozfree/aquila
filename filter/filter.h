@@ -29,7 +29,14 @@
 extern "C" {
 #endif
 
+enum filter_type {
+    SRC_FILTER,
+    MID_FILTER,
+    SNK_FILTER,
+};
+
 struct filter_ctx {
+    enum filter_type type;
     int rfd;
     int wfd;
     const char *name;
@@ -40,7 +47,7 @@ struct filter_ctx {
     struct queue *q_src;
     struct queue *q_snk;
     struct filter *ops;
-    struct media_params media;
+    struct media_params mp;
     const char *url;
     void *priv;
     void *config;

@@ -167,25 +167,32 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     //1. src filter: <NULL, snk>
     //2. mid fitler: <src, snk>
     //3. snk filter: <src, NULL>
-    if (ctx->q_src) {//not sink filter
-        memcpy(&ctx->media, q_src->opaque.iov_base, q_src->opaque.iov_len);
+    if (ctx->q_src) {//mid/snk filter
+        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->mp.video.width, ctx->mp.video.height, ctx->mp.video.extradata.iov_len);
+        memcpy(&ctx->mp, q_src->opaque.iov_base, q_src->opaque.iov_len);
+        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->mp.video.width, ctx->mp.video.height, ctx->mp.video.extradata.iov_len);
         if (ctx->q_snk) {
             q_snk->opaque.iov_base = q_src->opaque.iov_base;
             q_snk->opaque.iov_len = q_src->opaque.iov_len;
+            ctx->type = MID_FILTER;
         }
     }
-    logd("%s, media.video: %d*%d\n", c->type.str, ctx->media.video.width, ctx->media.video.height);
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;
     }
     if (ctx->q_src) {//middle filter
         qb = queue_branch_get(q_src, ctx->name);
         fd = qb->RD_FD;
+        if (ctx->q_snk) {
+        q_snk->opaque.iov_base = &ctx->mp;
+        q_snk->opaque.iov_len = sizeof(ctx->mp);
+        }
     } else {//device source filter
+        ctx->type = SRC_FILTER;
         fd = ctx->rfd;
         if (ctx->q_snk) {
-            q_snk->opaque.iov_base = &ctx->media;
-            q_snk->opaque.iov_len = sizeof(ctx->media);
+            q_snk->opaque.iov_base = &ctx->mp;
+            q_snk->opaque.iov_len = sizeof(ctx->mp);
         }
     }
     queue_set_hook(ctx->q_src, q_alloc_cb, q_free_cb);

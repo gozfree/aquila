@@ -59,8 +59,8 @@ static int playback_filter_open(struct filter_ctx *fc)
         loge("malloc failed!\n");
         return -1;
     }
-    pfc->conf = &fconf->conf.playback;
-    struct playback_ctx *pc = playback_open(fc->url, &fc->media);
+    pfc->conf = &fconf->playback;
+    struct playback_ctx *pc = playback_open(fc->url, &fc->mp);
     if (!pc) {
         loge("open %s failed!\n", fc->url);
         goto failed;
@@ -68,8 +68,8 @@ static int playback_filter_open(struct filter_ctx *fc)
 
     pfc->pc = pc;
     pfc->seq = 0;
-    pc->media.video.width = fc->media.video.width;
-    pc->media.video.height = fc->media.video.height;
+    pc->media.video.width = fc->mp.video.width;
+    pc->media.video.height = fc->mp.video.height;
     fc->rfd = -1;
     fc->wfd = -1;
     fc->priv = pfc;

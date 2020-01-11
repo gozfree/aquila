@@ -31,7 +31,7 @@ extern "C" {
 struct codec_ctx {
     struct url url;
     struct codec *ops;
-    struct iovec extradata;
+    //struct iovec extradata;
     void *priv;
 };
 

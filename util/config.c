@@ -84,15 +84,15 @@ static void load_videocap(struct aq_config *c)
     strcat(c->videocap.url, c->videocap.type.str);
     strcat(c->videocap.url, "://");
     strcat(c->videocap.url, c->videocap.device);
-    c->videocap.param.video.width = conf_get_int(c->conf, "videocap", "width");
-    c->videocap.param.video.height = conf_get_int(c->conf, "videocap", "height");
+    c->videocap.mp.video.width = conf_get_int(c->conf, "videocap", "width");
+    c->videocap.mp.video.height = conf_get_int(c->conf, "videocap", "height");
     strcpy(c->videocap.format, conf_get_string(c->conf, "videocap", "format"));
-    c->videocap.param.video.format = string_to_enum(c->videocap.format);
+    c->videocap.mp.video.format = string_to_enum(c->videocap.format);
     logi("[videocap][type] = %s\n", c->videocap.type.str);
     logi("[videocap][device] = %s\n", c->videocap.device);
     logi("[videocap][url] = %s\n", c->videocap.url);
     logi("[videocap][format] = %s\n", c->videocap.format);
-    logi("[videocap][w*h] = %d*%d\n", c->videocap.param.video.width, c->videocap.param.video.height);
+    logi("[videocap][w*h] = %d*%d\n", c->videocap.mp.video.width, c->videocap.mp.video.height);
 }
 
 static void load_vencode(struct aq_config *c)
@@ -178,11 +178,11 @@ static void load_filter(struct aq_config *c)
         switch (c->filter[i].type.val) {
         case VIDEOCAP:
             c->filter[i].url = c->videocap.url;
-            memcpy(&c->filter[i].conf.videocap, &c->videocap, sizeof(struct videocap_conf));
+            memcpy(&c->filter[i].videocap, &c->videocap, sizeof(struct videocap_conf));
             break;
         case PLAYBACK:
             c->filter[i].url = c->playback.url;
-            memcpy(&c->filter[i].conf.playback, &c->playback, sizeof(struct playback_conf));
+            memcpy(&c->filter[i].playback, &c->playback, sizeof(struct playback_conf));
             break;
         case VENCODE:
             c->filter[i].url = c->vencode.url;
