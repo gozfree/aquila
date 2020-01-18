@@ -224,21 +224,11 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
     pkt->size = 0;
     p = pkt->data;
 
-#if 1
     if (!c->append_extra) {
-        /* Write the extradata as part of the first frame. */
-        if (c->extradata.iov_len > 0 && nal_cnt > 0) {
-            if (c->extradata.iov_len > size) {
-                loge("Error: nal buffer is too small\n");
-                return -1;
-            }
-            memcpy(p, c->extradata.iov_base, c->extradata.iov_len);
-            p += c->extradata.iov_len;
-            pkt->size += c->extradata.iov_len;
-        }
+        pkt->extra_data = c->extradata.iov_base;
+        pkt->extra_size = c->extradata.iov_len;
         c->append_extra = true;
     }
-#endif
 
     for (i = 0; i < nal_cnt; i++){
         memcpy(p, nals[i].p_payload, nals[i].i_payload);

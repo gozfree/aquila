@@ -1,8 +1,15 @@
-Aquila [English](README.md)
-[![Build Status](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila) [![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases) [![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.MIT)
-======
+# Aquila
+
+[English](README.md) | 简体中文
+
+[![Build](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila)
+[![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases)
+[![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.MIT)
+
 Aquila 是一套多媒体处理框架，目标是为支持不同厂商的多媒体SDK，并快速推出IPCamera产品而设计的软件框架.
 支持软硬件编解码，适用产品：安防视频/家庭监控/行车记录仪/运动DV等
+
+
 
 ## 代码结构
 * `algo`     算法相关：目标检测/识别
@@ -11,6 +18,8 @@ Aquila 是一套多媒体处理框架，目标是为支持不同厂商的多媒�
 * `playback` 回放功能，支持带屏幕的产品 SDL/FrameBuffer/Vendro SDK
 * `protocol` 网络协议层，RTMP/RTSP
 * `util`     基础组建
+
+
 
 ## 依赖库
 该软件需要依赖 [gear-lib](https://github.com/gozfree/gear-lib)

@@ -45,8 +45,6 @@ static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_para
         loge("malloc rtmp_ctx failed!\n");
         goto failed;
     }
-    loge("xxxxxxx width=%d\n", mp->video.width);
-    loge("xxxxxxx extra.len=%d\n", mp->video.extradata.iov_len);
     rc->status = RTMP_STATUS_IDLE;
     rc->client = rtmp_create(url);
     if(!rc->client) {

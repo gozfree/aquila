@@ -1,11 +1,15 @@
-Aquila [中文](README.cn.md)
-[![Build Status](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila) [![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases) [![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.MIT)
-====
+# Aquila
+
+English | [简体中文](README.cn.md)
+
+[![Build](https://travis-ci.org/gozfree/aquila.svg?branch=master)](https://travis-ci.org/gozfree/aquila)
+[![Release](https://img.shields.io/github/release/gozfree/aquila.svg)](https://github.com/gozfree/aquila/releases)
+[![License](https://img.shields.io/github/license/gozfree/aquila.svg)](https://github.com/gozfree/aquila/blob/master/LICENSE.MIT)
 
 Aquila is an app-level framework to process multimedia, aims to unify the
 different middleware SDK on generic level. It mainly support software encoding
 and decoding on CPU, and easily porting. It can be used on video surveillance,
-ipcam or drone.
+ipcam.
 
 ## Framework
 * `algo`     algorithm
@@ -22,9 +26,6 @@ This app is mostly based on [gear-lib](https://github.com/gozfree/gear-lib)
 
 ## Build
 How to build aquila, please refer to INSTALL.md.
-
-## Documentation
-The documentation is available in the **doc/** directory.
 
 ## Moral
 Wiki: Aquila is the Latin and Romance languages word for eagle.
