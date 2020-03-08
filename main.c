@@ -18,15 +18,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-#include <libdebug.h>
-#include <liblog.h>
+#include <gear-lib/libdebug.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libqueue.h>
 #include "device.h"
 #include "codec.h"
 #include "playback.h"
 #include "protocol.h"
 #include "muxer.h"
 #include "filter.h"
-#include "libqueue.h"
 #include "config.h"
 
 struct aquila {

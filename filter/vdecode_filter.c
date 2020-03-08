@@ -22,8 +22,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 
 #include "filter.h"
 #include "common.h"
@@ -46,7 +46,7 @@ static int on_vdec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *o
 
 static int vdec_open(struct filter_ctx *fc)
 {
-    struct codec_ctx *decoder = codec_open(fc->url, &fc->mp);
+    struct codec_ctx *decoder = codec_open(fc->url, &fc->media_attr);
     if (!decoder) {
         loge("open codec %s failed!\n", fc->url);
         return -1;

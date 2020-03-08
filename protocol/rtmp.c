@@ -18,10 +18,10 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <libmacro.h>
-#include <liblog.h>
-#include <libtime.h>
-#include <librtmp.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libtime.h>
+#include <gear-lib/librtmpc.h>
 
 #include "protocol.h"
 
@@ -33,12 +33,12 @@ enum rtmp_status {
 
 typedef struct rtmp_ctx {
     enum rtmp_status status;
-    struct media_params mp;
+    struct media_attr mp;
     char *url;
-    struct rtmp *client;
+    struct rtmpc *client;
 } rtmp_ctx_t;
 
-static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_params *mp)
+static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_attr *mp)
 {
     struct rtmp_ctx *rc = CALLOC(1, struct rtmp_ctx);
     if (!rc) {
@@ -46,14 +46,14 @@ static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_para
         goto failed;
     }
     rc->status = RTMP_STATUS_IDLE;
-    rc->client = rtmp_create(url);
+    rc->client = rtmpc_create(url);
     if(!rc->client) {
         loge("failed to connect %s, please make sure rtmp server exist\n", url);
         goto failed;
     }
     logi("url = %s\n", url);
     rc->url = strdup(url);
-    memcpy(&rc->mp, mp, sizeof(struct media_params));
+    memcpy(&rc->mp, mp, sizeof(struct media_attr));
     pc->priv = rc;
     return 0;
 
@@ -71,16 +71,16 @@ static int rtmp_write(struct protocol_ctx *pc, void *buf, int len)
     struct media_packet *pkt = buf;
 
     if (rc->status == RTMP_STATUS_IDLE) {
-        if (rtmp_stream_add(rc->client, pkt)) {
+        if (rtmpc_stream_add(rc->client, pkt)) {
             loge("rtmp_stream_add failed!\n");
             ret = 0;
         } else {
-            rtmp_stream_start(rc->client);
+            rtmpc_stream_start(rc->client);
             rc->status = RTMP_STATUS_RUNNING;
             logi("get_extra_data success!\n");
         }
     } else if (rc->status == RTMP_STATUS_RUNNING) {
-        rtmp_send_packet(rc->client, pkt);
+        rtmpc_send_packet(rc->client, pkt);
     }
     return ret;
 }
@@ -88,7 +88,7 @@ static int rtmp_write(struct protocol_ctx *pc, void *buf, int len)
 static void rtmp_close(struct protocol_ctx *pc)
 {
     struct rtmp_ctx *rc = (struct rtmp_ctx *)pc->priv;
-    rtmp_stream_stop(rc->client);
+    rtmpc_stream_stop(rc->client);
     free(rc->url);
     free(rc);
 }

@@ -15,7 +15,6 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-#include <libdarray.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -31,16 +30,17 @@ extern "C" {
 #endif
 
 
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libdarray.h>
 
 #include "codec.h"
 #include "common.h"
-#include "imgconvert.h"
 
 struct x264_ctx {
     enum video_format input_format;
     struct iovec sei;
+    DARRAY(uint8_t) packet_data;
     x264_param_t param;
     x264_t *handle;
     bool first_frame;
@@ -105,7 +105,7 @@ static int init_header(struct x264_ctx *c)
     return 0;
 }
 
-static int _x264_open(struct codec_ctx *cc, struct media_params *mp)
+static int _x264_open(struct codec_ctx *cc, struct media_attr *ma)
 {
     struct x264_ctx *c = CALLOC(1, struct x264_ctx);
     if (!c) {
@@ -114,7 +114,7 @@ static int _x264_open(struct codec_ctx *cc, struct media_params *mp)
     }
 
     x264_param_default_preset(&c->param, "ultrafast" , "zerolatency");
-    c->input_format = mp->video.format;
+    c->input_format = ma->video.format;
 
     c->param.rc.i_vbv_max_bitrate = 2500;
     c->param.rc.i_vbv_buffer_size = 2500;
@@ -128,10 +128,10 @@ static int _x264_open(struct codec_ctx *cc, struct media_params *mp)
     c->param.i_log_level = X264_LOG_INFO;
     c->param.i_csp = video_format_to_x264_csp(c->input_format);
 
-    c->param.i_width = mp->video.width;
-    c->param.i_height = mp->video.height;
-    c->param.i_fps_num = mp->video.fps_num;
-    c->param.i_fps_den = mp->video.fps_den;
+    c->param.i_width = ma->video.width;
+    c->param.i_height = ma->video.height;
+    c->param.i_fps_num = ma->video.fps_num;
+    c->param.i_fps_den = ma->video.fps_den;
 
     x264_param_apply_profile(&c->param, NULL);
 
@@ -152,8 +152,8 @@ static int _x264_open(struct codec_ctx *cc, struct media_params *mp)
         goto failed;
     }
 
-    mp->video.extradata.iov_base = c->extradata.iov_base;
-    mp->video.extradata.iov_len = c->extradata.iov_len;
+    ma->video.extra_data = c->extradata.iov_base;
+    ma->video.extra_size = c->extradata.iov_len;
 
     c->parent = cc;
     cc->priv = c;
@@ -207,42 +207,28 @@ static int init_pic_data(struct x264_ctx *c, x264_picture_t *pic,
 static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
                        x264_nal_t *nals, int nal_cnt, x264_picture_t *pic_out)
 {
-    uint8_t *p;
-    int i;
-    size_t size = c->sei.iov_len;
-
-    for (i = 0; i < nal_cnt; i++)
-        size += nals[i].i_payload;
-
-    if (pkt->size < size) {
-        pkt->data = realloc(pkt->data, size);
-    }
-    if (!pkt->data) {
+    if (!nal_cnt)
         return -1;
-    }
 
-    pkt->size = 0;
-    p = pkt->data;
+    da_resize(c->packet_data, 0);
 
     if (!c->append_extra) {
         pkt->extra_data = c->extradata.iov_base;
         pkt->extra_size = c->extradata.iov_len;
         c->append_extra = true;
     }
-
-    for (i = 0; i < nal_cnt; i++){
-        memcpy(p, nals[i].p_payload, nals[i].i_payload);
-        p += nals[i].i_payload;
-        pkt->size += nals[i].i_payload;
+    for (int i = 0; i < nal_cnt; i++) {
+        x264_nal_t *nal = nals + i;
+        da_push_back_array(c->packet_data, nal->p_payload, nal->i_payload);
     }
 
+    pkt->data = c->packet_data.array;
+    pkt->size = c->packet_data.num;
     pkt->pts = pic_out->i_pts;
     pkt->dts = pic_out->i_dts;
     pkt->timebase_num = c->param.i_fps_den;
     pkt->timebase_den = c->param.i_fps_num;
     pkt->key_frame = pic_out->b_keyframe != 0;
-    logd("pkt->pts=%zu, dts=%zu, keyframe=%d\n", pkt->pts, pkt->dts, pkt->key_frame);
-
     return pkt->size;
 }
 
@@ -275,6 +261,9 @@ static int _x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
         loge("fill_packet failed!\n");
         return -1;
     }
+
+    logd("frame->pts=%zu, packet->pts=%zu, dts=%zu, keyframe=%d, timebase=%d/%d, size=%zu\n",
+        frm->timestamp, pkt->pts, pkt->dts, pkt->key_frame, pkt->timebase_num, pkt->timebase_den, pkt->size);
     c->cur_pts += c->timebase_num;
     out->iov_len = ret;
     return ret;
@@ -284,6 +273,7 @@ static void _x264_close(struct codec_ctx *cc)
 {
     struct x264_ctx *c = (struct x264_ctx *)cc->priv;
     if (c->handle) {
+        da_free(c->packet_data);
         x264_encoder_close(c->handle);
         free(c->extradata.iov_base);
         c->extradata.iov_len = 0;

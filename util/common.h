@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/uio.h>
-#include <libmedia-io.h>
+#include <gear-lib/libmedia-io.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,52 +62,6 @@ struct ikey_cvalue {
     char str[32];
 };
 
-
-struct frame {
-    struct iovec buf;
-    int index;
-};
-
-enum media_type {
-    MEDIA_TYPE_UNKNOWN = -1,  ///< Usually treated as MEDIA_TYPE_DATA
-    MEDIA_TYPE_VIDEO,
-    MEDIA_TYPE_AUDIO,
-    MEDIA_TYPE_DATA,          ///< Opaque data information usually continuous
-    MEDIA_TYPE_SUBTITLE,
-    MEDIA_TYPE_ATTACHMENT,    ///< Opaque data information usually sparse
-    MEDIA_TYPE_NB
-};
-
-struct packet {
-    //compressed data
-    struct iovec data;
-    enum media_type type;
-    uint64_t pts;
-};
-
-struct video_param {
-    enum video_format format;
-    uint32_t          width;
-    uint32_t          height;
-    uint64_t          timestamp;//ns
-    uint64_t          id;
-    uint32_t          fps_num;
-    uint32_t          fps_den;
-    struct iovec      extradata;
-    void              *opaque;
-};
-
-struct audio_param {
-
-};
-
-struct media_params {
-    int type;
-    union {
-        struct video_param video;
-        struct audio_param audio;
-    };
-};
 
 #ifdef __cplusplus
 }

@@ -18,9 +18,9 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
-#include <libatomic.h>
-#include <liblog.h>
-#include <libmacro.h>
+#include <gear-lib/libatomic.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libmacro.h>
 
 
 #include "common.h"
@@ -66,7 +66,7 @@ void muxer_register_all()
 }
 
 
-struct muxer_ctx *muxer_open(const char *url, struct media_params *media)
+struct muxer_ctx *muxer_open(const char *url, struct media_attr *ma)
 {
     struct muxer *p;
     struct muxer_ctx *c = CALLOC(1, struct muxer_ctx);
@@ -92,7 +92,7 @@ struct muxer_ctx *muxer_open(const char *url, struct media_params *media)
         loge("muxer open ops can't be null\n");
         goto failed;
     }
-    if (0 != c->ops->open(c, media)) {
+    if (0 != c->ops->open(c, ma)) {
         loge("open %s muxer failed!\n", c->url.head);
         goto failed;
     }
@@ -113,7 +113,7 @@ int muxer_write_header(struct muxer_ctx *c)
     return c->ops->write_header(c);
 }
 
-int muxer_write_packet(struct muxer_ctx *c, struct packet *pkt)
+int muxer_write_packet(struct muxer_ctx *c, struct media_packet *pkt)
 {
     if (!c->ops->write_packet) {
         return -1;
@@ -137,7 +137,7 @@ int muxer_read_header(struct muxer_ctx *c)
     return c->ops->read_header(c);
 }
 
-int muxer_read_packet(struct muxer_ctx *c, struct packet *pkt)
+int muxer_read_packet(struct muxer_ctx *c, struct media_packet *pkt)
 {
     if (!c->ops->read_packet) {
         return -1;

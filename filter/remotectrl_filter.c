@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
-#include <liblog.h>
+#include <gear-lib/liblog.h>
 
 #include "protocol.h"
 #include "filter.h"
@@ -46,7 +46,7 @@ static int on_remotectrl_read(struct filter_ctx *fc, struct iovec *in, struct io
 
 static int remotectrl_open(struct filter_ctx *fc)
 {
-    struct protocol_ctx *proto = protocol_open(fc->url, &fc->mp);
+    struct protocol_ctx *proto = protocol_open(fc->url, &fc->media_attr);
     if (!proto) {
         loge("open protocol %s failed!\n", fc->url);
         return -1;

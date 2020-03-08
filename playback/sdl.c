@@ -21,8 +21,8 @@
 #include <SDL/SDL.h>
 #include <SDL_thread.h>
 #include <libavformat/avformat.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 
 #include "playback.h"
 #include "common.h"
@@ -370,7 +370,7 @@ fail:
     return -1;
 }
 
-static int sdl_open(struct playback_ctx *pc, const char *type, struct media_params *format)
+static int sdl_open(struct playback_ctx *pc, const char *type, struct media_attr *ma)
 {
     struct sdl_ctx *c = CALLOC(1, struct sdl_ctx);
     if (!c) {
@@ -387,8 +387,8 @@ static int sdl_open(struct playback_ctx *pc, const char *type, struct media_para
         loge("sdl only support RGB/YUV surface\n");
         return -1;
     }
-    c->width = format->video.width;
-    c->height = format->video.height;
+    c->width = ma->video.width;
+    c->height = ma->video.height;
 
     logi("sdl pix format: %d*%d\n", c->width, c->height);
     if (-1 == sdl_init(c)) {

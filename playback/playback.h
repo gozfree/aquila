@@ -30,20 +30,20 @@ extern "C" {
 struct playback_ctx {
     struct url url;
     struct playback *ops;
-    struct media_params media;
+    struct media_attr ma;
     void *priv;
 };
 
 struct playback {
     const char *name;
-    int (*open)(struct playback_ctx *c, const char *type, struct media_params *format);
+    int (*open)(struct playback_ctx *c, const char *type, struct media_attr *format);
     int (*read)(struct playback_ctx *c, void *buf, int len);
     int (*write)(struct playback_ctx *c, void *buf, int len);
     void (*close)(struct playback_ctx *c);
     struct playback *next;
 };
 
-struct playback_ctx *playback_open(const char *url, struct media_params *format);
+struct playback_ctx *playback_open(const char *url, struct media_attr *format);
 int playback_read(struct playback_ctx *c, void *buf, int len);
 int playback_write(struct playback_ctx *c, void *buf, int len);
 void playback_close(struct playback_ctx *c);

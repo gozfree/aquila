@@ -21,13 +21,13 @@
 #include <errno.h>
 #include <stdint.h>
 #include <x264.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 
 #include "muxer.h"
 #include "common.h"
 
-static int flv_open(struct muxer_ctx *cc, struct media_params *media)
+static int flv_open(struct muxer_ctx *cc, struct media_attr *ma)
 {
     return 0;
 }

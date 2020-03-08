@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <string.h>
-#include <libmacro.h>
-#include <libatomic.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/libatomic.h>
+#include <gear-lib/liblog.h>
 #include "device.h"
 
 #define REGISTER_DEVICE(x)                                                     \
@@ -51,7 +51,7 @@ void device_register_all(void)
     REGISTER_DEVICE(vdevfake);
 }
 
-struct device_ctx *device_open(const char *url, struct media_params *mp)
+struct device_ctx *device_open(const char *url, struct media_attr *ma)
 {
     struct device *p;
     struct device_ctx *dc = CALLOC(1, struct device_ctx);
@@ -80,7 +80,7 @@ struct device_ctx *device_open(const char *url, struct media_params *mp)
         loge("device open ops can't be null\n");
         goto failed;
     }
-    if (0 != dc->ops->open(dc, dc->url.body, mp)) {
+    if (0 != dc->ops->open(dc, dc->url.body, ma)) {
         loge("open %s failed!\n", dc->url.body);
         goto failed;
     }

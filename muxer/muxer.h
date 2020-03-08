@@ -36,14 +36,14 @@ struct muxer_ctx {
 
 struct muxer {
     const char *name;
-    int (*open)(struct muxer_ctx *c, struct media_params *media);
+    int (*open)(struct muxer_ctx *c, struct media_attr *ma);
     int (*write_header)(struct muxer_ctx *c);
-    int (*write_packet)(struct muxer_ctx *c, struct packet *pkt);
+    int (*write_packet)(struct muxer_ctx *c, struct media_packet *pkt);
     int (*write_tailer)(struct muxer_ctx *c);
 
 
     int (*read_header)(struct muxer_ctx *c);
-    int (*read_packet)(struct muxer_ctx *c, struct packet *pkt);
+    int (*read_packet)(struct muxer_ctx *c, struct media_packet *pkt);
     int (*read_tailer)(struct muxer_ctx *c);
 
     void (*close)(struct muxer_ctx *c);
@@ -51,15 +51,15 @@ struct muxer {
 };
 
 void muxer_register_all();
-struct muxer_ctx *muxer_open(const char *name, struct media_params *mediah);
+struct muxer_ctx *muxer_open(const char *name, struct media_attr *ma);
 void muxer_close(struct muxer_ctx *c);
 
 int muxer_write_header(struct muxer_ctx *c);
-int muxer_write_packet(struct muxer_ctx *c, struct packet *pkt);
+int muxer_write_packet(struct muxer_ctx *c, struct media_packet *pkt);
 int muxer_write_tailer(struct muxer_ctx *c);
 
 int muxer_read_header(struct muxer_ctx *c);
-int muxer_read_packet(struct muxer_ctx *c, struct packet *pkt);
+int muxer_read_packet(struct muxer_ctx *c, struct media_packet *pkt);
 int muxer_read_header(struct muxer_ctx *c);
 
 

@@ -24,10 +24,10 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-#include <liblog.h>
-#include <librtsp.h>
-#include <libmacro.h>
-#include <libqueue.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/librtsp.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/libqueue.h>
 #include "protocol.h"
 #include "common.h"
 
@@ -127,7 +127,7 @@ struct media_source media_source_proxy = {
 
 extern struct media_source media_source_proxy;
 
-static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_params *media)
+static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_attr *media)
 {
     struct rtsp_server *rc = rtsp_server_init(NULL, 8554);
     if (!rc) {

@@ -20,11 +20,11 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/uio.h>
-#include <libmacro.h>
-#include <libskt.h>
-#include <liblog.h>
-#include <libgevent.h>
-#include <libvector.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/libskt.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libgevent.h>
+#include <gear-lib/libvector.h>
 #include "protocol.h"
 #include "common.h"
 #include "rtp_h264.h"
@@ -136,7 +136,7 @@ static void on_error(int fd, void *arg)
 }
 
 
-static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_params *media)
+static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_attr *media)
 {
     struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     skt_addr_list_t *tmp;

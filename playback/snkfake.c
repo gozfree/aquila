@@ -22,8 +22,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 
 #include "playback.h"
 #include "common.h"
@@ -34,15 +34,15 @@ struct snkfake_ctx {
     int height;
 };
 
-static int snk_open(struct playback_ctx *pc, const char *type, struct media_params *format)
+static int snk_open(struct playback_ctx *pc, const char *type, struct media_attr *ma)
 {
     struct snkfake_ctx *c = CALLOC(1, struct snkfake_ctx);
     if (!c) {
         loge("malloc snkfake_ctx failed!\n");
         return -1;
     }
-    c->width = format->video.width;
-    c->height = format->video.height;
+    c->width = ma->video.width;
+    c->height = ma->video.height;
     c->index = 0;
     pc->priv = c;
     logd("snk_open sucess\n");

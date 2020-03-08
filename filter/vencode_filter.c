@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
-#include <liblog.h>
+#include <gear-lib/liblog.h>
 
 #include "codec.h"
 #include "filter.h"
@@ -48,7 +48,7 @@ static int on_venc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *o
 
 static int venc_open(struct filter_ctx *fc)
 {
-    struct codec_ctx *encoder = codec_open(fc->url, &fc->mp);
+    struct codec_ctx *encoder = codec_open(fc->url, &fc->media_attr);
     if (!encoder) {
         loge("open codec %s failed!\n", fc->url);
         return -1;

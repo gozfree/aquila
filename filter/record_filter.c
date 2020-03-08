@@ -22,8 +22,8 @@
 #include <errno.h>
 #include <assert.h>
 
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 
 #include "filter.h"
 #include "common.h"
@@ -35,11 +35,13 @@ struct rec_ctx {
 
 static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
-    struct packet pkt;
+    struct media_packet pkt;
+    struct video_packet video;
     struct rec_ctx *vc = (struct rec_ctx *)fc->priv;
-    pkt.type = MEDIA_TYPE_VIDEO;
-    pkt.data.iov_base = in->iov_base;
-    pkt.data.iov_len = in->iov_len;
+    pkt.type = MEDIA_VIDEO;
+    video.data = in->iov_base;
+    video.size = in->iov_len;
+    pkt.video = &video;
     int ret = muxer_write_packet(vc->muxer, &pkt);
     if (ret == -1) {
         loge("decode failed!\n");
@@ -50,7 +52,7 @@ static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *ou
 
 static int rec_open(struct filter_ctx *fc)
 {
-    struct muxer_ctx *muxer = muxer_open(fc->url, &fc->mp);
+    struct muxer_ctx *muxer = muxer_open(fc->url, &fc->media_attr);
     if (!muxer) {
         loge("open muxer %s failed!\n", fc->url);
         return -1;

@@ -20,8 +20,8 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <libmacro.h>
-#include <libgevent.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/libgevent.h>
 #include "common.h"
 #include "config.h"
 
@@ -47,7 +47,7 @@ struct filter_ctx {
     struct queue *q_src;
     struct queue *q_snk;
     struct filter *ops;
-    struct media_params mp;
+    struct media_attr media_attr;
     const char *url;
     void *priv;
     void *config;

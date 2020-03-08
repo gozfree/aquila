@@ -21,7 +21,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <liblog.h>
+#include <gear-lib/liblog.h>
 
 #include "playback.h"
 #include "filter.h"
@@ -60,7 +60,7 @@ static int playback_filter_open(struct filter_ctx *fc)
         return -1;
     }
     pfc->conf = &fconf->playback;
-    struct playback_ctx *pc = playback_open(fc->url, &fc->mp);
+    struct playback_ctx *pc = playback_open(fc->url, &fc->media_attr);
     if (!pc) {
         loge("open %s failed!\n", fc->url);
         goto failed;
@@ -68,8 +68,8 @@ static int playback_filter_open(struct filter_ctx *fc)
 
     pfc->pc = pc;
     pfc->seq = 0;
-    pc->media.video.width = fc->mp.video.width;
-    pc->media.video.height = fc->mp.video.height;
+    pc->ma.video.width = fc->media_attr.video.width;
+    pc->ma.video.height = fc->media_attr.video.height;
     fc->rfd = -1;
     fc->wfd = -1;
     fc->priv = pfc;

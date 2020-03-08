@@ -21,10 +21,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <liblog.h>
-#include <libtime.h>
-#include <libmacro.h>
-#include <libmedia-io.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libtime.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/libmedia-io.h>
 
 #include "device.h"
 #include "filter.h"
@@ -40,7 +40,7 @@ struct videocap_ctx {
 static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
-    struct media_params *mp = &fc->mp;
+    struct media_attr *mp = &fc->media_attr;
     char tmp_tm[32];
     struct video_frame frm;
     video_frame_init(&frm, mp->video.format, mp->video.width, mp->video.height, VFC_NONE);
@@ -53,7 +53,7 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
         return -1;
     }
 
-    time_get_msec_str(tmp_tm, sizeof(tmp_tm));
+    time_msec_str(tmp_tm, sizeof(tmp_tm));
     //overlay_draw_text((unsigned char *)frm, 0, 0, mp->video.width, tmp_tm);
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
@@ -66,7 +66,7 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
 
 static int videocap_open(struct filter_ctx *fc)
 {
-    struct media_params *mp = &fc->mp;
+    struct media_attr *mp = &fc->media_attr;
     struct filter_conf *fconf = (struct filter_conf *)fc->config;
     struct videocap_ctx *vc = CALLOC(1, struct videocap_ctx);
     if (!vc) {
@@ -74,12 +74,12 @@ static int videocap_open(struct filter_ctx *fc)
         return -1;
     }
     vc->conf = &fconf->videocap;
-    struct device_ctx *dc = device_open(fc->url, &vc->conf->mp);
+    struct device_ctx *dc = device_open(fc->url, &vc->conf->ma);
     if (!dc) {
         loge("open %s failed!\n", fc->url);
         goto failed;
     }
-    memcpy(mp, &vc->conf->mp, sizeof(struct media_params));
+    memcpy(mp, &vc->conf->ma, sizeof(struct media_attr));
     vc->dev = dc;
     vc->seq = 0;
 

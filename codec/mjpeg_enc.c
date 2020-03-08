@@ -21,8 +21,8 @@
 #include <stdint.h>
 #include <sys/uio.h>
 #include <jpeglib.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 
 #include "codec.h"
 #include "common.h"
@@ -50,16 +50,16 @@ typedef struct jpeg_args {
     int *written;
 } jpeg_args_t;
 
-static int mjpeg_open(struct codec_ctx *c, struct media_params *media)
+static int mjpeg_open(struct codec_ctx *c, struct media_attr *ma)
 {
     struct mjpeg_ctx *mc = CALLOC(1, struct mjpeg_ctx);
     if (!mc) {
         loge("malloc mjpeg_ctx failed!\n");
         return -1;
     }
-    mc->width = media->video.width;
-    mc->height = media->video.height;
-    mc->input_format = media->video.format;
+    mc->width = ma->video.width;
+    mc->height = ma->video.height;
+    mc->input_format = ma->video.format;
     mc->encode_format = YUV420;
     mc->encoder.err = jpeg_std_error(&mc->errmgr);
     jpeg_create_compress(&mc->encoder);

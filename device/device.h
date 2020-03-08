@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/uio.h>
+#include <gear-lib/libmedia-io.h>
 
 #include "common.h"
 #include "url.h"
@@ -59,13 +60,13 @@ struct device_ctx {
     struct url url;
     enum device_type type;
     struct device *ops;
-    //struct media_params media;
+    //struct media_attr media;
     void *priv;
 };
 
 struct device {
     const char *name;
-    int (*open)(struct device_ctx *c, const char *url, struct media_params *media);
+    int (*open)(struct device_ctx *c, const char *url, struct media_attr *ma);
     int (*read)(struct device_ctx *c, void *buf, int len);
     int (*query_frame)(struct device_ctx *c, struct media_frame *frame);
     int (*query_packet)(struct device_ctx *c, struct media_packet *packet);
@@ -77,7 +78,7 @@ struct device {
 
 
 void device_register_all();
-struct device_ctx *device_open(const char *url, struct media_params *media);
+struct device_ctx *device_open(const char *url, struct media_attr *ma);
 int device_read(struct device_ctx *dc, void *buf, int len);
 int device_query_buffer(struct device_ctx *dc, struct device_buffer *buf);
 int device_write(struct device_ctx *dc, void *buf, int len);

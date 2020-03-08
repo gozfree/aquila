@@ -20,9 +20,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <libmacro.h>
-#include <liblog.h>
-#include <libatomic.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libatomic.h>
 
 #include "common.h"
 #include "protocol.h"
@@ -59,7 +59,7 @@ void protocol_register_all()
     REGISTER_PROTOCOL(rpcd);
 }
 
-struct protocol_ctx *protocol_open(const char *url, struct media_params *mp)
+struct protocol_ctx *protocol_open(const char *url, struct media_attr *ma)
 {
     struct protocol *p;
     struct protocol_ctx *pc = CALLOC(1, struct protocol_ctx);
@@ -87,7 +87,7 @@ struct protocol_ctx *protocol_open(const char *url, struct media_params *mp)
         loge("protocol open ops can't be null\n");
         goto failed;
     }
-    if (0 != pc->ops->open(pc, url, mp)) {
+    if (0 != pc->ops->open(pc, url, ma)) {
         loge("open %s failed!\n", url);
         goto failed;
     }

@@ -24,8 +24,8 @@
 #include <sys/types.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 #include "common.h"
 #include "config.h"
 
@@ -84,15 +84,15 @@ static void load_videocap(struct aq_config *c)
     strcat(c->videocap.url, c->videocap.type.str);
     strcat(c->videocap.url, "://");
     strcat(c->videocap.url, c->videocap.device);
-    c->videocap.mp.video.width = conf_get_int(c->conf, "videocap", "width");
-    c->videocap.mp.video.height = conf_get_int(c->conf, "videocap", "height");
+    c->videocap.ma.video.width = conf_get_int(c->conf, "videocap", "width");
+    c->videocap.ma.video.height = conf_get_int(c->conf, "videocap", "height");
     strcpy(c->videocap.format, conf_get_string(c->conf, "videocap", "format"));
-    c->videocap.mp.video.format = string_to_enum(c->videocap.format);
+    c->videocap.ma.video.format = string_to_enum(c->videocap.format);
     logi("[videocap][type] = %s\n", c->videocap.type.str);
     logi("[videocap][device] = %s\n", c->videocap.device);
     logi("[videocap][url] = %s\n", c->videocap.url);
     logi("[videocap][format] = %s\n", c->videocap.format);
-    logi("[videocap][w*h] = %d*%d\n", c->videocap.mp.video.width, c->videocap.mp.video.height);
+    logi("[videocap][w*h] = %d*%d\n", c->videocap.ma.video.width, c->videocap.ma.video.height);
 }
 
 static void load_vencode(struct aq_config *c)
@@ -150,12 +150,12 @@ static void load_playback(struct aq_config *c)
     strcat(c->playback.url, c->playback.type.str);
     strcat(c->playback.url, "://");
     strcat(c->playback.url, c->playback.format);
-    c->playback.param.video.width = conf_get_int(c->conf, "playback", "width");
-    c->playback.param.video.height = conf_get_int(c->conf, "playback", "height");
+    c->playback.ma.video.width = conf_get_int(c->conf, "playback", "width");
+    c->playback.ma.video.height = conf_get_int(c->conf, "playback", "height");
 
     logi("[playback][type] = %s\n", c->playback.type.str);
     logi("[playback][url] = %s\n", c->playback.url);
-    logi("[playback][w*h] = %d*%d\n", c->playback.param.video.width, c->playback.param.video.height);
+    logi("[playback][w*h] = %d*%d\n", c->playback.ma.video.width, c->playback.ma.video.height);
 }
 
 static void load_remotectrl(struct aq_config *c)

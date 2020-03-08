@@ -26,8 +26,8 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 #include "device.h"
 #include "imgconvert.h"
 
@@ -42,7 +42,7 @@ struct vdev_fake_ctx {
     int req_count;
 };
 
-static int vf_open(struct device_ctx *dc, const char *dev, struct media_params *media)
+static int vf_open(struct device_ctx *dc, const char *dev, struct media_attr *ma)
 {
     int fd = -1;
     int fds[2];
@@ -66,8 +66,8 @@ static int vf_open(struct device_ctx *dc, const char *dev, struct media_params *
         goto failed;
     }
     vc->fd = fd;
-    vc->width = media->video.width;
-    vc->height = media->video.height;
+    vc->width = ma->video.width;
+    vc->height = ma->video.height;
 
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
 #if 0

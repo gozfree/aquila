@@ -17,11 +17,11 @@
  ******************************************************************************/
 #include "protocol.h"
 #include "device.h"
-#include <librpc.h>
-#include <librpc_stub.h>
-#include <libgevent.h>
-#include <liblog.h>
-#include <libskt.h>
+#include <gear-lib/librpc.h>
+#include <gear-lib/librpc_stub.h>
+#include <gear-lib/libgevent.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libskt.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -55,7 +55,7 @@ int rpcd_group_register()
 }
 
 
-static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_params *media)
+static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_attr *media)
 {
     int port = RPCD_PORT;
     struct rpc *rpc = rpc_server_create(NULL, port);

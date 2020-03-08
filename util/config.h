@@ -18,7 +18,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include <libconfig.h>
+#include <gear-lib/libconfig.h>
 #include "common.h"
 
 #ifdef __cplusplus
@@ -29,7 +29,7 @@ struct videocap_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_params mp;
+    struct media_attr ma;
     char *url;
 };
 
@@ -53,7 +53,7 @@ struct playback_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_params param;
+    struct media_attr ma;
     char *url;
 };
 

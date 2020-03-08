@@ -15,10 +15,10 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-#include <libuvc.h>
-#include <libmedia-io.h>
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/libuvc.h>
+#include <gear-lib/libmedia-io.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +34,7 @@ struct usbcam_ctx {
     int on_write_fd;
 };
 
-static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_params *mp)
+static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_attr *ma)
 {
     int fds[2] = {0};
     char notify = '1';
@@ -51,16 +51,20 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_para
     vc->on_write_fd = fds[1];
     logd("pipe: rfd = %d, wfd = %d\n", vc->on_read_fd, vc->on_write_fd);
 
-    vc->uvc = uvc_open(dev, mp->video.width, mp->video.height);
+    vc->uvc = uvc_open(dev, ma->video.width, ma->video.height);
     if (uvc_start_stream(vc->uvc, NULL)) {
         loge("uvc start stream failed!\n");
         goto failed;
     }
     vc->name = strdup(dev);
+    logd("open %s format:%s resolution:%d*%d @%d/%dfps\n",
+          dev, video_format_name(vc->uvc->format),
+          vc->uvc->width, vc->uvc->height,
+          vc->uvc->fps_num, vc->uvc->fps_den);
 
-    mp->video.fps_num = vc->uvc->fps_num;
-    mp->video.fps_den = vc->uvc->fps_den;
-    mp->video.format = vc->uvc->format;
+    ma->video.fps_num = vc->uvc->fps_num;
+    ma->video.fps_den = vc->uvc->fps_den;
+    ma->video.format = vc->uvc->format;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->priv = vc;
     if (write(vc->on_write_fd, &notify, 1) != 1) {

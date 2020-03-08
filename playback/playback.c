@@ -20,9 +20,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
-#include <libmacro.h>
-#include <libatomic.h>
-#include <liblog.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/libatomic.h>
+#include <gear-lib/liblog.h>
 
 #include "playback.h"
 
@@ -56,7 +56,7 @@ void playback_register_all()
     REGISTER_PLAYBACK(snk);
 }
 
-struct playback_ctx *playback_open(const char *url, struct media_params *format)
+struct playback_ctx *playback_open(const char *url, struct media_attr *ma)
 {
     struct playback *p;
     struct playback_ctx *pc = CALLOC(1, struct playback_ctx);
@@ -84,7 +84,7 @@ struct playback_ctx *playback_open(const char *url, struct media_params *format)
         loge("playback open ops can't be null\n");
         goto failed;
     }
-    if (0 != pc->ops->open(pc, pc->url.body, format)) {
+    if (0 != pc->ops->open(pc, pc->url.body, ma)) {
         loge("open %s failed!\n", pc->url.body);
         goto failed;
     }
