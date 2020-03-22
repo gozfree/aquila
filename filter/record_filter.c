@@ -38,7 +38,7 @@ static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *ou
     struct media_packet pkt;
     struct video_packet video;
     struct rec_ctx *vc = (struct rec_ctx *)fc->priv;
-    pkt.type = MEDIA_VIDEO;
+    pkt.type = MEDIA_TYPE_VIDEO;
     video.data = in->iov_base;
     video.size = in->iov_len;
     pkt.video = &video;

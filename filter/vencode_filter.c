@@ -35,7 +35,7 @@ static int on_venc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *o
 {
     int ret;
     struct venc_ctx *vc = (struct venc_ctx *)fc->priv;
-    struct media_packet *pkt = media_packet_create(MEDIA_PACKET_VIDEO, NULL, 0);
+    struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, NULL, 0);
     struct iovec iov_pkt;
     iov_pkt.iov_base = pkt->video;
     ret = codec_encode(vc->encoder, in, &iov_pkt);
