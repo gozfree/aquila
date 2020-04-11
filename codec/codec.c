@@ -69,7 +69,7 @@ void codec_register_all()
 #endif
 }
 
-struct codec_ctx *codec_open(const char *url, struct media_attr *ma)
+struct codec_ctx *codec_open(const char *url, struct media_encoder *me)
 {
     struct codec *p;
     struct codec_ctx *c = CALLOC(1, struct codec_ctx);
@@ -95,7 +95,7 @@ struct codec_ctx *codec_open(const char *url, struct media_attr *ma)
         loge("codec open ops can't be null\n");
         goto failed;
     }
-    if (0 != c->ops->open(c, ma)) {
+    if (0 != c->ops->open(c, me)) {
         loge("open %s codec failed!\n", c->url.head);
         goto failed;
     }

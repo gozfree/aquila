@@ -370,7 +370,7 @@ fail:
     return -1;
 }
 
-static int sdl_open(struct playback_ctx *pc, const char *type, struct media_attr *ma)
+static int sdl_open(struct playback_ctx *pc, const char *type, struct media_encoder *ma)
 {
     struct sdl_ctx *c = CALLOC(1, struct sdl_ctx);
     if (!c) {

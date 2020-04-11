@@ -42,7 +42,7 @@ struct vdev_fake_ctx {
     int req_count;
 };
 
-static int vf_open(struct device_ctx *dc, const char *dev, struct media_attr *ma)
+static int vf_open(struct device_ctx *dc, const char *dev, struct media_encoder *ma)
 {
     int fd = -1;
     int fds[2];

@@ -168,9 +168,9 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     //2. mid fitler: <src, snk>
     //3. snk filter: <src, NULL>
     if (ctx->q_src) {//mid/snk filter
-        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_attr.video.width, ctx->media_attr.video.height, ctx->media_attr.video.extra_size);
-        memcpy(&ctx->media_attr, q_src->opaque.iov_base, q_src->opaque.iov_len);
-        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_attr.video.width, ctx->media_attr.video.height, ctx->media_attr.video.extra_size);
+        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
+        memcpy(&ctx->media_encoder, q_src->opaque.iov_base, q_src->opaque.iov_len);
+        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
         if (ctx->q_snk) {
             q_snk->opaque.iov_base = q_src->opaque.iov_base;
             q_snk->opaque.iov_len = q_src->opaque.iov_len;
@@ -184,15 +184,15 @@ struct filter_ctx *filter_create(struct filter_conf *c,
         qb = queue_branch_get(q_src, ctx->name);
         fd = qb->RD_FD;
         if (ctx->q_snk) {
-        q_snk->opaque.iov_base = &ctx->media_attr;
-        q_snk->opaque.iov_len = sizeof(ctx->media_attr);
+        q_snk->opaque.iov_base = &ctx->media_encoder;
+        q_snk->opaque.iov_len = sizeof(ctx->media_encoder);
         }
     } else {//device source filter
         ctx->type = SRC_FILTER;
         fd = ctx->rfd;
         if (ctx->q_snk) {
-            q_snk->opaque.iov_base = &ctx->media_attr;
-            q_snk->opaque.iov_len = sizeof(ctx->media_attr);
+            q_snk->opaque.iov_base = &ctx->media_encoder;
+            q_snk->opaque.iov_len = sizeof(ctx->media_encoder);
         }
     }
     queue_set_hook(ctx->q_src, q_alloc_cb, q_free_cb);

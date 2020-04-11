@@ -60,7 +60,7 @@ static int playback_filter_open(struct filter_ctx *fc)
         return -1;
     }
     pfc->conf = &fconf->playback;
-    struct playback_ctx *pc = playback_open(fc->url, &fc->media_attr);
+    struct playback_ctx *pc = playback_open(fc->url, &fc->media_encoder);
     if (!pc) {
         loge("open %s failed!\n", fc->url);
         goto failed;
@@ -68,8 +68,8 @@ static int playback_filter_open(struct filter_ctx *fc)
 
     pfc->pc = pc;
     pfc->seq = 0;
-    pc->ma.video.width = fc->media_attr.video.width;
-    pc->ma.video.height = fc->media_attr.video.height;
+    pc->ma.video.width = fc->media_encoder.video.width;
+    pc->ma.video.height = fc->media_encoder.video.height;
     fc->rfd = -1;
     fc->wfd = -1;
     fc->priv = pfc;

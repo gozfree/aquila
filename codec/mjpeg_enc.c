@@ -50,7 +50,7 @@ typedef struct jpeg_args {
     int *written;
 } jpeg_args_t;
 
-static int mjpeg_open(struct codec_ctx *c, struct media_attr *ma)
+static int mjpeg_open(struct codec_ctx *c, struct media_encoder *ma)
 {
     struct mjpeg_ctx *mc = CALLOC(1, struct mjpeg_ctx);
     if (!mc) {

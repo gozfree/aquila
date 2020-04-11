@@ -66,7 +66,7 @@ void muxer_register_all()
 }
 
 
-struct muxer_ctx *muxer_open(const char *url, struct media_attr *ma)
+struct muxer_ctx *muxer_open(const char *url, struct media_encoder *ma)
 {
     struct muxer *p;
     struct muxer_ctx *c = CALLOC(1, struct muxer_ctx);

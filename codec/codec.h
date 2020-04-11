@@ -38,7 +38,7 @@ struct codec_ctx {
 
 struct codec {
     const char *name;
-    int (*open)(struct codec_ctx *c, struct media_attr *ma);
+    int (*open)(struct codec_ctx *c, struct media_encoder *me);
     int (*encode)(struct codec_ctx *c, struct iovec *in, struct iovec *out);
     int (*decode)(struct codec_ctx *c, struct iovec *in, struct iovec *out);
     void (*close)(struct codec_ctx *c);
@@ -46,7 +46,7 @@ struct codec {
 };
 
 void codec_register_all();
-struct codec_ctx *codec_open(const char *name, struct media_attr *ma);
+struct codec_ctx *codec_open(const char *name, struct media_encoder *me);
 void codec_close(struct codec_ctx *c);
 int codec_encode(struct codec_ctx *c, struct iovec *in, struct iovec *out);
 int codec_decode(struct codec_ctx *c, struct iovec *in, struct iovec *out);

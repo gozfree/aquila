@@ -33,12 +33,12 @@ enum rtmp_status {
 
 typedef struct rtmp_ctx {
     enum rtmp_status status;
-    struct media_attr mp;
+    struct media_encoder mp;
     char *url;
     struct rtmpc *client;
 } rtmp_ctx_t;
 
-static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_attr *mp)
+static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_encoder *mp)
 {
     struct rtmp_ctx *rc = CALLOC(1, struct rtmp_ctx);
     if (!rc) {
@@ -53,7 +53,7 @@ static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_attr
     }
     logi("url = %s\n", url);
     rc->url = strdup(url);
-    memcpy(&rc->mp, mp, sizeof(struct media_attr));
+    memcpy(&rc->mp, mp, sizeof(struct media_encoder));
     pc->priv = rc;
     return 0;
 
@@ -80,6 +80,8 @@ static int rtmp_write(struct protocol_ctx *pc, void *buf, int len)
             logi("get_extra_data success!\n");
         }
     } else if (rc->status == RTMP_STATUS_RUNNING) {
+    logd("pkt->dts=%d, extra_size=%d, pkt->encoder.timebase = %d/%d\n", pkt->video->dts, pkt->video->encoder.extra_size, pkt->video->encoder.timebase.num, pkt->video->encoder.timebase.den);
+    logd("rtmpc_send_packet pkt->size=%d\n", pkt->video->size);
         rtmpc_send_packet(rc->client, pkt);
     }
     return ret;

@@ -56,7 +56,7 @@ void playback_register_all()
     REGISTER_PLAYBACK(snk);
 }
 
-struct playback_ctx *playback_open(const char *url, struct media_attr *ma)
+struct playback_ctx *playback_open(const char *url, struct media_encoder *ma)
 {
     struct playback *p;
     struct playback_ctx *pc = CALLOC(1, struct playback_ctx);

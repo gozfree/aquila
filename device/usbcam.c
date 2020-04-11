@@ -34,7 +34,7 @@ struct usbcam_ctx {
     int on_write_fd;
 };
 
-static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_attr *ma)
+static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_encoder *ma)
 {
     int fds[2] = {0};
     char notify = '1';
@@ -58,12 +58,12 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_attr
     }
     vc->name = strdup(dev);
     logd("open %s format:%s resolution:%d*%d @%d/%dfps\n",
-          dev, video_format_name(vc->uvc->format),
+          dev, pixel_format_name(vc->uvc->format),
           vc->uvc->width, vc->uvc->height,
           vc->uvc->fps_num, vc->uvc->fps_den);
 
-    ma->video.fps_num = vc->uvc->fps_num;
-    ma->video.fps_den = vc->uvc->fps_den;
+    ma->video.framerate.num = vc->uvc->fps_num;
+    ma->video.framerate.den = vc->uvc->fps_den;
     ma->video.format = vc->uvc->format;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->priv = vc;

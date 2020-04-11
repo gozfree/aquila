@@ -47,7 +47,7 @@ struct filter_ctx {
     struct queue *q_src;
     struct queue *q_snk;
     struct filter *ops;
-    struct media_attr media_attr;
+    struct media_encoder media_encoder;
     const char *url;
     void *priv;
     void *config;

@@ -46,7 +46,7 @@ static int on_vdec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *o
 
 static int vdec_open(struct filter_ctx *fc)
 {
-    struct codec_ctx *decoder = codec_open(fc->url, &fc->media_attr);
+    struct codec_ctx *decoder = codec_open(fc->url, &fc->media_encoder);
     if (!decoder) {
         loge("open codec %s failed!\n", fc->url);
         return -1;

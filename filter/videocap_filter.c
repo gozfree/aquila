@@ -40,7 +40,7 @@ struct videocap_ctx {
 static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
-    struct media_attr *mp = &fc->media_attr;
+    struct media_encoder *mp = &fc->media_encoder;
     char tmp_tm[32];
     struct video_frame frm;
     video_frame_init(&frm, mp->video.format, mp->video.width, mp->video.height, VFC_NONE);
@@ -66,7 +66,7 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
 
 static int videocap_open(struct filter_ctx *fc)
 {
-    struct media_attr *mp = &fc->media_attr;
+    struct media_encoder *mp = &fc->media_encoder;
     struct filter_conf *fconf = (struct filter_conf *)fc->config;
     struct videocap_ctx *vc = CALLOC(1, struct videocap_ctx);
     if (!vc) {
@@ -79,7 +79,7 @@ static int videocap_open(struct filter_ctx *fc)
         loge("open %s failed!\n", fc->url);
         goto failed;
     }
-    memcpy(mp, &vc->conf->ma, sizeof(struct media_attr));
+    memcpy(mp, &vc->conf->ma, sizeof(struct media_encoder));
     vc->dev = dc;
     vc->seq = 0;
 

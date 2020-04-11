@@ -27,7 +27,7 @@
 #include "muxer.h"
 #include "common.h"
 
-static int flv_open(struct muxer_ctx *cc, struct media_attr *ma)
+static int flv_open(struct muxer_ctx *cc, struct media_encoder *ma)
 {
     return 0;
 }

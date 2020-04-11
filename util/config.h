@@ -29,7 +29,7 @@ struct videocap_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_attr ma;
+    struct media_encoder ma;
     char *url;
 };
 
@@ -53,7 +53,7 @@ struct playback_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_attr ma;
+    struct media_encoder ma;
     char *url;
 };
 

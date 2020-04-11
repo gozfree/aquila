@@ -51,7 +51,7 @@ void device_register_all(void)
     REGISTER_DEVICE(vdevfake);
 }
 
-struct device_ctx *device_open(const char *url, struct media_attr *ma)
+struct device_ctx *device_open(const char *url, struct media_encoder *ma)
 {
     struct device *p;
     struct device_ctx *dc = CALLOC(1, struct device_ctx);

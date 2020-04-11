@@ -136,7 +136,7 @@ static void on_error(int fd, void *arg)
 }
 
 
-static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_attr *media)
+static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_encoder *media)
 {
     struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     skt_addr_list_t *tmp;

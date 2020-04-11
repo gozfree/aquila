@@ -59,7 +59,7 @@ void protocol_register_all()
     REGISTER_PROTOCOL(rpcd);
 }
 
-struct protocol_ctx *protocol_open(const char *url, struct media_attr *ma)
+struct protocol_ctx *protocol_open(const char *url, struct media_encoder *ma)
 {
     struct protocol *p;
     struct protocol_ctx *pc = CALLOC(1, struct protocol_ctx);

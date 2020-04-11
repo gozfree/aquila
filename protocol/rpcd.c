@@ -55,7 +55,7 @@ int rpcd_group_register()
 }
 
 
-static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_attr *media)
+static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media)
 {
     int port = RPCD_PORT;
     struct rpc *rpc = rpc_server_create(NULL, port);

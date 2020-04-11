@@ -36,7 +36,7 @@ struct protocol_ctx {
 
 struct protocol {
     const char *name;
-    int (*open)(struct protocol_ctx *c, const char *url, struct media_attr *media);
+    int (*open)(struct protocol_ctx *c, const char *url, struct media_encoder *media);
     int (*read)(struct protocol_ctx *c, void *buf, int len);
     int (*write)(struct protocol_ctx *c, void *buf, int len);
     void (*close)(struct protocol_ctx *c);
@@ -47,7 +47,7 @@ void protocol_register_all();
 struct protocol_ctx *protocol_new(const char *url);
 void protocol_free(struct protocol_ctx *c);
 
-struct protocol_ctx *protocol_open(const char *url, struct media_attr *media);
+struct protocol_ctx *protocol_open(const char *url, struct media_encoder *media);
 
 int protocol_read(struct protocol_ctx *c, void *buf, int len);
 int protocol_write(struct protocol_ctx *c, void *buf, int len);

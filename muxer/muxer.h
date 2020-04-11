@@ -36,7 +36,7 @@ struct muxer_ctx {
 
 struct muxer {
     const char *name;
-    int (*open)(struct muxer_ctx *c, struct media_attr *ma);
+    int (*open)(struct muxer_ctx *c, struct media_encoder *ma);
     int (*write_header)(struct muxer_ctx *c);
     int (*write_packet)(struct muxer_ctx *c, struct media_packet *pkt);
     int (*write_tailer)(struct muxer_ctx *c);
@@ -51,7 +51,7 @@ struct muxer {
 };
 
 void muxer_register_all();
-struct muxer_ctx *muxer_open(const char *name, struct media_attr *ma);
+struct muxer_ctx *muxer_open(const char *name, struct media_encoder *ma);
 void muxer_close(struct muxer_ctx *c);
 
 int muxer_write_header(struct muxer_ctx *c);
