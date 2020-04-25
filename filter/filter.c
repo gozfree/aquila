@@ -82,7 +82,7 @@ static void on_filter_read(int fd, void *arg)
         logd("filter[%s]: queue_pop %p\n", ctx->name, in.iov_base);
     }
     //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
-    pthread_mutex_lock(&ctx->lock);
+    thread_lock(ctx->thread);
     ret = ctx->ops->on_read(ctx, &in, &out);
     if (ret == -1) {
         //loge("filter %s on_read failed!\n", ctx->name);
@@ -104,7 +104,7 @@ static void on_filter_read(int fd, void *arg)
             //aqueue_item_free(in_item);//FIXME: double free
         }
     }
-    pthread_mutex_unlock(&ctx->lock);
+    thread_unlock(ctx->thread);
     logd("filtre[%s] leave\n", ctx->name);
 }
 
@@ -160,7 +160,6 @@ struct filter_ctx *filter_create(struct filter_conf *c,
         return NULL;
     }
     queue_branch_new(q_src, ctx->name);
-    pthread_mutex_init(&ctx->lock, NULL);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
     //filter types:
@@ -168,9 +167,9 @@ struct filter_ctx *filter_create(struct filter_conf *c,
     //2. mid fitler: <src, snk>
     //3. snk filter: <src, NULL>
     if (ctx->q_src) {//mid/snk filter
-        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
+        logd("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
         memcpy(&ctx->media_encoder, q_src->opaque.iov_base, q_src->opaque.iov_len);
-        loge("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
+        logd("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
         if (ctx->q_snk) {
             q_snk->opaque.iov_base = q_src->opaque.iov_base;
             q_snk->opaque.iov_len = q_src->opaque.iov_len;
@@ -241,7 +240,7 @@ failed:
     return NULL;
 }
 
-static void *filter_loop(void *arg)
+static void *filter_loop(struct thread *t, void *arg)
 {
     struct filter_ctx *ctx = (struct filter_ctx *)arg;
     gevent_base_loop(ctx->ev_base);
@@ -254,13 +253,14 @@ int filter_dispatch(struct filter_ctx *ctx, int block)
         return -1;
     }
     if (block) {
-        filter_loop(ctx);
+        filter_loop(NULL, ctx);
     } else {
-        pthread_t tid;
-        if (0 != pthread_create(&tid, NULL, filter_loop, ctx)) {
-            loge("pthread_create falied: %s\n", strerror(errno));
+        ctx->thread = thread_create(filter_loop, ctx);
+        if (!ctx->thread) {
+            loge("thread_create falied: %s\n", strerror(errno));
             return -1;
         }
+        thread_set_name(ctx->thread, ctx->name);
     }
     return 0;
 }

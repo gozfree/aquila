@@ -45,15 +45,33 @@ struct proxy_source_ctx {
 
 static struct proxy_source_ctx g_proxy;
 
+static void *item_alloc_hook(void *data, size_t len, void *arg)
+{
+    struct media_packet *pkt = (struct media_packet *)arg;
+    if (!pkt) {
+        loge("calloc packet failed!\n");
+        return NULL;
+    }
+    struct media_packet *new_pkt = media_packet_copy(pkt);
+    logi("media_packet size=%d\n", media_packet_get_size(new_pkt));
+    return new_pkt;
+}
+
+static void item_free_hook(void *data)
+{
+    struct media_packet *pkt = (struct media_packet *)data;
+    media_packet_destroy(pkt);
+}
+
 static int proxy_open(struct media_source *ms, const char *name)
 {
     struct proxy_source_ctx *c = &g_proxy;
-    loge("xxxx\n");
     c->q = queue_create();
     if (!c->q) {
         loge("queue_create failed!\n");
         return -1;
     }
+    queue_set_hook(c->q, item_alloc_hook, item_free_hook);
     ms->opaque = c;
 
     return 0;
@@ -111,9 +129,10 @@ static int proxy_read(struct media_source *ms, void **data, size_t *len)
 {
     struct proxy_source_ctx *c = (struct proxy_source_ctx *)ms->opaque;
     struct item *it = queue_pop(c->q);
-    *data = memdup(it->data.iov_base, it->data.iov_len);
+    *data = (struct media_packet *)it->opaque.iov_base;
     *len = it->data.iov_len;
-    item_free(c->q, it);
+    logd("queue_pop ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, *data, it->opaque.iov_len);
+    //item_free(c->q, it);
     return 0;
 }
 
@@ -134,8 +153,9 @@ static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_enco
         loge("rtsp_server_init failed!\n");
         return -1;
     }
-    loge("url=%s\n", url);
+    logd("url=%s\n", url);
     rtsp_media_source_register(&media_source_proxy);
+    logi("rtsp_media_source_register %s:%p\n", media_source_proxy.name, &media_source_proxy);
     rtsp_server_dispatch(rc);
 
     pc->priv = rc;
@@ -144,6 +164,7 @@ static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_enco
 
 static int rtsp_read(struct protocol_ctx *pc, void *buf, int len)
 {
+    loge("xxxx\n");
     return 0;
 }
 
@@ -152,12 +173,34 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
     struct media_source *ms = rtsp_media_source_lookup("proxy");
     if (!ms) {
         loge("rtsp_media_source_lookup proxy failed!\n");
+        return -1;
     }
-    if (ms->is_active) {
+    if (!rtsp_media_source_alive(ms)) {
+        logd("rtsp_media_source %s is not alive\n", ms->name);
+        return 0;
+    }
     struct proxy_source_ctx *c = (struct proxy_source_ctx *)ms->opaque;
-    struct item *it = item_alloc(c->q, buf, len, NULL);
-    queue_push(c->q, it);
+    struct media_packet *pkt = buf;
+    struct item *it = NULL;
+    switch (pkt->type) {
+    case MEDIA_TYPE_AUDIO:
+        it = item_alloc(c->q, pkt->audio->data, pkt->audio->size, pkt);
+        break;
+    case MEDIA_TYPE_VIDEO:
+        it = item_alloc(c->q, pkt->video->data, pkt->video->size, pkt);
+        break;
+    default:
+        break;
     }
+    if (!it) {
+        loge("item_alloc packet type %d failed!\n", pkt->type);
+        return -1;
+    }
+    if (0 != queue_push(c->q, it)) {
+        loge("queue_push failed!\n");
+        return -1;
+    }
+
     return 0;
 }
 

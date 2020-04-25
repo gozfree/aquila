@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <gear-lib/libmacro.h>
 #include <gear-lib/libgevent.h>
+#include <gear-lib/libthread.h>
 #include "common.h"
 #include "config.h"
 
@@ -40,7 +41,7 @@ struct filter_ctx {
     int rfd;
     int wfd;
     const char *name;
-    pthread_mutex_t lock;
+    struct thread *thread;
     struct gevent_base *ev_base;
     struct gevent *ev_read;
     struct gevent *ev_write;

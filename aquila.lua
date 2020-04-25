@@ -17,9 +17,9 @@ aquila_global = {
                 format = "NV12",
         },
 
-        --vdecode = {
-         --       type = "h264dec",
-        --},
+        vdecode = {
+                type = "h264dec",
+        },
 
         overlay = {
                 type = "timestamp",
@@ -40,8 +40,9 @@ aquila_global = {
         },
 
         upstream = {
-                type = "rtmp",
-                url = "rtmp://127.0.0.1/live",
+                type = "rtsp",
+                port = 8554,
+                url = "rtsp://localhost/usbcam",
         },
 
 

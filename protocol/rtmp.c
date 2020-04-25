@@ -77,11 +77,12 @@ static int rtmp_write(struct protocol_ctx *pc, void *buf, int len)
         } else {
             rtmpc_stream_start(rc->client);
             rc->status = RTMP_STATUS_RUNNING;
-            logi("get_extra_data success!\n");
+            logd("get_extra_data success!\n");
         }
     } else if (rc->status == RTMP_STATUS_RUNNING) {
-    logd("pkt->dts=%d, extra_size=%d, pkt->encoder.timebase = %d/%d\n", pkt->video->dts, pkt->video->encoder.extra_size, pkt->video->encoder.timebase.num, pkt->video->encoder.timebase.den);
-    logd("rtmpc_send_packet pkt->size=%d\n", pkt->video->size);
+        logd("pkt->size=%d, pkt->dts=%d, pts=%d, extra_size=%d, pkt->encoder.timebase = %d/%d\n",
+              pkt->video->size, pkt->video->dts, pkt->video->pts, pkt->video->encoder.extra_size,
+              pkt->video->encoder.timebase.num, pkt->video->encoder.timebase.den);
         rtmpc_send_packet(rc->client, pkt);
     }
     return ret;

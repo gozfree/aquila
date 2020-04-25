@@ -58,19 +58,14 @@ static int pixel_format_to_x264_csp(enum pixel_format fmt)
 {
     switch (fmt) {
     case PIXEL_FORMAT_UYVY:
-        logi("PIXEL_FORMAT_UYVY");
         return X264_CSP_UYVY;
     case PIXEL_FORMAT_YUY2:
-        logi("PIXEL_FORMAT_YUY2");
         return X264_CSP_YUYV;
     case PIXEL_FORMAT_NV12:
-        logi("PIXEL_FORMAT_NV12");
         return X264_CSP_NV12;
     case PIXEL_FORMAT_I420:
-        logi("PIXEL_FORMAT_I420");
         return X264_CSP_I420;
     case PIXEL_FORMAT_I444:
-        logi("PIXEL_FORMAT_I444");
         return X264_CSP_I444;
     default:
         return X264_CSP_NONE;
@@ -96,12 +91,9 @@ static int init_header(struct x264_ctx *c)
 
     for (i = 0; i < nal_cnt; i++) {
         x264_nal_t *nal = nals + i;
-        loge("i_payload=%d\n", nal->i_payload);
         if (nal->i_type == NAL_SEI) {
-            loge("xxx\n");
             da_push_back_array(sei, nal->p_payload, nal->i_payload);
         } else {
-            loge("xxx\n");
             da_push_back_array(extra, nal->p_payload, nal->i_payload);
         }
     }
@@ -110,7 +102,9 @@ static int init_header(struct x264_ctx *c)
     c->encoder.extra_size = extra.num;
     c->sei.iov_base = sei.array;
     c->sei.iov_len = sei.num;
-    DUMP_BUFFER(c->encoder.extra_data, c->encoder.extra_size);
+    //DUMP_BUFFER(c->encoder.extra_data, c->encoder.extra_size);
+    logd("encoder.extra_data=%p, encoder.extra_size=%d\n",
+          c->encoder.extra_data, c->encoder.extra_size);
 
     return 0;
 }
@@ -248,11 +242,13 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
     pkt->dts = pic_out->i_dts;
     pkt->encoder.timebase.num = c->param.i_fps_den;
     pkt->encoder.timebase.den = c->param.i_fps_num;
-    logd("pkt->dts=%d, pkt->encoder.timebase = %d/%d\n", pkt->dts, pkt->encoder.timebase.num, pkt->encoder.timebase.den);
+    logd("pkt->dts=%d, pkt->encoder.timebase = %d/%d\n",
+          pkt->dts, pkt->encoder.timebase.num, pkt->encoder.timebase.den);
 
     pkt->key_frame = pic_out->b_keyframe != 0;
 
     memcpy(&pkt->encoder, &c->encoder, sizeof(struct video_encoder));
+    logd("pkt->encoder.extra_size = %d\n", pkt->encoder.extra_size);
     return pkt->size;
 }
 
@@ -286,8 +282,8 @@ static int _x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
         return -1;
     }
 
-    logd("frame->pts=%zu, packet->pts=%zu, dts=%zu, keyframe=%d, timebase=%d/%d, size=%zu\n",
-        frm->timestamp, pkt->pts, pkt->dts, pkt->key_frame, pkt->encoder.timebase.num, pkt->encoder.timebase.den, pkt->size);
+    logd("frame info: <id=%d, pts=%zu>; packet info: <pts=%zu, dts=%zu, keyframe=%d, size=%zu>\n",
+        frm->frame_id, frm->timestamp, pkt->pts, pkt->dts, pkt->key_frame, pkt->size);
     c->cur_pts += c->timebase_num;
     out->iov_len = ret;
     logd("encode size=%d\n", out->iov_len);
