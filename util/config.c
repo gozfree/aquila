@@ -39,8 +39,8 @@ struct ikey_cvalue conf_map_table[] = {
     {UPSTREAM, "upstream"},
     {USBCAM,   "usbcam"},
     {VDEVFAKE, "vdevfake"},
-    {VENCODE,  "vencode"},
-    {VDECODE,  "vdecode"},
+    {VENCODE,  "videoenc"},
+    {VDECODE,  "videodec"},
     {VIDEOCAP, "videocap"},
     {RECORD,   "record"},
     {REMOTECTRL,"remotectrl"},
@@ -77,16 +77,17 @@ static char *enum_to_string(int key)
 
 static void load_videocap(struct aq_config *c)
 {
-    strcpy(c->videocap.type.str, conf_get_string(c->conf, "videocap", "type"));
+    const char *key = "videocap";
+    strcpy(c->videocap.type.str, conf_get_string(c->conf, key, "type"));
     c->videocap.type.val = string_to_enum(c->videocap.type.str);
-    strcpy(c->videocap.device, conf_get_string(c->conf, "videocap", "device"));
+    strcpy(c->videocap.device, conf_get_string(c->conf, key, "device"));
     c->videocap.url = CALLOC(strlen(c->videocap.type.str)+ strlen(c->videocap.device) + strlen("://"), char);
     strcat(c->videocap.url, c->videocap.type.str);
     strcat(c->videocap.url, "://");
     strcat(c->videocap.url, c->videocap.device);
-    c->videocap.ma.video.width = conf_get_int(c->conf, "videocap", "width");
-    c->videocap.ma.video.height = conf_get_int(c->conf, "videocap", "height");
-    strcpy(c->videocap.format, conf_get_string(c->conf, "videocap", "format"));
+    c->videocap.ma.video.width = conf_get_int(c->conf, key, "width");
+    c->videocap.ma.video.height = conf_get_int(c->conf, key, "height");
+    strcpy(c->videocap.format, conf_get_string(c->conf, key, "format"));
     c->videocap.ma.video.format = string_to_enum(c->videocap.format);
     logi("[videocap][type] = %s\n", c->videocap.type.str);
     logi("[videocap][device] = %s\n", c->videocap.device);
@@ -95,27 +96,63 @@ static void load_videocap(struct aq_config *c)
     logi("[videocap][w*h] = %d*%d\n", c->videocap.ma.video.width, c->videocap.ma.video.height);
 }
 
-static void load_vencode(struct aq_config *c)
+static void load_videoenc(struct aq_config *c)
 {
-    strcpy(c->vencode.type.str, conf_get_string(c->conf, "vencode", "type"));
-    c->vencode.type.val = string_to_enum(c->vencode.type.str);
-    c->vencode.url = CALLOC(strlen(c->vencode.type.str) + strlen("://"), char);
-    strcat(c->vencode.url, c->vencode.type.str);
-    strcat(c->vencode.url, "://");
+    strcpy(c->videoenc.type.str, conf_get_string(c->conf, "videoenc", "type"));
+    c->videoenc.type.val = string_to_enum(c->videoenc.type.str);
+    c->videoenc.url = CALLOC(strlen(c->videoenc.type.str) + strlen("://"), char);
+    strcat(c->videoenc.url, c->videoenc.type.str);
+    strcat(c->videoenc.url, "://");
 
-    logi("[vencode][type] = %s\n", c->vencode.type.str);
+    logi("[videoenc][type] = %s\n", c->videoenc.type.str);
 }
 
-static void load_vdecode(struct aq_config *c)
+static void load_audioenc(struct aq_config *c)
 {
-    strcpy(c->vdecode.type.str, conf_get_string(c->conf, "vdecode", "type"));
-    c->vdecode.type.val = string_to_enum(c->vdecode.type.str);
-    c->vdecode.url = CALLOC(strlen(c->vdecode.type.str) + strlen("://"), char);
-    strcat(c->vdecode.url, c->vdecode.type.str);
-    strcat(c->vdecode.url, "://");
+    const char *key = "audioenc";
+    strcpy(c->audioenc.type.str, conf_get_string(c->conf, key, "type"));
+    c->audioenc.type.val = string_to_enum(c->audioenc.type.str);
+    c->audioenc.url = CALLOC(strlen(c->audioenc.type.str) + strlen("://"), char);
+    strcat(c->audioenc.url, c->audioenc.type.str);
+    strcat(c->audioenc.url, "://");
 
-    logi("[vdecode][type] = %s\n", c->vdecode.type.str);
+    logi("[audioenc][type] = %s\n", c->audioenc.type.str);
 }
+
+
+static void load_videodec(struct aq_config *c)
+{
+    strcpy(c->videodec.type.str, conf_get_string(c->conf, "videodec", "type"));
+    c->videodec.type.val = string_to_enum(c->videodec.type.str);
+    c->videodec.url = CALLOC(strlen(c->videodec.type.str) + strlen("://"), char);
+    strcat(c->videodec.url, c->videodec.type.str);
+    strcat(c->videodec.url, "://");
+
+    logi("[videodec][type] = %s\n", c->videodec.type.str);
+}
+
+static void load_audiocap(struct aq_config *c)
+{
+    const char *key = "audiocap";
+    strcpy(c->audiocap.type.str, conf_get_string(c->conf, key, "type"));
+    c->audiocap.type.val = string_to_enum(c->audiocap.type.str);
+    strcpy(c->audiocap.device, conf_get_string(c->conf, key, "device"));
+    c->audiocap.url = CALLOC(strlen(c->audiocap.type.str)+ strlen(c->audiocap.device) + strlen("://"), char);
+    strcat(c->audiocap.url, c->audiocap.type.str);
+    strcat(c->audiocap.url, "://");
+    strcat(c->audiocap.url, c->audiocap.device);
+    c->audiocap.sample_rate = conf_get_int(c->conf, key, "sample_rate");
+    c->audiocap.channels = conf_get_int(c->conf, key, "channels");
+
+    strcpy(c->audiocap.format, conf_get_string(c->conf, key, "format"));
+    logi("[audiocap][type] = %s\n", c->audiocap.type.str);
+    logi("[audiocap][device] = %s\n", c->audiocap.device);
+    logi("[audiocap][url] = %s\n", c->audiocap.url);
+    logi("[audiocap][format] = %s\n", c->audiocap.format);
+    logi("[audiocap][sample_rate] = %d\n", c->audiocap.sample_rate);
+    logi("[audiocap][channels] = %d\n", c->audiocap.channels);
+}
+
 
 static void load_upstream(struct aq_config *c)
 {
@@ -185,10 +222,10 @@ static void load_filter(struct aq_config *c)
             memcpy(&c->filter[i].playback, &c->playback, sizeof(struct playback_conf));
             break;
         case VENCODE:
-            c->filter[i].url = c->vencode.url;
+            c->filter[i].url = c->videoenc.url;
             break;
         case VDECODE:
-            c->filter[i].url = c->vdecode.url;
+            c->filter[i].url = c->videodec.url;
             break;
         case UPSTREAM:
             c->filter[i].url = c->upstream.url;
@@ -229,8 +266,10 @@ int load_conf(struct aq_config *c)
         return -1;
     }
     load_videocap(c);
-    load_vencode(c);
-    load_vdecode(c);
+    load_audiocap(c);
+    load_videoenc(c);
+    load_audioenc(c);
+    load_videodec(c);
     load_record(c);
     load_upstream(c);
     load_playback(c);

@@ -15,26 +15,16 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-#include <string.h>
-#include <unistd.h>
-#include <signal.h>
+
 #include <gear-lib/libdebug.h>
 #include <gear-lib/liblog.h>
-#include <gear-lib/libqueue.h>
+#include "aquila.h"
 #include "device.h"
 #include "codec.h"
 #include "playback.h"
 #include "protocol.h"
 #include "muxer.h"
-#include "filter.h"
-#include "config.h"
 
-struct aquila {
-    struct aq_config config;
-    struct queue **queue;
-    struct filter_ctx **filter;
-    bool run;
-};
 
 static struct aquila aq_instance;
 

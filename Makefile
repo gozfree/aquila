@@ -62,7 +62,7 @@ LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -L/usr/local/lib/gear-lib -ldebug -llog -lconfig -lgevent -ltime -lrtsp -ldict -lfile -lvector -lskt
-LDFLAGS	+= -L/usr/local/lib/gear-lib -lthread -lmacro -lrpc -lhash -lworkq -luvc -lmedia-io -ldarray
+LDFLAGS	+= -L/usr/local/lib/gear-lib -lthread -lmacro -lrpc -lhash -lworkq -luvc -luac -lmedia-io -ldarray
 LDFLAGS	+= -L/usr/local/lib/gear-lib -lrtmpc
 LDFLAGS	+= -lqueue
 LDFLAGS	+= -lpthread -lrt
@@ -89,6 +89,7 @@ CODEC_OBJS :=			\
 DEVICE_OBJS := 			\
     device/device.o 		\
     device/usbcam.o 		\
+    device/microphone.o 	\
     device/vdevfake.o
 
 FILTER_OBJS := 			\

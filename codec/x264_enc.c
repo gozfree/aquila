@@ -126,8 +126,7 @@ static int _x264_open(struct codec_ctx *cc, struct media_encoder *ma)
     c->param.rc.i_rc_method = X264_RC_ABR;
     c->param.rc.b_filler = true;
     c->param.i_keyint_max = 1;
-    //XXX b_repeat_headers 0: rtmp is ok; 1: playback is ok
-    c->param.b_repeat_headers = 0;  // repeat SPS/PPS before i frame
+    c->param.b_repeat_headers = 1;
     c->param.b_vfr_input = 0;
     c->param.i_log_level = X264_LOG_INFO;
     c->param.i_csp = pixel_format_to_x264_csp(c->input_format);

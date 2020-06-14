@@ -28,6 +28,7 @@
 #include "common.h"
 
 struct usbcam_ctx {
+    struct uvc_config conf;
     struct uvc_ctx *uvc;
     char *name;
     int on_read_fd;
@@ -51,20 +52,23 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_enco
     vc->on_write_fd = fds[1];
     logd("pipe: rfd = %d, wfd = %d\n", vc->on_read_fd, vc->on_write_fd);
 
-    vc->uvc = uvc_open(dev, ma->video.width, ma->video.height);
+    vc->conf.width = ma->video.width;
+    vc->conf.height = ma->video.height;
+
+    vc->uvc = uvc_open(dev, &vc->conf);
     if (uvc_start_stream(vc->uvc, NULL)) {
         loge("uvc start stream failed!\n");
         goto failed;
     }
     vc->name = strdup(dev);
     logd("open %s format:%s resolution:%d*%d @%d/%dfps\n",
-          dev, pixel_format_name(vc->uvc->format),
-          vc->uvc->width, vc->uvc->height,
-          vc->uvc->fps_num, vc->uvc->fps_den);
+          dev, pixel_format_name(vc->uvc->conf.format),
+          vc->uvc->conf.width, vc->uvc->conf.height,
+          vc->uvc->conf.fps.num, vc->uvc->conf.fps.den);
 
-    ma->video.framerate.num = vc->uvc->fps_num;
-    ma->video.framerate.den = vc->uvc->fps_den;
-    ma->video.format = vc->uvc->format;
+    ma->video.framerate.num = vc->uvc->conf.fps.num;
+    ma->video.framerate.den = vc->uvc->conf.fps.den;
+    ma->video.format = vc->uvc->conf.format;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->priv = vc;
     if (write(vc->on_write_fd, &notify, 1) != 1) {

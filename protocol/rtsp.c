@@ -53,7 +53,7 @@ static void *item_alloc_hook(void *data, size_t len, void *arg)
         return NULL;
     }
     struct media_packet *new_pkt = media_packet_copy(pkt);
-    logi("media_packet size=%d\n", media_packet_get_size(new_pkt));
+    logd("media_packet size=%d\n", media_packet_get_size(new_pkt));
     return new_pkt;
 }
 

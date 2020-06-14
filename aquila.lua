@@ -7,18 +7,28 @@ aquila_global = {
                 format = "YUY2",
         },
         audiocap = {
-                type = "alsa",
+                type = "pulseaudio",
+                device = "alsa_input.pci-0000_00_1b.0.analog-stereo",
+                sample_rate = 44100,
+                channels = 2,
+                format = "PCM_S16LE"
         },
-
-        vencode = {
+        videoenc = {
                 --type supported: mjpeg/x264
                 --type = "mjpeg",
                 type = "x264",
                 format = "NV12",
         },
-
-        vdecode = {
+        audioenc = {
+                --type supported: aac/speex
+                type = "aac",
+        },
+        videodec = {
                 type = "h264dec",
+        },
+
+        aencode = {
+                type = "aac",
         },
 
         overlay = {
@@ -48,17 +58,17 @@ aquila_global = {
 
         filters = {
                 "videocap",
-                "vencode",
+                "videoenc",
                 "upstream",
         },
 
         graphs = {
                 {
                         source = "videocap",
-                        sink = "vencode",
+                        sink = "videoenc",
                 },
                 {
-                        source = "vencode",
+                        source = "videoenc",
                         sink = "upstream",
                 },
         },

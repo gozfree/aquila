@@ -33,12 +33,27 @@ struct videocap_conf {
     char *url;
 };
 
-struct vencode_conf {
+struct audiocap_conf {
+    struct ikey_cvalue type;
+    char device[256];
+    char format[32];
+    int sample_rate;
+    int channels;
+    char *url;
+};
+
+struct videoenc_conf {
     struct ikey_cvalue type;
     char *url;
 };
 
-struct vdecode_conf {
+struct audioenc_conf {
+    struct ikey_cvalue type;
+    char *url;
+};
+
+
+struct videodec_conf {
     struct ikey_cvalue type;
     char *url;
 };
@@ -71,8 +86,8 @@ struct filter_conf {
     char *url;
     union {
         struct videocap_conf videocap;
-        struct vencode_conf vencode;
-        struct vdecode_conf vdecode;
+        struct videoenc_conf videoenc;
+        struct videodec_conf videodec;
         struct record_conf record;
         struct upstream_conf upstream;
         struct playback_conf playback;
@@ -87,19 +102,21 @@ struct graph_conf {
 
 
 struct aq_config {
-    struct videocap_conf videocap;
-    struct vencode_conf vencode;
-    struct vdecode_conf vdecode;
-    struct record_conf record;
-    struct upstream_conf upstream;
-    struct playback_conf playback;
+    struct videocap_conf   videocap;
+    struct audiocap_conf   audiocap;
+    struct videoenc_conf   videoenc;
+    struct audioenc_conf   audioenc;
+    struct videodec_conf   videodec;
+    struct record_conf     record;
+    struct upstream_conf   upstream;
+    struct playback_conf   playback;
     struct remotectrl_conf remotectrl;
 
-    int filter_num;
-    struct filter_conf *filter;
-    int graph_num;
-    struct graph_conf *graph;
-    struct config *conf;
+    int                    filter_num;
+    struct filter_conf    *filter;
+    int                    graph_num;
+    struct graph_conf     *graph;
+    struct config         *conf;
 };
 
 int load_conf(struct aq_config *c);

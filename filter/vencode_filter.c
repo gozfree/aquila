@@ -83,7 +83,7 @@ static void venc_close(struct filter_ctx *fc)
 }
 
 struct filter aq_vencode_filter = {
-    .name     = "vencode",
+    .name     = "videoenc",
     .open     = venc_open,
     .on_read  = on_venc_read,
     .on_write = NULL,
