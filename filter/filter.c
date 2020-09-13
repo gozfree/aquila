@@ -50,7 +50,7 @@ void filter_register_all(void)
     registered = 1;
 
     REGISTER_FILTER(videocap);
-    REGISTER_FILTER(vencode);
+    REGISTER_FILTER(videoenc);
     REGISTER_FILTER(vdecode);
     REGISTER_FILTER(playback);
     REGISTER_FILTER(upstream);

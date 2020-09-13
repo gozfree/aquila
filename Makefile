@@ -63,7 +63,7 @@ LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
 LDFLAGS	+= -L/usr/local/lib/gear-lib -ldebug -llog -lconfig -lgevent -ltime -lrtsp -ldict -lfile -lvector -lskt
-LDFLAGS	+= -L/usr/local/lib/gear-lib -lthread -lmacro -lrpc -lhash -lworkq -luvc -luac -lmedia-io -ldarray
+LDFLAGS	+= -L/usr/local/lib/gear-lib -lthread -lmacro -lrpc -lhash -lworkq -luvc -luac -lmedia-io -ldarray -lmp4
 LDFLAGS	+= -L/usr/local/lib/gear-lib -lrtmpc
 LDFLAGS	+= -lqueue
 LDFLAGS	+= -lpthread -lrt
@@ -107,8 +107,8 @@ FILTER_OBJS := 			\
 
 MUXER_OBJS :=			\
     muxer/muxer.o		\
-    muxer/flv.o
-    #muxer/mp4.o			\
+    muxer/flv.o			\
+    muxer/mp4.o
 
 
 PLAYBACK_OBJS := 		\

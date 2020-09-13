@@ -60,13 +60,13 @@ void muxer_register_all()
     registered = 1;
 
     REGISTER_MUXER(flv);
-#if 0
+#if 1
     REGISTER_MUXER(mp4);
 #endif
 }
 
 
-struct muxer_ctx *muxer_open(const char *url, struct media_encoder *ma)
+struct muxer_ctx *muxer_open(const char *url, struct media_encoder *me)
 {
     struct muxer *p;
     struct muxer_ctx *c = CALLOC(1, struct muxer_ctx);
@@ -92,7 +92,7 @@ struct muxer_ctx *muxer_open(const char *url, struct media_encoder *ma)
         loge("muxer open ops can't be null\n");
         goto failed;
     }
-    if (0 != c->ops->open(c, ma)) {
+    if (0 != c->ops->open(c, me)) {
         loge("open %s muxer failed!\n", c->url.head);
         goto failed;
     }
