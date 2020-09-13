@@ -52,8 +52,6 @@ struct x264_ctx {
     void *parent;
 };
 
-#define AV_INPUT_BUFFER_PADDING_SIZE 32
-
 static int pixel_format_to_x264_csp(enum pixel_format fmt)
 {
     switch (fmt) {

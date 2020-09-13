@@ -39,8 +39,8 @@ struct ikey_cvalue conf_map_table[] = {
     {UPSTREAM, "upstream"},
     {USBCAM,   "usbcam"},
     {VDEVFAKE, "vdevfake"},
-    {VENCODE,  "videoenc"},
-    {VDECODE,  "videodec"},
+    {VIDEOENC, "videoenc"},
+    {VIDEODEC, "videodec"},
     {VIDEOCAP, "videocap"},
     {RECORD,   "record"},
     {REMOTECTRL,"remotectrl"},
@@ -221,10 +221,10 @@ static void load_filter(struct aq_config *c)
             c->filter[i].url = c->playback.url;
             memcpy(&c->filter[i].playback, &c->playback, sizeof(struct playback_conf));
             break;
-        case VENCODE:
+        case VIDEOENC:
             c->filter[i].url = c->videoenc.url;
             break;
-        case VDECODE:
+        case VIDEODEC:
             c->filter[i].url = c->videodec.url;
             break;
         case UPSTREAM:
@@ -237,7 +237,8 @@ static void load_filter(struct aq_config *c)
             c->filter[i].url = "rpcd://xxx";
             break;
         default :
-            loge("unsupport filter type %s\n", c->filter[i].type.str);
+            loge("unsupport filter type %d, %s\n",
+                 c->filter[i].type.val, c->filter[i].type.str);
             break;
         }
     }

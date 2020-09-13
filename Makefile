@@ -39,7 +39,8 @@ TGT_NAME 	= aquila
 CFLAGS_SDL	= `pkg-config --cflags sdl`
 LDFLAGS_SDL	= `pkg-config --libs sdl`
 LDFLAGS_X264	= -lx264
-LDFLAGS_ALSA	= -lasound
+LDFLAGS_FDKAAC	= -lfdk-aac
+#LDFLAGS_ALSA	= -lasound
 LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
 LDFLAGS_JPEG	= -ljpeg
 LDFLAGS_LUA 	= -llua5.2
@@ -68,6 +69,7 @@ LDFLAGS	+= -lqueue
 LDFLAGS	+= -lpthread -lrt
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
+LDFLAGS	+= $(LDFLAGS_FDKAAC)
 LDFLAGS += $(LDFLAGS_ALSA)
 LDFLAGS += $(LDFLAGS_FFMPEG)
 LDFLAGS += $(LDFLAGS_JPEG)
@@ -82,6 +84,7 @@ ALGO_OBJS :=
 CODEC_OBJS :=			\
     codec/codec.o		\
     codec/x264_enc.o		\
+    codec/aac_enc.o		\
     codec/mjpeg_enc.o
     #codec/h264_enc.o		\
     #codec/h264_dec.o		\

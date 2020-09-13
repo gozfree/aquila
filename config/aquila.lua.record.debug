@@ -51,7 +51,7 @@ aquila_global = {
 
         filters = {
                 "videocap",
-                "vencode",
+                "videoenc",
                 --"vdecode",
                 --"playback",
                 --"upstream",

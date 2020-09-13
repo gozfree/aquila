@@ -15,46 +15,50 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-#ifndef _COMMON_H_
-#define _COMMON_H_
-
-#include <stdint.h>
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libdarray.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/uio.h>
-#include <gear-lib/libmedia-io.h>
+#include <stdbool.h>
+#include <string.h>
+#include <errno.h>
+#include <stdint.h>
+#include "codec.h"
+#include "common.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-enum conf_map_index {
-    ALSA = 0,
-    MJPEG,
-    PLAYBACK,
-    SDL,
-    SNKFAKE,
-    UPSTREAM,
-    USBCAM,
-    VDEVFAKE,
-    VIDEOENC,
-    VIDEODEC,
-    VIDEOCAP,
-    RECORD,
-    REMOTECTRL,
-    X264,
-    H264ENC,
-    YUV420,
-    YUV422P,
-    UNKNOWN = -1
+struct aac_ctx {
+    void *parent;
 };
 
-struct ikey_cvalue {
-    int val;
-    char str[32];
-};
+static int aac_open(struct codec_ctx *cc, struct media_encoder *ma)
+{
+    struct aac_ctx *c = CALLOC(1, struct aac_ctx);
+    if (!c) {
+        loge("malloc aac_ctx failed!\n");
+        return -1;
+    }
 
-
-#ifdef __cplusplus
+    c->parent = cc;
+    cc->priv = c;
+    return 0;
 }
-#endif
-#endif
+
+static int aac_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *out)
+{
+    return 0;
+}
+
+static void aac_close(struct codec_ctx *cc)
+{
+    struct aac_ctx *c = (struct aac_ctx *)cc->priv;
+    free(c);
+}
+
+struct codec aq_aac_encoder = {
+    .name   = "aac",
+    .open   = aac_open,
+    .encode = aac_encode,
+    .decode = NULL,
+    .close  = aac_close,
+};
