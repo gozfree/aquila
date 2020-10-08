@@ -48,10 +48,10 @@ void device_register_all(void)
     registered = 1;
 
     REGISTER_DEVICE(usbcam);
-    REGISTER_DEVICE(vdevfake);
+    REGISTER_DEVICE(file);
 }
 
-struct device_ctx *device_open(const char *url, struct media_encoder *ma)
+struct device_ctx *device_open(const char *url, struct media_producer *mp)
 {
     struct device *p;
     struct device_ctx *dc = CALLOC(1, struct device_ctx);
@@ -80,7 +80,7 @@ struct device_ctx *device_open(const char *url, struct media_encoder *ma)
         loge("device open ops can't be null\n");
         goto failed;
     }
-    if (0 != dc->ops->open(dc, dc->url.body, ma)) {
+    if (0 != dc->ops->open(dc, mp)) {
         loge("open %s failed!\n", dc->url.body);
         goto failed;
     }

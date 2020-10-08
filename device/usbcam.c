@@ -35,10 +35,11 @@ struct usbcam_ctx {
     int on_write_fd;
 };
 
-static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_encoder *ma)
+static int usbcam_open(struct device_ctx *dc, struct media_producer *mp)
 {
     int fds[2] = {0};
     char notify = '1';
+    const char *dev = dc->url.body;
     struct usbcam_ctx *vc = CALLOC(1, struct usbcam_ctx);
     if (!vc) {
         loge("malloc usbcam_ctx failed!\n");
@@ -52,8 +53,8 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_enco
     vc->on_write_fd = fds[1];
     logd("pipe: rfd = %d, wfd = %d\n", vc->on_read_fd, vc->on_write_fd);
 
-    vc->conf.width = ma->video.width;
-    vc->conf.height = ma->video.height;
+    vc->conf.width = mp->video.width;
+    vc->conf.height = mp->video.height;
 
     vc->uvc = uvc_open(dev, &vc->conf);
     if (uvc_start_stream(vc->uvc, NULL)) {
@@ -62,13 +63,13 @@ static int usbcam_open(struct device_ctx *dc, const char *dev, struct media_enco
     }
     vc->name = strdup(dev);
     logd("open %s format:%s resolution:%d*%d @%d/%dfps\n",
-          dev, pixel_format_name(vc->uvc->conf.format),
+          dev, pixel_format_to_string(vc->uvc->conf.format),
           vc->uvc->conf.width, vc->uvc->conf.height,
           vc->uvc->conf.fps.num, vc->uvc->conf.fps.den);
 
-    ma->video.framerate.num = vc->uvc->conf.fps.num;
-    ma->video.framerate.den = vc->uvc->conf.fps.den;
-    ma->video.format = vc->uvc->conf.format;
+    mp->video.framerate.num = vc->uvc->conf.fps.num;
+    mp->video.framerate.den = vc->uvc->conf.fps.den;
+    mp->video.format = vc->uvc->conf.format;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
     dc->priv = vc;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
@@ -91,7 +92,7 @@ failed:
     return -1;
 }
 
-static int usbcam_read(struct device_ctx *dc, void *buf, int len)
+static int usbcam_read(struct device_ctx *dc, void *buf, size_t len)
 {
     struct usbcam_ctx *vc = (struct usbcam_ctx *)dc->priv;
     char notify;
@@ -116,7 +117,7 @@ static int usbcam_query(struct device_ctx *dc, struct media_frame *frame)
     return uvc_query_frame(vc->uvc, &frame->video);
 }
 
-static int usbcam_write(struct device_ctx *dc, void *buf, int len)
+static int usbcam_write(struct device_ctx *dc, const void *buf, size_t len)
 {
     struct usbcam_ctx *vc = (struct usbcam_ctx *)dc->priv;
     char notify = '1';
@@ -137,7 +138,7 @@ static void usbcam_close(struct device_ctx *dc)
     free(vc);
 }
 
-static int usbcam_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len)
+static int usbcam_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, size_t len)
 {
 #if 0
     struct usbcam_ctx *vc = (struct usbcam_ctx *)dc->priv;

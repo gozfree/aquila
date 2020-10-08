@@ -1,34 +1,26 @@
 aquila_global = {
         videocap = {
-                type = "usbcam",
-                device = "/dev/video0",
+                type = "file",
+                device = "sample/sample_yuv422p.yuv",
+                format = "I422",
                 width = 640,
                 height = 480,
-                format = "YUY2",
         },
         audiocap = {
-                type = "pulseaudio",
-                device = "alsa_input.pci-0000_00_1b.0.analog-stereo",
-                sample_rate = 44100,
-                channels = 2,
-                format = "PCM_S16LE"
+                type = "alsa",
         },
+
         videoenc = {
                 --type supported: mjpeg/x264
                 --type = "mjpeg",
                 type = "x264",
-                format = "NV12",
-        },
-        audioenc = {
-                --type supported: aac/speex
-                type = "aac",
-        },
-        videodec = {
-                type = "h264dec",
+                format = "I422",
+                width = 640,
+                height = 480,
         },
 
-        aencode = {
-                type = "aac",
+        vdecode = {
+                type = "h264dec",
         },
 
         overlay = {
@@ -36,6 +28,11 @@ aquila_global = {
                 offsetx = 0,
                 offsety = 0,
                 switch = "on",
+        },
+
+        record = {
+                type = "mp4",
+                file = "test.mp4",
         },
 
         playback = {
@@ -50,16 +47,18 @@ aquila_global = {
         },
 
         upstream = {
-                type = "rtsp",
-                port = 8554,
-                url = "rtsp://localhost/usbcam",
+                type = "rtmp",
+                port = 554;
         },
 
 
         filters = {
                 "videocap",
                 "videoenc",
-                "upstream",
+                --"vdecode",
+                --"playback",
+                --"upstream",
+                "record",
         },
 
         graphs = {
@@ -69,7 +68,7 @@ aquila_global = {
                 },
                 {
                         source = "videoenc",
-                        sink = "upstream",
+                        sink = "record",
                 },
         },
 }

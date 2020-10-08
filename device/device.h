@@ -60,25 +60,25 @@ struct device_ctx {
     struct url url;
     enum device_type type;
     struct device *ops;
-    //struct media_encoder media;
+    //struct media_producer media;
     void *priv;
 };
 
 struct device {
     const char *name;
-    int (*open)(struct device_ctx *c, const char *url, struct media_encoder *ma);
-    int (*read)(struct device_ctx *c, void *buf, int len);
+    int (*open)(struct device_ctx *c, struct media_producer *mp);
+    int (*read)(struct device_ctx *c, void *buf, size_t len);
     int (*query_frame)(struct device_ctx *c, struct media_frame *frame);
     int (*query_packet)(struct device_ctx *c, struct media_packet *packet);
-    int (*write)(struct device_ctx *c, void *buf, int len);
-    int (*ioctl)(struct device_ctx *c, uint32_t cmd, void *buf, int len);
+    int (*write)(struct device_ctx *c, const void *buf, size_t len);
+    int (*ioctl)(struct device_ctx *c, uint32_t cmd, void *buf, size_t len);
     void (*close)(struct device_ctx *c);
     struct device *next;
 };
 
 
 void device_register_all();
-struct device_ctx *device_open(const char *url, struct media_encoder *ma);
+struct device_ctx *device_open(const char *url, struct media_producer *mp);
 int device_read(struct device_ctx *dc, void *buf, int len);
 int device_query_buffer(struct device_ctx *dc, struct device_buffer *buf);
 int device_write(struct device_ctx *dc, void *buf, int len);

@@ -18,52 +18,57 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
-
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 
-#include "filter.h"
-#include "common.h"
 #include "codec.h"
+#include "filter.h"
 
-struct vdec_ctx {
-    struct codec_ctx *decoder;
+struct videoenc_ctx {
+    struct codec_ctx *encoder;
+    struct videoenc_conf *conf;
 };
 
-static int on_vdec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
+static int on_videoenc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
-    struct vdec_ctx *vc = (struct vdec_ctx *)fc->priv;
-    int ret = codec_decode(vc->decoder, in, out);
-    if (ret == -1) {
-        loge("decode failed!\n");
+    int ret;
+    struct videoenc_ctx *vc = (struct videoenc_ctx *)fc->priv;
+    struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, NULL, 0);
+    struct iovec iov_pkt;
+    iov_pkt.iov_base = pkt->video;
+    ret = codec_encode(vc->encoder, in, &iov_pkt);
+    if (-1 == ret) {
+        loge("encode failed!\n");
     }
-    out->iov_len = ret;
+    out->iov_base = pkt;
     return ret;
 }
 
-static int vdec_open(struct filter_ctx *fc)
+static int videoenc_open(struct filter_ctx *fc)
 {
-    struct codec_ctx *decoder = codec_open(fc->url, &fc->media_encoder);
-    if (!decoder) {
+    struct codec_ctx *encoder = codec_open(fc->url, &fc->conf->videoenc.me);
+    if (!encoder) {
         loge("open codec %s failed!\n", fc->url);
         return -1;
     }
-    struct vdec_ctx *vc = CALLOC(1, struct vdec_ctx);
+    struct videoenc_ctx *vc = CALLOC(1, struct videoenc_ctx);
     if (!vc) {
-        loge("malloc vdec_ctx failed!\n");
+        loge("malloc videoenc_ctx failed!\n");
         goto failed;
     }
-    vc->decoder = decoder;
+
+    vc->conf = &fc->conf->videoenc;
+    vc->encoder = encoder;
     fc->rfd = -1;
     fc->wfd = -1;
     fc->priv = vc;
     return 0;
 failed:
-    if (decoder) {
-        codec_close(decoder);
+    if (encoder) {
+        codec_close(encoder);
     }
     if (vc) {
         free(vc);
@@ -71,19 +76,19 @@ failed:
     return -1;
 }
 
-static void vdec_close(struct filter_ctx *fc)
+static void videoenc_close(struct filter_ctx *fc)
 {
-    struct vdec_ctx *c = (struct vdec_ctx *)fc->priv;
-    if (c->decoder) {
-        codec_close(c->decoder);
-        free(c->decoder);
+    struct videoenc_ctx *vc = (struct videoenc_ctx *)fc->priv;
+    if (vc->encoder) {
+        codec_close(vc->encoder);
     }
+    free(vc);
 }
 
-struct filter aq_vdecode_filter = {
-    .name     = "vdecode",
-    .open     = vdec_open,
-    .on_read  = on_vdec_read,
+struct filter aq_videoenc_filter = {
+    .name     = "videoenc",
+    .open     = videoenc_open,
+    .on_read  = on_videoenc_read,
     .on_write = NULL,
-    .close    = vdec_close,
+    .close    = videoenc_close,
 };

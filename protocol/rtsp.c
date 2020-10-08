@@ -130,8 +130,8 @@ static int proxy_read(struct media_source *ms, void **data, size_t *len)
     struct proxy_source_ctx *c = (struct proxy_source_ctx *)ms->opaque;
     struct item *it = queue_pop(c->q);
     *data = (struct media_packet *)it->opaque.iov_base;
-    *len = it->data.iov_len;
-    logd("queue_pop ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, *data, it->opaque.iov_len);
+    *len = it->opaque.iov_len;
+    loge("queue_pop ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
     //item_free(c->q, it);
     return 0;
 }
@@ -196,6 +196,7 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
         loge("item_alloc packet type %d failed!\n", pkt->type);
         return -1;
     }
+    loge("queue_push ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
     if (0 != queue_push(c->q, it)) {
         loge("queue_push failed!\n");
         return -1;

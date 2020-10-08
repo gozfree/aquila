@@ -15,24 +15,22 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libfile.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <assert.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <gear-lib/libmacro.h>
-#include <gear-lib/liblog.h>
+#include <sys/stat.h>
 #include "device.h"
-#include "imgconvert.h"
 
 struct vdev_fake_ctx {
     int fd;
+    struct file *fp;
     int on_read_fd;
     int on_write_fd;
     int width;
@@ -42,11 +40,12 @@ struct vdev_fake_ctx {
     int req_count;
 };
 
-static int vf_open(struct device_ctx *dc, const char *dev, struct media_encoder *ma)
+static int _open(struct device_ctx *dc, struct media_producer *mp)
 {
     int fd = -1;
     int fds[2];
     char notify = '1';
+    const char *dev = dc->url.body;
     struct vdev_fake_ctx *vc = CALLOC(1, struct vdev_fake_ctx);
     if (!vc) {
         loge("malloc vdev_fake_ctx failed!\n");
@@ -65,16 +64,16 @@ static int vf_open(struct device_ctx *dc, const char *dev, struct media_encoder 
         loge("open %s failed: %s\n", dev, strerror(errno));
         goto failed;
     }
+    vc->fp = file_open(dev, F_RDONLY);
+    if (!vc->fp) {
+        loge("open %s failed: %s\n", dev, strerror(errno));
+        goto failed;
+    }
     vc->fd = fd;
-    vc->width = ma->video.width;
-    vc->height = ma->video.height;
+    vc->width = mp->video.width;
+    vc->height = mp->video.height;
 
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
-#if 0
-    dc->media.video.width = vc->width;
-    dc->media.video.height = vc->height;
-    dc->media.video.format = YUV420;
-#endif
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe\n");
         goto failed;
@@ -89,6 +88,9 @@ failed:
     if (fd != -1) {
         close(fd);
     }
+    if (vc->fp) {
+        file_close(vc->fp);
+    }
     if (fds[0] != -1 || fds[1] != -1) {
         close(fds[0]);
         close(fds[1]);
@@ -96,10 +98,10 @@ failed:
     return -1;
 }
 
-static int vf_read(struct device_ctx *dc, void *buf, int len)
+static int _read(struct device_ctx *dc, void *buf, size_t len)
 {
     struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
-    int flen;
+    ssize_t flen;
     char notify;
 
     if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
@@ -107,7 +109,8 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
     }
 
     flen = read(vc->fd, buf, len);
-    lseek(vc->fd, 0L, SEEK_SET);
+    flen = file_read(vc->fp, buf, len);
+    file_seek(vc->fp, 0L, SEEK_SET);
     if (flen == -1) {
         loge("read failed!\n");
         return -1;
@@ -122,7 +125,7 @@ static int vf_read(struct device_ctx *dc, void *buf, int len)
     return len;
 }
 
-static int vf_write(struct device_ctx *dc, void *buf, int len)
+static int _write(struct device_ctx *dc, const void *buf, size_t len)
 {
     char notify = '1';
     struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
@@ -133,7 +136,7 @@ static int vf_write(struct device_ctx *dc, void *buf, int len)
     return 0;
 }
 
-static void vf_close(struct device_ctx *dc)
+static void _close(struct device_ctx *dc)
 {
     struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
     if (!vc) {
@@ -141,18 +144,18 @@ static void vf_close(struct device_ctx *dc)
     }
 
     close(vc->fd);
+    file_close(vc->fp);
     close(vc->on_read_fd);
     close(vc->on_write_fd);
     free(vc);
     vc = NULL;
 }
 
-
-struct device aq_vdevfake_device = {
-    .name  = "vdevfake",
-    .open  = vf_open,
-    .read  = vf_read,
-    .write = vf_write,
+struct device aq_file_device = {
+    .name  = "file",
+    .open  = _open,
+    .read  = _read,
+    .write = _write,
     .ioctl = NULL,
-    .close = vf_close,
+    .close = _close,
 };

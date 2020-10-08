@@ -52,7 +52,8 @@ static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *ou
 
 static int rec_open(struct filter_ctx *fc)
 {
-    struct muxer_ctx *muxer = muxer_open(fc->url, &fc->media_encoder);
+    memcpy(&fc->conf->record.me, &fc->prev_conf->videoenc.me, sizeof(struct media_encoder));
+    struct muxer_ctx *muxer = muxer_open(fc->url, &fc->conf->record.me);
     if (!muxer) {
         loge("open muxer %s failed!\n", fc->url);
         return -1;

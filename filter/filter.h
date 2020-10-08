@@ -31,9 +31,13 @@ extern "C" {
 #endif
 
 enum filter_type {
-    SRC_FILTER,
-    MID_FILTER,
-    SNK_FILTER,
+/*
+ * [filter_src)-> ->(filter_mid)-> ->(filter_snk]
+ */
+    FILTER_TYPE_SRC,
+    FILTER_TYPE_MID,
+    FILTER_TYPE_SNK,
+    FILTER_TYPE_MAX,
 };
 
 struct filter_ctx {
@@ -48,10 +52,11 @@ struct filter_ctx {
     struct queue *q_src;
     struct queue *q_snk;
     struct filter *ops;
-    struct media_encoder media_encoder;
     const char *url;
+    struct iovec opaque;
     void *priv;
-    void *config;
+    struct filter_conf *conf;
+    struct filter_conf *prev_conf;
 };
 
 

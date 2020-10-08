@@ -40,7 +40,7 @@ struct videocap_ctx {
 static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
-    struct media_encoder *mp = &fc->media_encoder;
+    struct media_producer *mp = &fc->conf->videocap.mp;
     char tmp_tm[32];
     struct video_frame frm;
     video_frame_init(&frm, mp->video.format, mp->video.width, mp->video.height, VFC_NONE);
@@ -66,26 +66,22 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
 
 static int videocap_open(struct filter_ctx *fc)
 {
-    struct media_encoder *mp = &fc->media_encoder;
-    struct filter_conf *fconf = (struct filter_conf *)fc->config;
-    struct videocap_ctx *vc = CALLOC(1, struct videocap_ctx);
-    if (!vc) {
-        loge("malloc failed!\n");
-        return -1;
-    }
-    vc->conf = &fconf->videocap;
-    struct device_ctx *dc = device_open(fc->url, &vc->conf->ma);
+    struct device_ctx *dc = device_open(fc->url, &fc->conf->videocap.mp);
     if (!dc) {
         loge("open %s failed!\n", fc->url);
+        return -1;
+    }
+    struct videocap_ctx *vc = CALLOC(1, struct videocap_ctx);
+    if (!vc) {
+        loge("malloc videocap_ctx failed!\n");
         goto failed;
     }
-    memcpy(mp, &vc->conf->ma, sizeof(struct media_encoder));
+
+    vc->conf = &fc->conf->videocap;
     vc->dev = dc;
     vc->seq = 0;
 
-    logi("vc->conf->fomat = %s\n", vc->conf->format);
-
-    fc->rfd = vc->dev->fd;
+    fc->rfd = dc->fd;
     fc->wfd = -1;
     fc->priv = vc;
     overlay_init();

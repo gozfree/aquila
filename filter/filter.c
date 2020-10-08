@@ -116,31 +116,6 @@ static void on_filter_write(int fd, void *arg)
     }
 }
 
-struct filter_ctx *filter_ctx_new(struct filter_conf *c)
-{
-    struct filter *p;
-    struct filter_ctx *fc = CALLOC(1, struct filter_ctx);
-    if (!fc) {
-        loge("malloc filter context failed!\n");
-        return NULL;
-    }
-    for (p = first_filter; p != NULL; p = p->next) {
-        if (!strcasecmp(c->type.str, p->name))
-            break;
-    }
-    if (p == NULL) {
-        loge("%s protocol is not support!\n", c->type.str);
-        return NULL;
-    }
-    logd("\t[filter module] <%s> loaded\n", c->type.str);
-
-    fc->ops = p;
-    fc->name = c->type.str;
-    fc->url = c->url;
-    fc->config = c;
-    return fc;
-}
-
 static void *q_alloc_cb(void *data, size_t len, void *arg)
 {
     return data;
@@ -150,35 +125,106 @@ static void q_free_cb(void *data)
 {
 }
 
-struct filter_ctx *filter_create(struct filter_conf *c,
+struct filter_ctx *filter_create(struct filter_conf *conf,
                                  struct queue *q_src, struct queue *q_snk)
 {
     int fd;
     struct queue_branch *qb;
-    struct filter_ctx *ctx = filter_ctx_new(c);
+    struct filter *f;
+    struct filter_ctx *ctx = CALLOC(1, struct filter_ctx);
     if (!ctx) {
+        loge("malloc filter context failed!\n");
         return NULL;
     }
+    for (f = first_filter; f != NULL; f = f->next) {
+        if (!strcasecmp(conf->type.str, f->name))
+            break;
+    }
+    if (f == NULL) {
+        loge("%s does not support!\n", conf->type.str);
+        return NULL;
+    }
+    logi("\t[filter module] <%s> loaded\n", conf->type.str);
+
+    ctx->ops = f;
+    ctx->name = conf->type.str;
+    ctx->url = conf->url;
+    ctx->conf = conf;
+
     queue_branch_new(q_src, ctx->name);
     ctx->q_src = q_src;
     ctx->q_snk = q_snk;
+
+    if (!q_src && q_snk) {
+        ctx->type = FILTER_TYPE_SRC;
+    } else if (q_src && q_snk) {
+        ctx->type = FILTER_TYPE_MID;
+    } else if (q_src && !q_snk) {
+        ctx->type = FILTER_TYPE_SNK;
+    }
+
+    /*
+     * prepare: transfer configure to next filters
+     */
+    switch (ctx->type) {
+    case FILTER_TYPE_SRC:
+        q_snk->opaque.iov_base = ctx->conf;
+        q_snk->opaque.iov_len  = sizeof(*ctx->conf);
+        break;
+    case FILTER_TYPE_MID:
+        ctx->prev_conf = q_src->opaque.iov_base;
+        q_snk->opaque.iov_base = ctx->conf;
+        q_snk->opaque.iov_len  = sizeof(*ctx->conf);
+        break;
+    case FILTER_TYPE_SNK:
+        ctx->prev_conf = q_src->opaque.iov_base;
+        break;
+    default:
+        break;
+    }
+
+#if 0
     //filter types:
     //1. src filter: <NULL, snk>
     //2. mid fitler: <src, snk>
     //3. snk filter: <src, NULL>
     if (ctx->q_src) {//mid/snk filter
-        logd("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
+        loge("%s, media.video: %d*%d, format=%d, extra.len=%d\n",
+             conf->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.format, ctx->media_encoder.video.extra_size);
+        media_encoder_dump_info(&ctx->media_encoder);
         memcpy(&ctx->media_encoder, q_src->opaque.iov_base, q_src->opaque.iov_len);
-        logd("%s, media.video: %d*%d, extra.len=%d\n", c->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.extra_size);
+        media_encoder_dump_info(&ctx->media_encoder);
+        loge("%s, media.video: %d*%d, format=%d, extra.len=%d\n", conf->type.str, ctx->media_encoder.video.width, ctx->media_encoder.video.height, ctx->media_encoder.video.format, ctx->media_encoder.video.extra_size);
         if (ctx->q_snk) {
             q_snk->opaque.iov_base = q_src->opaque.iov_base;
             q_snk->opaque.iov_len = q_src->opaque.iov_len;
-            ctx->type = MID_FILTER;
         }
     }
+#endif
     if (-1 == ctx->ops->open(ctx)) {
         return NULL;
     }
+
+    /*
+     * after
+     */
+    switch (ctx->type) {
+    case FILTER_TYPE_SRC:
+        fd = ctx->rfd;
+        break;
+    case FILTER_TYPE_MID:
+        qb = queue_branch_get(q_src, ctx->name);
+        fd = qb->RD_FD;
+        break;
+    case FILTER_TYPE_SNK:
+        qb = queue_branch_get(q_src, ctx->name);
+        fd = qb->RD_FD;
+        break;
+    default:
+        break;
+    }
+
+#if 0
     if (ctx->q_src) {//middle filter
         qb = queue_branch_get(q_src, ctx->name);
         fd = qb->RD_FD;
@@ -187,13 +233,13 @@ struct filter_ctx *filter_create(struct filter_conf *c,
         q_snk->opaque.iov_len = sizeof(ctx->media_encoder);
         }
     } else {//device source filter
-        ctx->type = SRC_FILTER;
         fd = ctx->rfd;
         if (ctx->q_snk) {
             q_snk->opaque.iov_base = &ctx->media_encoder;
             q_snk->opaque.iov_len = sizeof(ctx->media_encoder);
         }
     }
+#endif
     queue_set_hook(ctx->q_src, q_alloc_cb, q_free_cb);
     queue_set_hook(ctx->q_snk, q_alloc_cb, q_free_cb);
 

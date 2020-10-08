@@ -65,7 +65,10 @@ static int pixel_format_to_x264_csp(enum pixel_format fmt)
         return X264_CSP_I420;
     case PIXEL_FORMAT_I444:
         return X264_CSP_I444;
+    case PIXEL_FORMAT_I422:
+        return X264_CSP_I422;
     default:
+        loge("X264_CSP_NONE\n");
         return X264_CSP_NONE;
     }
 }
@@ -107,7 +110,7 @@ static int init_header(struct x264_ctx *c)
     return 0;
 }
 
-static int _x264_open(struct codec_ctx *cc, struct media_encoder *ma)
+static int _x264_open(struct codec_ctx *cc, struct media_encoder *me)
 {
     struct x264_ctx *c = CALLOC(1, struct x264_ctx);
     if (!c) {
@@ -116,7 +119,7 @@ static int _x264_open(struct codec_ctx *cc, struct media_encoder *ma)
     }
 
     x264_param_default_preset(&c->param, "ultrafast" , "zerolatency");
-    c->input_format = ma->video.format;
+    c->input_format = me->video.format;
 
     c->param.rc.i_vbv_max_bitrate = 2500;
     c->param.rc.i_vbv_buffer_size = 2500;
@@ -129,10 +132,10 @@ static int _x264_open(struct codec_ctx *cc, struct media_encoder *ma)
     c->param.i_log_level = X264_LOG_INFO;
     c->param.i_csp = pixel_format_to_x264_csp(c->input_format);
 
-    c->param.i_width = ma->video.width;
-    c->param.i_height = ma->video.height;
-    c->param.i_fps_num = ma->video.framerate.num;
-    c->param.i_fps_den = ma->video.framerate.den;
+    c->param.i_width = me->video.width;
+    c->param.i_height = me->video.height;
+    c->param.i_fps_num = me->video.framerate.num;
+    c->param.i_fps_den = me->video.framerate.den;
 
     x264_param_apply_profile(&c->param, NULL);
 
@@ -154,17 +157,17 @@ static int _x264_open(struct codec_ctx *cc, struct media_encoder *ma)
     }
 
     c->encoder.format = VIDEO_CODEC_H264;
-    c->encoder.width = ma->video.width;
-    c->encoder.height = ma->video.height;
+    c->encoder.width = me->video.width;
+    c->encoder.height = me->video.height;
     c->encoder.bitrate = 2500;
-    c->encoder.framerate.num = ma->video.framerate.num;
-    c->encoder.framerate.den = ma->video.framerate.den;
+    c->encoder.framerate.num = me->video.framerate.num;
+    c->encoder.framerate.den = me->video.framerate.den;
     c->encoder.timebase.num = c->param.i_fps_den;
     c->encoder.timebase.den = c->param.i_fps_num;
     logi("width=%d, height=%d\n", c->encoder.width, c->encoder.height);
 
-    ma->video.extra_data = c->encoder.extra_data;
-    ma->video.extra_size = c->encoder.extra_size;
+    me->video.extra_data = c->encoder.extra_data;
+    me->video.extra_size = c->encoder.extra_size;
 
     c->parent = cc;
     cc->priv = c;

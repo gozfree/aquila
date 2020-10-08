@@ -44,7 +44,9 @@ static int mp4_open(struct muxer_ctx *mc, struct media_encoder *me)
 
 static int mp4_write(struct muxer_ctx *mc, struct media_packet *pkt)
 {
-    //struct mp4_muxer *mp4 = (struct mp4_muxer *)mc->priv;
+    struct mp4_muxer *mp4 = (struct mp4_muxer *)mc->priv;
+    mp4_muxer_write(mp4, pkt);
+
     return 0;
 }
 

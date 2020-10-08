@@ -19,3 +19,4 @@ libasound-dev libx264-dev libsdl-dev`
 1.error while loading shared libraries: libdebug.so: cannot open shared object file: No such file or directory
   make sure install libraries then
   `$ sudo ldconfig`
+ffplay -f rawvideo -pixel_format yuv422p -video_size 320x240 sample/sample_yuv422p.yuv

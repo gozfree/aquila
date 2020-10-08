@@ -29,7 +29,7 @@ struct videocap_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_encoder ma;
+    struct media_producer mp;
     char *url;
 };
 
@@ -37,6 +37,7 @@ struct audiocap_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
+    struct media_producer mp;
     int sample_rate;
     int channels;
     char *url;
@@ -44,6 +45,8 @@ struct audiocap_conf {
 
 struct videoenc_conf {
     struct ikey_cvalue type;
+    char format[32];
+    struct media_encoder me;
     char *url;
 };
 
@@ -62,23 +65,26 @@ struct upstream_conf {
     struct ikey_cvalue type;
     char *url;
     uint16_t port;
+    struct media_encoder me;
 };
 
 struct playback_conf {
     struct ikey_cvalue type;
     char device[256];
     char format[32];
-    struct media_encoder ma;
+    struct media_encoder me;
     char *url;
 };
 
 struct record_conf {
     struct ikey_cvalue type;
+    struct media_encoder me;
     char url[128];
 };
 
 struct remotectrl_conf {
     int port;
+    struct media_encoder me;
 };
 
 struct filter_conf {

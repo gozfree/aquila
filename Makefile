@@ -98,8 +98,8 @@ DEVICE_OBJS := 			\
 FILTER_OBJS := 			\
     filter/filter.o 		\
     filter/videocap_filter.o 	\
-    filter/vencode_filter.o 	\
-    filter/vdecode_filter.o 	\
+    filter/videoenc_filter.o 	\
+    filter/videodec_filter.o 	\
     filter/upstream_filter.o 	\
     filter/record_filter.o 	\
     filter/playback_filter.o 	\

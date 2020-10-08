@@ -15,6 +15,9 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
+#include <gear-lib/libmacro.h>
+#include <gear-lib/liblog.h>
+#include <gear-lib/libmedia-io.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,8 +27,7 @@
 #include <sys/types.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <gear-lib/libmacro.h>
-#include <gear-lib/liblog.h>
+
 #include "common.h"
 #include "config.h"
 
@@ -75,141 +77,160 @@ static char *enum_to_string(int key)
 }
 #endif
 
-static void load_videocap(struct aq_config *c)
+static void load_videocap(struct config *c, struct videocap_conf *v)
 {
     const char *key = "videocap";
-    strcpy(c->videocap.type.str, conf_get_string(c->conf, key, "type"));
-    c->videocap.type.val = string_to_enum(c->videocap.type.str);
-    strcpy(c->videocap.device, conf_get_string(c->conf, key, "device"));
-    c->videocap.url = CALLOC(strlen(c->videocap.type.str)+ strlen(c->videocap.device) + strlen("://"), char);
-    strcat(c->videocap.url, c->videocap.type.str);
-    strcat(c->videocap.url, "://");
-    strcat(c->videocap.url, c->videocap.device);
-    c->videocap.ma.video.width = conf_get_int(c->conf, key, "width");
-    c->videocap.ma.video.height = conf_get_int(c->conf, key, "height");
-    strcpy(c->videocap.format, conf_get_string(c->conf, key, "format"));
-    c->videocap.ma.video.format = string_to_enum(c->videocap.format);
-    logi("[videocap][type] = %s\n", c->videocap.type.str);
-    logi("[videocap][device] = %s\n", c->videocap.device);
-    logi("[videocap][url] = %s\n", c->videocap.url);
-    logi("[videocap][format] = %s\n", c->videocap.format);
-    logi("[videocap][w*h] = %d*%d\n", c->videocap.ma.video.width, c->videocap.ma.video.height);
+    strcpy(v->type.str, conf_get_string(c, key, "type"));
+    v->type.val = string_to_enum(v->type.str);
+    strcpy(v->device, conf_get_string(c, key, "device"));
+    v->url = CALLOC(strlen(v->type.str)+ strlen(v->device) + strlen("://"), char);
+    strcat(v->url, v->type.str);
+    strcat(v->url, "://");
+    strcat(v->url, v->device);
+
+    v->mp.type = MEDIA_TYPE_VIDEO;
+    v->mp.video.width = conf_get_int(c, key, "width");
+    v->mp.video.height = conf_get_int(c, key, "height");
+    strcpy(v->format, conf_get_string(c, key, "format"));
+    v->mp.video.format = pixel_string_to_format(v->format);
+    logi("[videocap][type] = %s\n", v->type.str);
+    logi("[videocap][device] = %s\n", v->device);
+    logi("[videocap][url] = %s\n", v->url);
+    logi("[videocap][format] = %s\n", v->format);
+    logi("[videocap][w*h] = %d*%d\n", v->mp.video.width, v->mp.video.height);
 }
 
-static void load_videoenc(struct aq_config *c)
+static void load_videoenc(struct config *c, struct videoenc_conf *v)
 {
-    strcpy(c->videoenc.type.str, conf_get_string(c->conf, "videoenc", "type"));
-    c->videoenc.type.val = string_to_enum(c->videoenc.type.str);
-    c->videoenc.url = CALLOC(strlen(c->videoenc.type.str) + strlen("://"), char);
-    strcat(c->videoenc.url, c->videoenc.type.str);
-    strcat(c->videoenc.url, "://");
+    const char *key = "videoenc";
+    strcpy(v->type.str, conf_get_string(c, key, "type"));
+    v->type.val = string_to_enum(v->type.str);
+    v->url = CALLOC(strlen(v->type.str) + strlen("://"), char);
+    strcat(v->url, v->type.str);
+    strcat(v->url, "://");
 
-    logi("[videoenc][type] = %s\n", c->videoenc.type.str);
+    v->me.type = MEDIA_TYPE_VIDEO;
+    v->me.video.type = VIDEO_CODEC_H264;
+    strcpy(v->format, conf_get_string(c, key, "format"));
+    v->me.video.format = pixel_string_to_format(v->format);
+    v->me.video.width = conf_get_int(c, key, "width");
+    v->me.video.height = conf_get_int(c, key, "height");
+
+    logi("[videoenc][type] = %s\n", v->type.str);
+    logi("[videocap][format] = %s\n", v->format);
+    logi("[videoenc][w*h] = %d*%d\n", v->me.video.width, v->me.video.height);
 }
 
-static void load_audioenc(struct aq_config *c)
+static void load_audioenc(struct config *c, struct audioenc_conf *a)
 {
     const char *key = "audioenc";
-    strcpy(c->audioenc.type.str, conf_get_string(c->conf, key, "type"));
-    c->audioenc.type.val = string_to_enum(c->audioenc.type.str);
-    c->audioenc.url = CALLOC(strlen(c->audioenc.type.str) + strlen("://"), char);
-    strcat(c->audioenc.url, c->audioenc.type.str);
-    strcat(c->audioenc.url, "://");
+    strcpy(a->type.str, conf_get_string(c, key, "type"));
+    a->type.val = string_to_enum(a->type.str);
+    a->url = CALLOC(strlen(a->type.str) + strlen("://"), char);
+    strcat(a->url, a->type.str);
+    strcat(a->url, "://");
 
-    logi("[audioenc][type] = %s\n", c->audioenc.type.str);
+    logi("[audioenc][type] = %s\n", a->type.str);
 }
 
 
-static void load_videodec(struct aq_config *c)
+static void load_videodec(struct config *c, struct videodec_conf *v)
 {
-    strcpy(c->videodec.type.str, conf_get_string(c->conf, "videodec", "type"));
-    c->videodec.type.val = string_to_enum(c->videodec.type.str);
-    c->videodec.url = CALLOC(strlen(c->videodec.type.str) + strlen("://"), char);
-    strcat(c->videodec.url, c->videodec.type.str);
-    strcat(c->videodec.url, "://");
+    const char *key = "videodec";
+    strcpy(v->type.str, conf_get_string(c, key, "type"));
+    v->type.val = string_to_enum(v->type.str);
+    v->url = CALLOC(strlen(v->type.str) + strlen("://"), char);
+    strcat(v->url, v->type.str);
+    strcat(v->url, "://");
 
-    logi("[videodec][type] = %s\n", c->videodec.type.str);
+    logi("[videodec][type] = %s\n", v->type.str);
 }
 
-static void load_audiocap(struct aq_config *c)
+static void load_audiocap(struct config *c, struct audiocap_conf *a)
 {
     const char *key = "audiocap";
-    strcpy(c->audiocap.type.str, conf_get_string(c->conf, key, "type"));
-    c->audiocap.type.val = string_to_enum(c->audiocap.type.str);
-    strcpy(c->audiocap.device, conf_get_string(c->conf, key, "device"));
-    c->audiocap.url = CALLOC(strlen(c->audiocap.type.str)+ strlen(c->audiocap.device) + strlen("://"), char);
-    strcat(c->audiocap.url, c->audiocap.type.str);
-    strcat(c->audiocap.url, "://");
-    strcat(c->audiocap.url, c->audiocap.device);
-    c->audiocap.sample_rate = conf_get_int(c->conf, key, "sample_rate");
-    c->audiocap.channels = conf_get_int(c->conf, key, "channels");
+    strcpy(a->type.str, conf_get_string(c, key, "type"));
+    a->type.val = string_to_enum(a->type.str);
+    strcpy(a->device, conf_get_string(c, key, "device"));
+    a->url = CALLOC(strlen(a->type.str)+ strlen(a->device) + strlen("://"), char);
+    strcat(a->url, a->type.str);
+    strcat(a->url, "://");
+    strcat(a->url, a->device);
 
-    strcpy(c->audiocap.format, conf_get_string(c->conf, key, "format"));
-    logi("[audiocap][type] = %s\n", c->audiocap.type.str);
-    logi("[audiocap][device] = %s\n", c->audiocap.device);
-    logi("[audiocap][url] = %s\n", c->audiocap.url);
-    logi("[audiocap][format] = %s\n", c->audiocap.format);
-    logi("[audiocap][sample_rate] = %d\n", c->audiocap.sample_rate);
-    logi("[audiocap][channels] = %d\n", c->audiocap.channels);
+    a->mp.type = MEDIA_TYPE_AUDIO;
+    a->mp.audio.sample_rate = conf_get_int(c, key, "sample_rate");
+    a->mp.audio.channels = conf_get_int(c, key, "channels");
+
+    strcpy(a->format, conf_get_string(c, key, "format"));
+    a->mp.audio.format = sample_string_to_format(a->format);
+    logi("[audiocap][type] = %s\n", a->type.str);
+    logi("[audiocap][device] = %s\n", a->device);
+    logi("[audiocap][url] = %s\n", a->url);
+    logi("[audiocap][format] = %s\n", a->format);
+    logi("[audiocap][sample_rate] = %d\n", a->sample_rate);
+    logi("[audiocap][channels] = %d\n", a->channels);
 }
 
 
-static void load_upstream(struct aq_config *c)
+static void load_upstream(struct config *c, struct upstream_conf *u)
 {
-    strcpy(c->upstream.type.str, conf_get_string(c->conf, "upstream", "type"));
-    c->upstream.url = strdup(conf_get_string(c->conf, "upstream", "url"));
-    c->upstream.type.val = string_to_enum(c->upstream.type.str);
-    c->upstream.port = conf_get_int(c->conf, "upstream", "port");
-    logi("[upstream][type] = %s\n", c->upstream.type.str);
-    logi("[upstream][port] = %d\n", c->upstream.port);
-    logi("[upstream][url] = %s\n", c->upstream.url);
+    const char *key = "upstream";
+    strcpy(u->type.str, conf_get_string(c, key, "type"));
+    u->url = strdup(conf_get_string(c, key, "url"));
+    u->type.val = string_to_enum(u->type.str);
+    u->port = conf_get_int(c, key, "port");
+    logi("[upstream][type] = %s\n", u->type.str);
+    logi("[upstream][port] = %d\n", u->port);
+    logi("[upstream][url] = %s\n", u->url);
 }
 
-static void load_record(struct aq_config *c)
+static void load_record(struct config *c, struct record_conf *r)
 {
-    strcpy(c->record.type.str, conf_get_string(c->conf, "record", "type"));
-    c->record.type.val = string_to_enum(c->record.type.str);
-    strcat(c->record.url, c->record.type.str);
-    strcat(c->record.url, "://");
-    strcat(c->record.url, conf_get_string(c->conf, "record", "file"));
-    logi("[record][type] = %s\n", c->record.type.str);
-    logi("[record][url] = %s\n", c->record.url);
+    const char *key = "record";
+    strcpy(r->type.str, conf_get_string(c, key, "type"));
+    r->type.val = string_to_enum(r->type.str);
+    strcat(r->url, r->type.str);
+    strcat(r->url, "://");
+    strcat(r->url, conf_get_string(c, "record", "file"));
+    logi("[record][type] = %s\n", r->type.str);
+    logi("[record][url] = %s\n", r->url);
 }
 
-
-static void load_playback(struct aq_config *c)
+static void load_playback(struct config *c, struct playback_conf *p)
 {
-    strcpy(c->playback.type.str, conf_get_string(c->conf, "playback", "type"));
-    c->playback.type.val = string_to_enum(c->playback.type.str);
-    strcpy(c->playback.device, conf_get_string(c->conf, "playback", "device"));
-    strcpy(c->playback.format, conf_get_string(c->conf, "playback", "format"));
-    c->playback.url = CALLOC(strlen(c->playback.type.str) + strlen(c->playback.format) + strlen("://"), char);
-    strcat(c->playback.url, c->playback.type.str);
-    strcat(c->playback.url, "://");
-    strcat(c->playback.url, c->playback.format);
-    c->playback.ma.video.width = conf_get_int(c->conf, "playback", "width");
-    c->playback.ma.video.height = conf_get_int(c->conf, "playback", "height");
+    const char *key = "playback";
+    strcpy(p->type.str, conf_get_string(c, key, "type"));
+    p->type.val = string_to_enum(p->type.str);
+    strcpy(p->device, conf_get_string(c, key, "device"));
+    strcpy(p->format, conf_get_string(c, key, "format"));
+    p->url = CALLOC(strlen(p->type.str) + strlen(p->format) + strlen("://"), char);
+    strcat(p->url, p->type.str);
+    strcat(p->url, "://");
+    strcat(p->url, p->format);
+    p->me.video.width = conf_get_int(c, key, "width");
+    p->me.video.height = conf_get_int(c, key, "height");
 
-    logi("[playback][type] = %s\n", c->playback.type.str);
-    logi("[playback][url] = %s\n", c->playback.url);
-    logi("[playback][w*h] = %d*%d\n", c->playback.ma.video.width, c->playback.ma.video.height);
+    logi("[playback][type] = %s\n", p->type.str);
+    logi("[playback][url] = %s\n", p->url);
+    logi("[playback][w*h] = %d*%d\n", p->me.video.width, p->me.video.height);
 }
 
-static void load_remotectrl(struct aq_config *c)
+static void load_remotectrl(struct config *c, struct remotectrl_conf *r)
 {
-    c->remotectrl.port = conf_get_int(c->conf, "remotectrl", "port");
-    logi("[remotectrl][port] = %d\n", c->remotectrl.port);
+    const char *key = "remotectrl";
+    r->port = conf_get_int(c, key, "port");
+    logi("[remotectrl][port] = %d\n", r->port);
 }
-
 
 static void load_filter(struct aq_config *c)
 {
     int i;
-    c->filter_num = conf_get_length(c->conf, "filters");
+    const char *key = "filters";
+    c->filter_num = conf_get_length(c->conf, key);
     c->filter = CALLOC(c->filter_num, struct filter_conf);
 
     for (i = 0; i < c->filter_num; i++) {
-        strcpy(c->filter[i].type.str, conf_get_string(c->conf, "filters", i+1));
+        strcpy(c->filter[i].type.str, conf_get_string(c->conf, key, i+1));
         c->filter[i].type.val = string_to_enum(c->filter[i].type.str);
         logi("[filter][%d][type] = %s\n", i, c->filter[i].type.str);
         switch (c->filter[i].type.val) {
@@ -223,18 +244,23 @@ static void load_filter(struct aq_config *c)
             break;
         case VIDEOENC:
             c->filter[i].url = c->videoenc.url;
+            memcpy(&c->filter[i].videoenc, &c->videoenc, sizeof(struct videoenc_conf));
             break;
         case VIDEODEC:
             c->filter[i].url = c->videodec.url;
+            memcpy(&c->filter[i].videodec, &c->videodec, sizeof(struct videodec_conf));
             break;
         case UPSTREAM:
             c->filter[i].url = c->upstream.url;
+            memcpy(&c->filter[i].upstream, &c->upstream, sizeof(struct upstream_conf));
             break;
         case RECORD:
             c->filter[i].url = c->record.url;
+            memcpy(&c->filter[i].record, &c->record, sizeof(struct record_conf));
             break;
         case REMOTECTRL:
             c->filter[i].url = "rpcd://xxx";
+            memcpy(&c->filter[i].remotectrl, &c->remotectrl, sizeof(struct remotectrl_conf));
             break;
         default :
             loge("unsupport filter type %d, %s\n",
@@ -266,15 +292,15 @@ int load_conf(struct aq_config *c)
         loge("conf_load failed!\n");
         return -1;
     }
-    load_videocap(c);
-    load_audiocap(c);
-    load_videoenc(c);
-    load_audioenc(c);
-    load_videodec(c);
-    load_record(c);
-    load_upstream(c);
-    load_playback(c);
-    load_remotectrl(c);
+    load_videocap(c->conf, &c->videocap);
+    load_audiocap(c->conf, &c->audiocap);
+    load_videoenc(c->conf, &c->videoenc);
+    load_audioenc(c->conf, &c->audioenc);
+    load_videodec(c->conf, &c->videodec);
+    load_record(c->conf, &c->record);
+    load_upstream(c->conf, &c->upstream);
+    load_playback(c->conf, &c->playback);
+    load_remotectrl(c->conf, &c->remotectrl);
     load_filter(c);
     load_graph(c);
     return 0;

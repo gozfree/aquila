@@ -53,23 +53,19 @@ static int on_playback_read(struct filter_ctx *fc, struct iovec *in, struct iove
 
 static int playback_filter_open(struct filter_ctx *fc)
 {
-    struct filter_conf *fconf = (struct filter_conf *)fc->config;
+    struct playback_ctx *pc = playback_open(fc->url, &fc->conf->playback.me);
+    if (!pc) {
+        loge("open %s failed!\n", fc->url);
+        return -1;
+    }
     struct playback_filter_ctx *pfc = CALLOC(1, struct playback_filter_ctx);
     if (!pfc) {
         loge("malloc failed!\n");
-        return -1;
-    }
-    pfc->conf = &fconf->playback;
-    struct playback_ctx *pc = playback_open(fc->url, &fc->media_encoder);
-    if (!pc) {
-        loge("open %s failed!\n", fc->url);
         goto failed;
     }
-
+    pfc->conf = &fc->conf->playback;
     pfc->pc = pc;
     pfc->seq = 0;
-    pc->ma.video.width = fc->media_encoder.video.width;
-    pc->ma.video.height = fc->media_encoder.video.height;
     fc->rfd = -1;
     fc->wfd = -1;
     fc->priv = pfc;

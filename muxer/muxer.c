@@ -65,7 +65,6 @@ void muxer_register_all()
 #endif
 }
 
-
 struct muxer_ctx *muxer_open(const char *url, struct media_encoder *me)
 {
     struct muxer *p;
@@ -86,6 +85,7 @@ struct muxer_ctx *muxer_open(const char *url, struct media_encoder *me)
         loge("%s muxer is not support!\n", c->url.head);
         goto failed;
     }
+    media_encoder_dump_info(me);
     logi("\t[muxer module] <%s> loaded\n", p->name);
     c->ops = p;
     if (!c->ops->open) {

@@ -44,7 +44,7 @@ static int on_frame(struct uac_ctx *c, struct audio_frame *frm)
     return 0;
 }
 
-static int mic_open(struct device_ctx *dc, const char *dev, struct media_encoder *ma)
+static int mic_open(struct device_ctx *dc, struct media_producer *mp)
 {
     int fds[2] = {0};
     char notify = '1';
@@ -61,7 +61,7 @@ static int mic_open(struct device_ctx *dc, const char *dev, struct media_encoder
     mc->on_write_fd = fds[1];
     logd("pipe: rfd = %d, wfd = %d\n", mc->on_read_fd, mc->on_write_fd);
 
-    mc->uac = uac_open(dev, &mc->conf);
+    mc->uac = uac_open(dc->url.body, &mc->conf);
     if (!mc->uac) {
         loge("uac_open failed!\n");
         goto failed;
@@ -70,9 +70,9 @@ static int mic_open(struct device_ctx *dc, const char *dev, struct media_encoder
         loge("uac start stream failed!\n");
         goto failed;
     }
-    mc->name = strdup(dev);
+    mc->name = strdup(dc->url.body);
     logd("open %s format:%s sample_rate: %d, channel: %d\n",
-          dev, sample_format_name(mc->uac->conf.format),
+          dc->url.body, sample_format_to_string(mc->uac->conf.format),
           mc->uac->conf.sample_rate, mc->uac->conf.channels);
 
     dc->fd = mc->on_read_fd;//use pipe fd to trigger event
@@ -97,7 +97,7 @@ failed:
     return -1;
 }
 
-static int mic_read(struct device_ctx *dc, void *buf, int len)
+static int mic_read(struct device_ctx *dc, void *buf, size_t len)
 {
 #if 0
     struct mic_ctx *mc = (struct mic_ctx *)dc->priv;
@@ -130,7 +130,7 @@ static int mic_query(struct device_ctx *dc, struct media_frame *frame)
 #endif
 }
 
-static int mic_write(struct device_ctx *dc, void *buf, int len)
+static int mic_write(struct device_ctx *dc, const void *buf, size_t len)
 {
 #if 0
     struct mic_ctx *mc = (struct mic_ctx *)dc->priv;
@@ -157,7 +157,7 @@ static void mic_close(struct device_ctx *dc)
 #endif
 }
 
-static int mic_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, int len)
+static int mic_ioctl(struct device_ctx *dc, uint32_t cmd, void *buf, size_t len)
 {
     return 0;
 }
