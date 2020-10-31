@@ -30,7 +30,6 @@ extern "C" {
 #endif
 
 
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 #include <gear-lib/libdarray.h>
 

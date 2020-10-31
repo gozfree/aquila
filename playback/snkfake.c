@@ -22,7 +22,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 
 #include "playback.h"

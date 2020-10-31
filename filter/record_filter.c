@@ -22,7 +22,6 @@
 #include <errno.h>
 #include <assert.h>
 
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 
 #include "filter.h"

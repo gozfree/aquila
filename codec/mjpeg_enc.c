@@ -21,7 +21,6 @@
 #include <stdint.h>
 #include <sys/uio.h>
 #include <jpeglib.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 
 #include "codec.h"

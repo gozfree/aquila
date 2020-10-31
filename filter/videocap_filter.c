@@ -23,7 +23,6 @@
 #include <errno.h>
 #include <gear-lib/liblog.h>
 #include <gear-lib/libtime.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/libmedia-io.h>
 
 #include "device.h"

@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <stdint.h>
 #include <x264.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 
 #include "muxer.h"

@@ -20,7 +20,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/libgevent.h>
 #include <gear-lib/libthread.h>
 #include "common.h"

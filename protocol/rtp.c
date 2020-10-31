@@ -20,8 +20,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/uio.h>
-#include <gear-lib/libmacro.h>
-#include <gear-lib/libskt.h>
+#include <gear-lib/libsock.h>
 #include <gear-lib/liblog.h>
 #include <gear-lib/libgevent.h>
 #include <gear-lib/libvector.h>
@@ -105,9 +104,9 @@ static void on_recv_rtp(int fd, void *arg)
     //struct rtp_ctx *c = (struct rtp_ctx *)arg;
     struct rtp_packet rtp_pkt;
     rtp_pkt.iobuf = iovec_create(RTP_PACKET_BUF_LEN_MAX);
-    rlen = skt_recv(fd, rtp_pkt.iobuf->iov_base, RTP_PACKET_BUF_LEN_MAX);
+    rlen = sock_recv(fd, rtp_pkt.iobuf->iov_base, RTP_PACKET_BUF_LEN_MAX);
     if (rlen > 0) {
-        logi("skt_recv len = %d\n", rlen);
+        logi("sock_recv len = %d\n", rlen);
     } else if (rlen == 0) {
         loge("peer connect shutdown\n");
     } else {
@@ -120,9 +119,9 @@ static void on_recv_rtcp(int fd, void *arg)
     int rlen;
     struct rtp_packet rtcp_pkt;
     rtcp_pkt.iobuf = iovec_create(RTP_PACKET_BUF_LEN_MAX);
-    rlen = skt_recv(fd, rtcp_pkt.iobuf->iov_base, RTP_PACKET_BUF_LEN_MAX);
+    rlen = sock_recv(fd, rtcp_pkt.iobuf->iov_base, RTP_PACKET_BUF_LEN_MAX);
     if (rlen > 0) {
-        logi("skt_recv len = %d\n", rlen);
+        logi("sock_recv len = %d\n", rlen);
     } else if (rlen == 0) {
         loge("peer connect shutdown\n");
     } else {
@@ -139,7 +138,7 @@ static void on_error(int fd, void *arg)
 static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_encoder *media)
 {
     struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
-    skt_addr_list_t *tmp;
+    sock_addr_list_t *tmp;
     char str[MAX_ADDR_STRING];
     char ip[64];
     int len;
@@ -157,31 +156,31 @@ static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_encod
     c->dst_port = atoi(p);
 
     memset(str, 0, MAX_ADDR_STRING);
-    if (0 == skt_get_local_list(&tmp, 0)) {
+    if (0 == sock_get_local_list(&tmp, 0)) {
         for (; tmp; tmp = tmp->next) {
-            skt_addr_ntop(str, tmp->addr.ip);
+            sock_addr_ntop(str, tmp->addr.ip);
             logd("ip = %s port = %d\n", str, tmp->addr.port);
         }
     }
     strncpy(c->src_ip, str, MAX_ADDR_STRING);
 
     c->src_rtp_port = RTP_PORT;
-    c->rtp_fd = skt_udp_bind(c->src_ip, RTP_PORT);//random port
+    c->rtp_fd = sock_udp_bind(c->src_ip, RTP_PORT);//random port
     if (c->rtp_fd == -1) {
         loge("bind %s failed\n", ip);
         return -1;
     }
-    skt_set_noblk(c->rtp_fd, 1);
-    skt_set_reuse(c->rtp_fd, 1);
+    sock_set_noblk(c->rtp_fd, 1);
+    sock_set_reuse(c->rtp_fd, 1);
 
     c->src_rtcp_port = RTCP_PORT;
-    c->rtcp_fd = skt_udp_bind(c->src_ip, RTCP_PORT);//random port
+    c->rtcp_fd = sock_udp_bind(c->src_ip, RTCP_PORT);//random port
     if (c->rtcp_fd == -1) {
         loge("bind %s failed\n", ip);
         return -1;
     }
-    skt_set_noblk(c->rtcp_fd, 1);
-    skt_set_reuse(c->rtcp_fd, 1);
+    sock_set_noblk(c->rtcp_fd, 1);
+    sock_set_reuse(c->rtcp_fd, 1);
     c->evbase = gevent_base_create();
     if (!c->evbase) {
         return -1;
@@ -241,7 +240,7 @@ static int rtp_packet_send(struct rtp_ctx *c, void *buf, size_t len)
     ssrc[2] = (SSRC & 0x0000ff00) >>  8;
     ssrc[3] = (SSRC & 0x000000ff);
 #endif
-    skt_sendto(c->rtp_fd, c->dst_ip, c->dst_port, data, len);
+    sock_sendto(c->rtp_fd, c->dst_ip, c->dst_port, data, len);
     //print_buffer(data, len);
     return 0;
 }
@@ -250,15 +249,15 @@ static int rtp_write(struct protocol_ctx *sc, void *buf, int len)
 {
     struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     int ret = rtp_packet_send(c, buf, len);
-    logi("skt_sendto len = %d\n", ret);
+    logi("sock_sendto len = %d\n", ret);
     return ret;
 }
 
 static void rtp_close(struct protocol_ctx *sc)
 {
     struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
-    skt_close(c->rtp_fd);
-    skt_close(c->rtcp_fd);
+    sock_close(c->rtp_fd);
+    sock_close(c->rtcp_fd);
 }
 
 struct protocol aq_rtp_protocol = {

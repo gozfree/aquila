@@ -21,7 +21,6 @@
 #include <gear-lib/librpc_stub.h>
 #include <gear-lib/libgevent.h>
 #include <gear-lib/liblog.h>
-#include <gear-lib/libskt.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>

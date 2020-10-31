@@ -20,8 +20,6 @@
 #include <unistd.h>
 #include <gear-lib/libatomic.h>
 #include <gear-lib/liblog.h>
-#include <gear-lib/libmacro.h>
-
 
 #include "common.h"
 #include "muxer.h"

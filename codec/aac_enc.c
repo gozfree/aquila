@@ -15,7 +15,6 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 #include <gear-lib/libdarray.h>
 #include <stdio.h>

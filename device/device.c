@@ -16,7 +16,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
 #include <string.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/libatomic.h>
 #include <gear-lib/liblog.h>
 #include "device.h"

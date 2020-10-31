@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 #include <gear-lib/libtime.h>
 #include <gear-lib/librtmpc.h>

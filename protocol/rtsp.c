@@ -26,7 +26,6 @@
 
 #include <gear-lib/liblog.h>
 #include <gear-lib/librtsp.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/libqueue.h>
 #include "protocol.h"
 #include "common.h"

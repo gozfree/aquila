@@ -17,7 +17,6 @@
  ******************************************************************************/
 #include <gear-lib/libuac.h>
 #include <gear-lib/libmedia-io.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 #include <unistd.h>
 #include <stdio.h>

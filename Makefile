@@ -55,14 +55,15 @@ CFLAGS	+= -I./muxer
 CFLAGS	+= -I./playback
 CFLAGS	+= -I./protocol
 CFLAGS	+= -I./util
+CFLAGS	+= -I/usr/local/include/gear-lib
 
-CFLAGS	+= -Wl,-rpath=/usr/loca/lib
+CFLAGS	+= -Wl,-rpath=/usr/local/lib
 CFLAGS	+= $(CFLAGS_SDL)
 
 LDFLAGS	:=
 LDFLAGS	+= -lgcc_s -lc
 LDFLAGS += -L$(OUTPUT)/lib
-LDFLAGS	+= -L/usr/local/lib/gear-lib -ldebug -llog -lconfig -lgevent -ltime -lrtsp -ldict -lfile -lvector -lskt
+LDFLAGS	+= -L/usr/local/lib/gear-lib -ldebug -llog -lconfig -lgevent -ltime -lrtsp -ldict -lfile -lvector -lsock
 LDFLAGS	+= -L/usr/local/lib/gear-lib -lthread -lmacro -lrpc -lhash -lworkq -luvc -luac -lmedia-io -ldarray -lmp4
 LDFLAGS	+= -L/usr/local/lib/gear-lib -lrtmpc
 LDFLAGS	+= -lqueue

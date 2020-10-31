@@ -20,7 +20,6 @@
 #include <liblog.h>
 #include <libgevent.h>
 #include <libhash.h>
-#include <libskt.h>
 #include <libworkq.h>
 #include <librpc.h>
 #include <librpc_stub.h>

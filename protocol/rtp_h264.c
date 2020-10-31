@@ -19,7 +19,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <gear-lib/libmacro.h>
 #include <gear-lib/liblog.h>
 #include <gear-lib/libvector.h>
 
