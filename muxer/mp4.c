@@ -25,17 +25,20 @@
 #include "muxer.h"
 #include "common.h"
 
-
 static int mp4_open(struct muxer_ctx *mc, struct media_encoder *me)
 {
     struct mp4_config conf = {
         .width = me->video.width,
         .height = me->video.height,
-        .fps.num = me->video.framerate.num,
-        .fps.den = me->video.framerate.den,
+        .fps.num = 30,//me->video.framerate.num,
+        .fps.den = 1,//me->video.framerate.den,
         .format = me->video.format,
     };
     struct mp4_muxer *mp4 = mp4_muxer_open(mc->url.body, &conf);
+    if (!mp4) {
+        loge("mp4_muxer_open failed!\n");
+        return -1;
+    }
 
     mc->priv = mp4;
     return 0;
@@ -44,9 +47,7 @@ static int mp4_open(struct muxer_ctx *mc, struct media_encoder *me)
 static int mp4_write(struct muxer_ctx *mc, struct media_packet *pkt)
 {
     struct mp4_muxer *mp4 = (struct mp4_muxer *)mc->priv;
-    mp4_muxer_write(mp4, pkt);
-
-    return 0;
+    return mp4_muxer_write(mp4, pkt);
 }
 
 void mp4_close(struct muxer_ctx *mc)

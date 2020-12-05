@@ -81,7 +81,7 @@ static void on_filter_read(int fd, void *arg)
         in.iov_len = tmp_io->iov_len;
         logd("filter[%s]: queue_pop %p\n", ctx->name, in.iov_base);
     }
-    //loge("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
+    logd("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in.iov_len, out.iov_len);
     thread_lock(ctx->thread);
     ret = ctx->ops->on_read(ctx, &in, &out);
     if (ret == -1) {
@@ -311,19 +311,33 @@ int filter_dispatch(struct filter_ctx *ctx, int block)
     return 0;
 }
 
+int filter_stop(struct filter_ctx *ctx)
+{
+    if (!ctx)
+        return -1;
+
+
+    return 0;
+}
+
 void filter_destroy(struct filter_ctx *ctx)
 {
     if (!ctx)
         return;
 
-    ctx->ops->close(ctx);
     gevent_base_loop_break(ctx->ev_base);
+    thread_join(ctx->thread);
 
     gevent_del(ctx->ev_base, ctx->ev_read);
+    if (0) {
     gevent_del(ctx->ev_base, ctx->ev_write);
+    }
     gevent_base_destroy(ctx->ev_base);
+    ctx->ops->close(ctx);
 
     queue_branch_del(ctx->q_src, ctx->name);
     queue_branch_del(ctx->q_snk, ctx->name);
+    thread_destroy(ctx->thread);
+    ctx->thread = NULL;
     free(ctx);
 }

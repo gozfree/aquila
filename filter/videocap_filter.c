@@ -41,10 +41,9 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
     struct media_producer *mp = &fc->conf->videocap.mp;
     char tmp_tm[32];
-    struct video_frame frm;
-    video_frame_init(&frm, mp->video.format, mp->video.width, mp->video.height, VFC_NONE);
+    struct video_frame *frm = video_frame_create(mp->video.format, mp->video.width, mp->video.height, VFC_ALLOC);
 
-    int ret = device_read(ctx->dev, &frm, sizeof(frm));
+    int ret = device_read(ctx->dev, frm, sizeof(struct video_frame));
     if (ret == -1) {
         if (-1 == device_write(ctx->dev, NULL, 0)) {
             loge("device_write failed!\n");
@@ -57,9 +56,8 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
     }
-    out->iov_base = video_frame_create(mp->video.format, mp->video.width, mp->video.height, VFC_ALLOC);
-    video_frame_copy(out->iov_base, &frm);
-    out->iov_len = ret;
+    out->iov_base = frm;
+    out->iov_len = frm->total_size;
     return ret;
 }
 

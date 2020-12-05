@@ -90,9 +90,10 @@ void aquila_deinit(struct aquila *aq)
     struct aq_config *c = &aq->config;
     for (i = 0; i < aq->config.filter_num; i++) {
         filter_destroy(aq->filter[i]);
+        aq->filter[i] = NULL;
     }
-    aq->run = false;
     unload_conf(c);
+    aq->run = false;
 }
 
 
@@ -134,7 +135,7 @@ int main(int argc, char **argv)
     }
     logi("quit\n");
 quit:
-    aquila_deinit(&aq_instance);
+    //aquila_deinit(&aq_instance);
 
     return 0;
 }

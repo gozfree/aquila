@@ -114,6 +114,8 @@ static void load_videoenc(struct config *c, struct videoenc_conf *v)
     v->me.video.format = pixel_string_to_format(v->format);
     v->me.video.width = conf_get_int(c, key, "width");
     v->me.video.height = conf_get_int(c, key, "height");
+    v->me.video.framerate.num = 1;
+    v->me.video.framerate.den = 30;
 
     logi("[videoenc][type] = %s\n", v->type.str);
     logi("[videocap][format] = %s\n", v->format);

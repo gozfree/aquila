@@ -199,10 +199,11 @@ static int init_pic_data(struct x264_ctx *c, x264_picture_t *pic,
         break;
     case X264_CSP_I420:
     case X264_CSP_I444:
+    case X264_CSP_I422:
         pic->img.i_plane = 3;
         break;
     default:
-        loge("unsupport colorspace type\n");
+        loge("unsupport colorspace type %d\n", c->param.i_csp);
         break;
     }
     if (pic->img.i_plane != frame->planes) {
@@ -245,6 +246,7 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
           pkt->dts, pkt->encoder.timebase.num, pkt->encoder.timebase.den);
 
     pkt->key_frame = pic_out->b_keyframe != 0;
+    pkt->type = pkt->key_frame ? H26X_FRAME_I : H26X_FRAME_P;
 
     memcpy(&pkt->encoder, &c->encoder, sizeof(struct video_encoder));
     logd("pkt->encoder.extra_size = %d\n", pkt->encoder.extra_size);
@@ -285,7 +287,6 @@ static int _x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
         frm->frame_id, frm->timestamp, pkt->pts, pkt->dts, pkt->key_frame, pkt->size);
     c->cur_pts += c->timebase_num;
     out->iov_len = ret;
-    logd("encode size=%d\n", out->iov_len);
     return ret;
 }
 

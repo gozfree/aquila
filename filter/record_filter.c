@@ -34,17 +34,14 @@ struct rec_ctx {
 
 static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
-    struct media_packet pkt;
-    struct video_packet video;
+    struct media_packet *pkt;
     struct rec_ctx *vc = (struct rec_ctx *)fc->priv;
-    pkt.type = MEDIA_TYPE_VIDEO;
-    video.data = in->iov_base;
-    video.size = in->iov_len;
-    pkt.video = &video;
-    int ret = muxer_write_packet(vc->muxer, &pkt);
+    pkt = in->iov_base;
+    int ret = muxer_write_packet(vc->muxer, pkt);
     if (ret == -1) {
         loge("decode failed!\n");
     }
+    //media_packet_destroy(pkt);
     out->iov_len = ret;
     return ret;
 }
@@ -79,16 +76,11 @@ failed:
 
 static void rec_close(struct filter_ctx *fc)
 {
-    loge("enter\n");
     struct rec_ctx *c = (struct rec_ctx *)fc->priv;
     if (c->muxer) {
-        loge("xxx\n");
         muxer_close(c->muxer);//XXX
-        loge("xxx\n");
         free(c->muxer);
-        loge("xxx\n");
     }
-    loge("leave\n");
 }
 
 struct filter aq_record_filter = {

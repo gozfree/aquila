@@ -15,8 +15,9 @@
  * License along with libraries; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  ******************************************************************************/
+#include <gear-lib/libuvc.h>
+#include <gear-lib/libmedia-io.h>
 #include <gear-lib/liblog.h>
-#include <gear-lib/libfile.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,68 +28,67 @@
 #include <sys/stat.h>
 #include "device.h"
 
-struct vdev_fake_ctx {
-    int fd;
-    struct file *fp;
+struct dummy_ctx {
+    struct uvc_config conf;
+    struct uvc_ctx *uvc;
+    char *name;
     int on_read_fd;
     int on_write_fd;
-    int width;
-    int height;
-    struct iovec buf;
-    int buf_index;
-    int req_count;
 };
 
 static int _open(struct device_ctx *dc, struct media_producer *mp)
 {
-    int fd = -1;
-    int fds[2];
+    int fds[2] = {0};
     char notify = '1';
     const char *dev = dc->url.body;
-    struct vdev_fake_ctx *vc = CALLOC(1, struct vdev_fake_ctx);
+    struct dummy_ctx *vc = CALLOC(1, struct dummy_ctx);
     if (!vc) {
-        loge("malloc vdev_fake_ctx failed!\n");
+        loge("malloc dummy_ctx failed!\n");
         return -1;
     }
-
     if (pipe(fds)) {
         loge("create pipe failed(%d): %s\n", errno, strerror(errno));
         goto failed;
     }
     vc->on_read_fd = fds[0];
     vc->on_write_fd = fds[1];
+    logd("pipe: rfd = %d, wfd = %d\n", vc->on_read_fd, vc->on_write_fd);
 
-    fd = open(dev, O_RDWR);
-    if (fd == -1) {
-        loge("open %s failed: %s\n", dev, strerror(errno));
+    vc->conf.width = mp->video.width;
+    vc->conf.height = mp->video.height;
+    vc->conf.fps.num = 5;
+    vc->conf.fps.den = 1;
+    vc->conf.format = PIXEL_FORMAT_YUY2;
+    media_producer_dump_info(mp);
+
+    vc->uvc = uvc_open(UVC_TYPE_DUMMY, dev, &vc->conf);
+    if (uvc_start_stream(vc->uvc, NULL)) {
+        loge("uvc start stream failed!\n");
         goto failed;
     }
-    vc->fp = file_open(dev, F_RDONLY);
-    if (!vc->fp) {
-        loge("open %s failed: %s\n", dev, strerror(errno));
-        goto failed;
-    }
-    vc->fd = fd;
-    vc->width = mp->video.width;
-    vc->height = mp->video.height;
+    vc->name = strdup(dev);
+    logi("open %s format:%s resolution:%d*%d @%d/%dfps\n",
+          dev, pixel_format_to_string(vc->uvc->conf.format),
+          vc->uvc->conf.width, vc->uvc->conf.height,
+          vc->uvc->conf.fps.num, vc->uvc->conf.fps.den);
 
+    mp->video.framerate.num = vc->uvc->conf.fps.num;
+    mp->video.framerate.den = vc->uvc->conf.fps.den;
+    mp->video.format = vc->uvc->conf.format;
     dc->fd = vc->on_read_fd;//use pipe fd to trigger event
-    if (write(vc->on_write_fd, &notify, 1) != 1) {
-        loge("Failed writing to notify pipe\n");
-        goto failed;
-    }
     dc->priv = vc;
+    if (write(vc->on_write_fd, &notify, 1) != 1) {
+        loge("Failed writing to notify pipe: %s\n", strerror(errno));
+        return -1;
+    }
     return 0;
 
 failed:
+    if (vc->name) {
+        free(vc->name);
+    }
     if (vc) {
         free(vc);
-    }
-    if (fd != -1) {
-        close(fd);
-    }
-    if (vc->fp) {
-        file_close(vc->fp);
     }
     if (fds[0] != -1 || fds[1] != -1) {
         close(fds[0]);
@@ -99,35 +99,33 @@ failed:
 
 static int _read(struct device_ctx *dc, void *buf, size_t len)
 {
-    struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
-    ssize_t flen;
+    struct dummy_ctx *vc = (struct dummy_ctx *)dc->priv;
+    char notify;
+    struct video_frame *frm = buf;
+
+    if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
+        perror("Failed read from notify pipe");
+    }
+
+    return uvc_query_frame(vc->uvc, frm);
+}
+
+static int _query(struct device_ctx *dc, struct media_frame *frame)
+{
+    struct dummy_ctx *vc = (struct dummy_ctx *)dc->priv;
     char notify;
 
     if (read(vc->on_read_fd, &notify, sizeof(notify)) != 1) {
-        loge("Failed read from notify pipe");
+        perror("Failed read from notify pipe");
     }
 
-    flen = read(vc->fd, buf, len);
-    flen = file_read(vc->fp, buf, len);
-    file_seek(vc->fp, 0L, SEEK_SET);
-    if (flen == -1) {
-        loge("read failed!\n");
-        return -1;
-    }
-    if (flen > len) {
-        loge("read frame is %d bytes, but buffer len is %d, not enough!\n", flen, len);
-        return -1;
-    }
-    logd("read frame is %d bytes, but buffer len is %d\n", flen, len);
-    usleep(200*1000);
-
-    return len;
+    return uvc_query_frame(vc->uvc, &frame->video);
 }
 
 static int _write(struct device_ctx *dc, const void *buf, size_t len)
 {
+    struct dummy_ctx *vc = (struct dummy_ctx *)dc->priv;
     char notify = '1';
-    struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
     if (write(vc->on_write_fd, &notify, 1) != 1) {
         loge("Failed writing to notify pipe: %s\n", strerror(errno));
         return -1;
@@ -137,24 +135,20 @@ static int _write(struct device_ctx *dc, const void *buf, size_t len)
 
 static void _close(struct device_ctx *dc)
 {
-    struct vdev_fake_ctx *vc = (struct vdev_fake_ctx *)dc->priv;
-    if (!vc) {
-        return;
-    }
-
-    close(vc->fd);
-    file_close(vc->fp);
+    struct dummy_ctx *vc = (struct dummy_ctx *)dc->priv;
+    uvc_close(vc->uvc);
+    free(vc->name);
     close(vc->on_read_fd);
     close(vc->on_write_fd);
     free(vc);
-    vc = NULL;
 }
 
 struct device aq_file_device = {
-    .name  = "file",
-    .open  = _open,
-    .read  = _read,
-    .write = _write,
-    .ioctl = NULL,
-    .close = _close,
+    .name        = "file",
+    .open        = _open,
+    .read        = _read,
+    .query_frame = _query,
+    .write       = _write,
+    .ioctl       = NULL,
+    .close       = _close,
 };

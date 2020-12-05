@@ -44,6 +44,7 @@ static int on_videoenc_read(struct filter_ctx *fc, struct iovec *in, struct iove
         loge("encode failed!\n");
     }
     out->iov_base = pkt;
+    out->iov_len = media_packet_get_size(pkt);
     return ret;
 }
 

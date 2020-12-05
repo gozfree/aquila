@@ -1,8 +1,8 @@
 aquila_global = {
         videocap = {
-                type = "file",
-                device = "sample/sample_yuv422p.yuv",
-                format = "I422",
+                type = "usbcam",
+                device = "/dev/video0",
+                format = "YUV422P",
                 width = 640,
                 height = 480,
         },
@@ -14,7 +14,7 @@ aquila_global = {
                 --type supported: mjpeg/x264
                 --type = "mjpeg",
                 type = "x264",
-                format = "I422",
+                format = "YUY2",
                 width = 640,
                 height = 480,
         },
