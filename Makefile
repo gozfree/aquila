@@ -46,6 +46,7 @@ LDFLAGS_JPEG	= -ljpeg
 LDFLAGS_LUA 	= -llua5.2
 
 CFLAGS	:= -g -Wall -Werror
+# -fsanitize=address
 CFLAGS	+= -I./
 CFLAGS	+= -I./algo
 CFLAGS	+= -I./codec
@@ -68,6 +69,7 @@ LDFLAGS	+= -L/usr/local/lib/gear-lib -lthread -lmacro -lrpc -lhash -lworkq -luvc
 LDFLAGS	+= -L/usr/local/lib/gear-lib -lrtmpc
 LDFLAGS	+= -lqueue
 LDFLAGS	+= -lpthread -lrt
+# -lasan
 LDFLAGS	+= $(LDFLAGS_SDL)
 LDFLAGS	+= $(LDFLAGS_X264)
 LDFLAGS	+= $(LDFLAGS_FDKAAC)

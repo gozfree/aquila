@@ -89,6 +89,9 @@ void aquila_deinit(struct aquila *aq)
     int i;
     struct aq_config *c = &aq->config;
     for (i = 0; i < aq->config.filter_num; i++) {
+        filter_stop(aq->filter[i]);
+    }
+    for (i = 0; i < aq->config.filter_num; i++) {
         filter_destroy(aq->filter[i]);
         aq->filter[i] = NULL;
     }

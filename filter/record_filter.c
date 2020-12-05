@@ -78,8 +78,8 @@ static void rec_close(struct filter_ctx *fc)
 {
     struct rec_ctx *c = (struct rec_ctx *)fc->priv;
     if (c->muxer) {
-        muxer_close(c->muxer);//XXX
-        free(c->muxer);
+        muxer_close(c->muxer);
+        free(c);
     }
 }
 

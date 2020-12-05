@@ -316,6 +316,13 @@ int filter_stop(struct filter_ctx *ctx)
     if (!ctx)
         return -1;
 
+    gevent_base_loop_break(ctx->ev_base);
+    thread_join(ctx->thread);
+
+    gevent_del(ctx->ev_base, ctx->ev_read);
+    if (0) {
+    gevent_del(ctx->ev_base, ctx->ev_write);
+    }
 
     return 0;
 }
@@ -325,14 +332,6 @@ void filter_destroy(struct filter_ctx *ctx)
     if (!ctx)
         return;
 
-    gevent_base_loop_break(ctx->ev_base);
-    thread_join(ctx->thread);
-
-    gevent_del(ctx->ev_base, ctx->ev_read);
-    if (0) {
-    gevent_del(ctx->ev_base, ctx->ev_write);
-    }
-    gevent_base_destroy(ctx->ev_base);
     ctx->ops->close(ctx);
 
     queue_branch_del(ctx->q_src, ctx->name);

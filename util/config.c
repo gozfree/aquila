@@ -82,7 +82,7 @@ static void load_videocap(struct config *c, struct videocap_conf *v)
     strcpy(v->type.str, conf_get_string(c, key, "type"));
     v->type.val = string_to_enum(v->type.str);
     strcpy(v->device, conf_get_string(c, key, "device"));
-    v->url = CALLOC(strlen(v->type.str)+ strlen(v->device) + strlen("://"), char);
+    v->url = CALLOC(1+strlen(v->type.str)+ strlen(v->device) + strlen("://"), char);
     strcat(v->url, v->type.str);
     strcat(v->url, "://");
     strcat(v->url, v->device);
@@ -104,7 +104,7 @@ static void load_videoenc(struct config *c, struct videoenc_conf *v)
     const char *key = "videoenc";
     strcpy(v->type.str, conf_get_string(c, key, "type"));
     v->type.val = string_to_enum(v->type.str);
-    v->url = CALLOC(strlen(v->type.str) + strlen("://"), char);
+    v->url = CALLOC(1+strlen(v->type.str) + strlen("://"), char);
     strcat(v->url, v->type.str);
     strcat(v->url, "://");
 
@@ -127,7 +127,7 @@ static void load_audioenc(struct config *c, struct audioenc_conf *a)
     const char *key = "audioenc";
     strcpy(a->type.str, conf_get_string(c, key, "type"));
     a->type.val = string_to_enum(a->type.str);
-    a->url = CALLOC(strlen(a->type.str) + strlen("://"), char);
+    a->url = CALLOC(1+strlen(a->type.str) + strlen("://"), char);
     strcat(a->url, a->type.str);
     strcat(a->url, "://");
 
@@ -140,7 +140,7 @@ static void load_videodec(struct config *c, struct videodec_conf *v)
     const char *key = "videodec";
     strcpy(v->type.str, conf_get_string(c, key, "type"));
     v->type.val = string_to_enum(v->type.str);
-    v->url = CALLOC(strlen(v->type.str) + strlen("://"), char);
+    v->url = CALLOC(1+strlen(v->type.str) + strlen("://"), char);
     strcat(v->url, v->type.str);
     strcat(v->url, "://");
 
@@ -153,7 +153,7 @@ static void load_audiocap(struct config *c, struct audiocap_conf *a)
     strcpy(a->type.str, conf_get_string(c, key, "type"));
     a->type.val = string_to_enum(a->type.str);
     strcpy(a->device, conf_get_string(c, key, "device"));
-    a->url = CALLOC(strlen(a->type.str)+ strlen(a->device) + strlen("://"), char);
+    a->url = CALLOC(1+strlen(a->type.str)+ strlen(a->device) + strlen("://"), char);
     strcat(a->url, a->type.str);
     strcat(a->url, "://");
     strcat(a->url, a->device);
@@ -204,7 +204,7 @@ static void load_playback(struct config *c, struct playback_conf *p)
     p->type.val = string_to_enum(p->type.str);
     strcpy(p->device, conf_get_string(c, key, "device"));
     strcpy(p->format, conf_get_string(c, key, "format"));
-    p->url = CALLOC(strlen(p->type.str) + strlen(p->format) + strlen("://"), char);
+    p->url = CALLOC(1+strlen(p->type.str) + strlen(p->format) + strlen("://"), char);
     strcat(p->url, p->type.str);
     strcat(p->url, "://");
     strcat(p->url, p->format);
