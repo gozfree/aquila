@@ -35,8 +35,7 @@ extern "C" {
 }
 #endif
 
-#include <libmacro.h>
-#include <liblog.h>
+#include <gear-lib/liblog.h>
 #include "codec.h"
 #include "common.h"
 
@@ -47,9 +46,29 @@ struct h264dec_ctx {
     AVCodec *avcdc;
     AVFrame *ori_avfrm;
     AVFrame *cvt_avfrm;
+    enum AVPixelFormat pix_fmt;
 };
 
-static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
+static int pixel_format_to_avpixfmt(enum pixel_format fmt)
+{
+    switch (fmt) {
+    case PIXEL_FORMAT_UYVY:
+        return AV_PIX_FMT_UYVY422;
+    case PIXEL_FORMAT_YUY2:
+        return AV_PIX_FMT_YUV422P;
+    case PIXEL_FORMAT_NV12:
+        return AV_PIX_FMT_NV12;
+    case PIXEL_FORMAT_I420:
+        return AV_PIX_FMT_YUV420P;
+    case PIXEL_FORMAT_I444:
+        return AV_PIX_FMT_YUV444P;
+    default:
+        loge("AV_PIX_FMT_NONE\n");
+        return AV_PIX_FMT_NONE;
+    }
+}
+
+static int h264dec_open(struct codec_ctx *cc, struct media_encoder *me)
 {
     struct h264dec_ctx *c = CALLOC(1, struct h264dec_ctx);
     if (!c) {
@@ -63,12 +82,12 @@ static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
     av_register_all();
     AVCodec *avcdc = avcodec_find_decoder(AV_CODEC_ID_H264);
     if (!avcdc) {
-        printf("avcodec_find_decoder failed!\n");
+        loge("avcodec_find_decoder failed!\n");
         return -1;
     }
     AVCodecContext *avctx = avcodec_alloc_context3(avcdc);
     if (!avctx) {
-        printf("can not alloc avcodec context!\n");
+        loge("can not alloc avcodec context!\n");
         return -1;
     }
 #if 0
@@ -79,21 +98,22 @@ static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
     avctx->frame_number = 1;//one frame per package
     avctx->codec_type = AVMEDIA_TYPE_VIDEO;
 #endif
-    avctx->width = media->video.width;
-    avctx->height = media->video.height;
+    avctx->width = me->video.width;
+    avctx->height = me->video.height;
 
     /*open codec*/
     if (0 > avcodec_open2(avctx, avcdc, NULL)) {
-        printf("can not open avcodec!\n");
+        loge("can not open avcodec!\n");
         return -1;
     }
+    c->pix_fmt = pixel_format_to_avpixfmt(me->video.format);
 
 /*preparation for frame convertion*/
-    pic_size = avpicture_get_size(AV_PIX_FMT_YUV420P, avctx->width, avctx->height);
+    pic_size = avpicture_get_size(c->pix_fmt, avctx->width, avctx->height);
     out_buffer = (uint8_t *)calloc(1, pic_size);
-    avpicture_fill((AVPicture *)c->cvt_avfrm, out_buffer, AV_PIX_FMT_YUV420P, avctx->width, avctx->height);
-    c->width = media->video.width;
-    c->height = media->video.height;
+    avpicture_fill((AVPicture *)c->cvt_avfrm, out_buffer, c->pix_fmt, avctx->width, avctx->height);
+    c->width = me->video.width;
+    c->height = me->video.height;
     c->avctx = avctx;
     c->avcdc = avcdc;
     cc->priv = c;
@@ -103,7 +123,9 @@ static int h264dec_open(struct codec_ctx *cc, struct media_params *media)
 static void frame_conv(struct h264dec_ctx *c)
 {
     struct SwsContext *swsctx;
-    swsctx = sws_getContext(c->avctx->width, c->avctx->height, c->avctx->pix_fmt, c->avctx->width, c->avctx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+    swsctx = sws_getContext(c->avctx->width, c->avctx->height, c->avctx->pix_fmt,
+                            c->avctx->width, c->avctx->height, c->pix_fmt,
+                            SWS_BICUBIC, NULL, NULL, NULL);
     sws_scale(swsctx, (const uint8_t* const*)c->ori_avfrm->data, c->ori_avfrm->linesize, 0, c->avctx->height, c->cvt_avfrm->data, c->cvt_avfrm->linesize);
     sws_freeContext(swsctx);
 }
@@ -112,10 +134,11 @@ static int h264dec_decode(struct codec_ctx *cc, struct iovec *in, struct iovec *
 {
     struct h264dec_ctx *c = (struct h264dec_ctx *)cc->priv;
     int got_pic = 0;
+    struct media_packet *mpkt = in->iov_base;
     AVPacket avpkt;
     memset(&avpkt, 0, sizeof(AVPacket));
-    avpkt.size = in->iov_len;
-    avpkt.data = (uint8_t *)in->iov_base;
+    avpkt.size = mpkt->video->size;
+    avpkt.data = mpkt->video->data;
 
     avcodec_decode_video2(c->avctx, c->ori_avfrm, &got_pic, &avpkt);
     if (got_pic) {
@@ -146,7 +169,7 @@ static int h264dec_decode(struct codec_ctx *cc, struct iovec *in, struct iovec *
 static void h264dec_close(struct codec_ctx *cc)
 {
     struct h264dec_ctx *c = (struct h264dec_ctx *)cc->priv;
-    //TODO:
+    avcodec_close(c->avcdc);
     free(c);
 }
 

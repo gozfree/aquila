@@ -54,6 +54,8 @@ static int usbcam_open(struct device_ctx *dc, struct media_producer *mp)
 
     vc->conf.width = mp->video.width;
     vc->conf.height = mp->video.height;
+    vc->conf.fps.num = mp->video.framerate.num;
+    vc->conf.fps.den = mp->video.framerate.den;
 
     vc->uvc = uvc_open(UVC_TYPE_V4L2, dev, &vc->conf);
     if (uvc_start_stream(vc->uvc, NULL)) {

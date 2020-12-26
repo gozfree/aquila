@@ -92,11 +92,14 @@ static void load_videocap(struct config *c, struct videocap_conf *v)
     v->mp.video.height = conf_get_int(c, key, "height");
     strcpy(v->format, conf_get_string(c, key, "format"));
     v->mp.video.format = pixel_string_to_format(v->format);
+    v->mp.video.framerate.num = conf_get_int(c, key, "fps", "num");
+    v->mp.video.framerate.den = conf_get_int(c, key, "fps", "den");
     logi("[videocap][type] = %s\n", v->type.str);
     logi("[videocap][device] = %s\n", v->device);
     logi("[videocap][url] = %s\n", v->url);
     logi("[videocap][format] = %s\n", v->format);
     logi("[videocap][w*h] = %d*%d\n", v->mp.video.width, v->mp.video.height);
+    logi("[videocap][fps] = %d/%d\n", v->mp.video.framerate.num, v->mp.video.framerate.den);
 }
 
 static void load_videoenc(struct config *c, struct videoenc_conf *v)
@@ -118,7 +121,7 @@ static void load_videoenc(struct config *c, struct videoenc_conf *v)
     v->me.video.framerate.den = 30;
 
     logi("[videoenc][type] = %s\n", v->type.str);
-    logi("[videocap][format] = %s\n", v->format);
+    logi("[videoenc][format] = %s\n", v->format);
     logi("[videoenc][w*h] = %d*%d\n", v->me.video.width, v->me.video.height);
 }
 
@@ -144,7 +147,15 @@ static void load_videodec(struct config *c, struct videodec_conf *v)
     strcat(v->url, v->type.str);
     strcat(v->url, "://");
 
+    v->me.type = MEDIA_TYPE_VIDEO;
+    v->me.video.type = VIDEO_CODEC_H264;
+    strcpy(v->format, conf_get_string(c, key, "format"));
+    v->me.video.format = pixel_string_to_format(v->format);
+    v->me.video.width = conf_get_int(c, key, "width");
+    v->me.video.height = conf_get_int(c, key, "height");
+
     logi("[videodec][type] = %s\n", v->type.str);
+    logi("[videodec][w*h] = %d*%d\n", v->me.video.width, v->me.video.height);
 }
 
 static void load_audiocap(struct config *c, struct audiocap_conf *a)

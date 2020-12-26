@@ -1,20 +1,23 @@
 aquila_global = {
         videocap = {
-                type = "usbcam",
+                type   = "usbcam",
                 device = "/dev/video0",
-                width = 640,
-                height = 480,
                 format = "YUY2",
+                width  = 640,
+                height = 480,
+                fps    = {num = 30, den = 1},
         },
         audiocap = {
                 type = "alsa",
         },
 
-        vencode = {
+        videoenc = {
                 --type supported: mjpeg/x264
                 --type = "mjpeg",
                 type = "x264",
-                format = "NV12",
+                format = "YUY2",
+                width = 640,
+                height = 480,
         },
 
         vdecode = {
@@ -26,6 +29,11 @@ aquila_global = {
                 offsetx = 0,
                 offsety = 0,
                 switch = "on",
+        },
+
+        record = {
+                type = "mp4",
+                file = "test.mp4",
         },
 
         playback = {
@@ -42,23 +50,26 @@ aquila_global = {
         upstream = {
                 type = "rtsp",
                 port = 8554,
-                url = "rtsp://localhost/usbcam",
+                url = "rtsp://localhost:8554/usbcam",
         },
 
 
         filters = {
                 "videocap",
-                "vencode",
+                "videoenc",
+                --"vdecode",
+                --"playback",
                 "upstream",
+                --"record",
         },
 
         graphs = {
                 {
                         source = "videocap",
-                        sink = "vencode",
+                        sink = "videoenc",
                 },
                 {
-                        source = "vencode",
+                        source = "videoenc",
                         sink = "upstream",
                 },
         },

@@ -58,6 +58,8 @@ struct audioenc_conf {
 
 struct videodec_conf {
     struct ikey_cvalue type;
+    char format[32];
+    struct media_encoder me;
     char *url;
 };
 

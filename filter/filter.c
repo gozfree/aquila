@@ -51,7 +51,7 @@ void filter_register_all(void)
 
     REGISTER_FILTER(videocap);
     REGISTER_FILTER(videoenc);
-    REGISTER_FILTER(vdecode);
+    REGISTER_FILTER(videodec);
     REGISTER_FILTER(playback);
     REGISTER_FILTER(upstream);
     REGISTER_FILTER(record);
@@ -94,7 +94,7 @@ static void on_filter_read(int fd, void *arg)
         if (-1 == queue_push(ctx->q_snk, out_item)) {
             loge("buffer_push failed!\n");
         }
-        logd("filter[%s]: queue_push %p\n", ctx->name, out_item->opaque.iov_base);
+        logd("filter[%s]: queue_push %p to %p\n", ctx->name, out_item->opaque.iov_base, ctx->q_snk);
     }
 
     if (ctx->q_src) {
@@ -336,6 +336,11 @@ void filter_destroy(struct filter_ctx *ctx)
 
     queue_branch_del(ctx->q_src, ctx->name);
     queue_branch_del(ctx->q_snk, ctx->name);
+    logi("filter[%s]: queue_flush q_src=%p, q_snk=%p\n", ctx->name, ctx->q_src, ctx->q_snk);
+    queue_flush(ctx->q_src);
+    queue_flush(ctx->q_snk);
+    gevent_destroy(ctx->ev_read);
+    gevent_base_destroy(ctx->ev_base);
     thread_destroy(ctx->thread);
     ctx->thread = NULL;
     free(ctx);

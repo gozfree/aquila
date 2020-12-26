@@ -45,7 +45,7 @@ static int on_vdec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *o
 
 static int vdec_open(struct filter_ctx *fc)
 {
-    struct codec_ctx *decoder = codec_open(fc->url, &fc->conf->videoenc.me);
+    struct codec_ctx *decoder = codec_open(fc->url, &fc->conf->videodec.me);
     if (!decoder) {
         loge("open codec %s failed!\n", fc->url);
         return -1;
@@ -79,8 +79,8 @@ static void vdec_close(struct filter_ctx *fc)
     }
 }
 
-struct filter aq_vdecode_filter = {
-    .name     = "vdecode",
+struct filter aq_videodec_filter = {
+    .name     = "videodec",
     .open     = vdec_open,
     .on_read  = on_vdec_read,
     .on_write = NULL,

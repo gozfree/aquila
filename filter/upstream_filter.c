@@ -76,7 +76,7 @@ static void upstream_close(struct filter_ctx *fc)
     struct upstream_ctx *c = (struct upstream_ctx *)fc->priv;
     if (c->proto) {
         protocol_close(c->proto);
-        free(c->proto);
+        free(c);
     }
 }
 

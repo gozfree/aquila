@@ -1,23 +1,30 @@
 aquila_global = {
         videocap = {
-                type = "usbcam",
+                type   = "usbcam",
                 device = "/dev/video0",
-                format = "YUV422P",
-                width = 640,
+                format = "YUY2",
+                width  = 640,
                 height = 480,
+                fps    = {num = 30, den = 1},
         },
         audiocap = {
                 type = "alsa",
         },
 
-        vencode = {
+        videoenc = {
                 --type supported: mjpeg/x264
                 --type = "mjpeg",
                 type = "x264",
+                format = "YUY2",
+                width = 640,
+                height = 480,
         },
 
-        vdecode = {
+        videodec = {
                 type = "h264dec",
+                format = "YUY2",
+                width = 640,
+                height = 480,
         },
 
         overlay = {
@@ -49,8 +56,8 @@ aquila_global = {
 
         filters = {
                 "videocap",
-                "vencode",
-                "vdecode",
+                "videoenc",
+                "videodec",
                 "playback",
                 "remotectrl",
                 --"upstream",
@@ -59,14 +66,14 @@ aquila_global = {
         graphs = {
                 {
                         source = "videocap",
-                        sink = "vencode",
+                        sink = "videoenc",
                 },
                 {
-                        source = "vencode",
-                        sink = "vdecode",
+                        source = "videoenc",
+                        sink = "videodec",
                 },
                 {
-                        source = "vdecode",
+                        source = "videodec",
                         sink = "playback",
                 },
         },

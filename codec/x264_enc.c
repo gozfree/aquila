@@ -224,14 +224,14 @@ static int fill_packet(struct x264_ctx *c, struct video_packet *pkt,
     if (!nal_cnt)
         return -1;
 
-    da_resize(c->packet_data, 0);
+    da_free(c->packet_data);
 
     if (!c->append_extra) {
         pkt->encoder.extra_data = c->encoder.extra_data;
         pkt->encoder.extra_size = c->encoder.extra_size;
         c->append_extra = true;
     }
-    for (int i = 0; i < nal_cnt; i++) {
+    for (int i = 0; i < nal_cnt - 1; i++) {
         x264_nal_t *nal = nals + i;
         da_push_back_array(c->packet_data, nal->p_payload, nal->i_payload);
     }
@@ -283,7 +283,7 @@ static int _x264_encode(struct codec_ctx *cc, struct iovec *in, struct iovec *ou
         return -1;
     }
 
-    logd("frame info: <id=%d, pts=%zu>; packet info: <pts=%zu, dts=%zu, keyframe=%d, size=%zu>\n",
+    logi("frame info: <id=%d, pts=%zu>; packet info: <pts=%zu, dts=%zu, keyframe=%d, size=%zu>\n",
         frm->frame_id, frm->timestamp, pkt->pts, pkt->dts, pkt->key_frame, pkt->size);
     c->cur_pts += c->timebase_num;
     out->iov_len = ret;

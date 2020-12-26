@@ -45,7 +45,8 @@ LDFLAGS_FFMPEG	= `pkg-config --libs libavformat libavutil libavcodec libswscale`
 LDFLAGS_JPEG	= -ljpeg
 LDFLAGS_LUA 	= -llua5.2
 
-CFLAGS	:= -g -Wall -Werror
+CFLAGS	:= -g -Wall
+# -Werror
 # -fsanitize=address
 CFLAGS	+= -I./
 CFLAGS	+= -I./algo
@@ -88,9 +89,9 @@ CODEC_OBJS :=			\
     codec/codec.o		\
     codec/x264_enc.o		\
     codec/aac_enc.o		\
-    codec/mjpeg_enc.o
+    codec/mjpeg_enc.o		\
+    codec/h264_dec.o
     #codec/h264_enc.o		\
-    #codec/h264_dec.o		\
 
 DEVICE_OBJS := 			\
     device/device.o 		\
