@@ -135,7 +135,7 @@ static void on_error(int fd, void *arg)
 }
 
 
-static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_encoder *media)
+static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_encoder *media, void *conf)
 {
     struct rtp_ctx *c = (struct rtp_ctx *)sc->priv;
     sock_addr_list_t *tmp;
@@ -186,12 +186,12 @@ static int rtp_open(struct protocol_ctx *sc, const char *url, struct media_encod
         return -1;
     }
     struct gevent *ev_rtp = gevent_create(c->rtp_fd, on_recv_rtp, NULL, on_error, (void *)c);
-    if (-1 == gevent_add(c->evbase, ev_rtp)) {
+    if (-1 == gevent_add(c->evbase, &ev_rtp)) {
         loge("event_add failed!\n");
         gevent_destroy(ev_rtp);
     }
     struct gevent *ev_rtcp = gevent_create(c->rtcp_fd, on_recv_rtcp, NULL, on_error, (void *)c);
-    if (-1 == gevent_add(c->evbase, ev_rtcp)) {
+    if (-1 == gevent_add(c->evbase, &ev_rtcp)) {
         loge("event_add failed!\n");
         gevent_destroy(ev_rtcp);
     }

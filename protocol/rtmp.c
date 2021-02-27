@@ -23,6 +23,7 @@
 #include <gear-lib/librtmpc.h>
 
 #include "protocol.h"
+#include "config.h"
 
 enum rtmp_status {
     RTMP_STATUS_IDLE,
@@ -37,15 +38,22 @@ typedef struct rtmp_ctx {
     struct rtmpc *client;
 } rtmp_ctx_t;
 
-static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_encoder *mp)
+static int rtmp_open(struct protocol_ctx *pc, const char *url, struct media_encoder *mp, void *arg)
 {
+    struct upstream_conf *conf = (struct upstream_conf *)arg;
+    struct rtmp_url rtmp_url;
+    rtmp_url.addr = conf->url;
+    rtmp_url.key = conf->key;
+    rtmp_url.username = conf->username;
+    rtmp_url.password = conf->password;
+
     struct rtmp_ctx *rc = CALLOC(1, struct rtmp_ctx);
     if (!rc) {
         loge("malloc rtmp_ctx failed!\n");
         goto failed;
     }
     rc->status = RTMP_STATUS_IDLE;
-    rc->client = rtmpc_create(url);
+    rc->client = rtmpc_create2(&rtmp_url);
     if(!rc->client) {
         loge("failed to connect %s, please make sure rtmp server exist\n", url);
         goto failed;

@@ -252,7 +252,7 @@ struct filter_ctx *filter_create(struct filter_conf *conf,
     if (!ctx->ev_read) {
         goto failed;
     }
-    if (-1 == gevent_add(ctx->ev_base, ctx->ev_read)) {
+    if (-1 == gevent_add(ctx->ev_base, &ctx->ev_read)) {
         goto failed;
     }
 
@@ -261,7 +261,7 @@ struct filter_ctx *filter_create(struct filter_conf *conf,
     if (!ctx->ev_write) {
         goto failed;
     }
-    if (-1 == gevent_add(ctx->ev_base, ctx->ev_write)) {
+    if (-1 == gevent_add(ctx->ev_base, &ctx->ev_write)) {
         goto failed;
     }
     }
@@ -274,10 +274,10 @@ failed:
         return NULL;
     }
     if (ctx->ev_read) {
-        gevent_del(ctx->ev_base, ctx->ev_read);
+        gevent_del(ctx->ev_base, &ctx->ev_read);
     }
     if (ctx->ev_write) {
-        gevent_del(ctx->ev_base, ctx->ev_write);
+        gevent_del(ctx->ev_base, &ctx->ev_write);
     }
     if (ctx->ev_base) {
         gevent_base_destroy(ctx->ev_base);
@@ -319,9 +319,9 @@ int filter_stop(struct filter_ctx *ctx)
     gevent_base_loop_break(ctx->ev_base);
     thread_join(ctx->thread);
 
-    gevent_del(ctx->ev_base, ctx->ev_read);
+    gevent_del(ctx->ev_base, &ctx->ev_read);
     if (0) {
-    gevent_del(ctx->ev_base, ctx->ev_write);
+    gevent_del(ctx->ev_base, &ctx->ev_write);
     }
 
     return 0;

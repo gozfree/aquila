@@ -66,6 +66,9 @@ struct videodec_conf {
 struct upstream_conf {
     struct ikey_cvalue type;
     char *url;
+    char *key;
+    char *username;
+    char *password;
     uint16_t port;
     struct media_encoder me;
 };

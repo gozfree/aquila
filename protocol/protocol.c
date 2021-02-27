@@ -58,7 +58,7 @@ void protocol_register_all()
     REGISTER_PROTOCOL(rpcd);
 }
 
-struct protocol_ctx *protocol_open(const char *url, struct media_encoder *ma)
+struct protocol_ctx *protocol_open(const char *url, struct media_encoder *ma, void *conf)
 {
     struct protocol *p;
     struct protocol_ctx *pc = CALLOC(1, struct protocol_ctx);
@@ -86,7 +86,7 @@ struct protocol_ctx *protocol_open(const char *url, struct media_encoder *ma)
         loge("protocol open ops can't be null\n");
         goto failed;
     }
-    if (0 != pc->ops->open(pc, url, ma)) {
+    if (0 != pc->ops->open(pc, url, ma, conf)) {
         loge("open %s failed!\n", url);
         goto failed;
     }

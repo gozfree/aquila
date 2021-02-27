@@ -189,11 +189,18 @@ static void load_upstream(struct config *c, struct upstream_conf *u)
     const char *key = "upstream";
     strcpy(u->type.str, conf_get_string(c, key, "type"));
     u->url = strdup(conf_get_string(c, key, "url"));
+    u->key = strdup(conf_get_string(c, key, "key"));
+    u->username = strdup(conf_get_string(c, key, "username"));
+    u->password = strdup(conf_get_string(c, key, "password"));
+
     u->type.val = string_to_enum(u->type.str);
     u->port = conf_get_int(c, key, "port");
     logi("[upstream][type] = %s\n", u->type.str);
     logi("[upstream][port] = %d\n", u->port);
     logi("[upstream][url] = %s\n", u->url);
+    logi("[upstream][key] = %s\n", u->key);
+    logi("[upstream][username] = %s\n", u->username);
+    logi("[upstream][password] = %s\n", u->password);
 }
 
 static void load_record(struct config *c, struct record_conf *r)

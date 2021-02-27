@@ -145,7 +145,7 @@ struct media_source media_source_proxy = {
 
 extern struct media_source media_source_proxy;
 
-static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media)
+static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media, void *conf)
 {
     struct rtsp_server *rc = rtsp_server_init(NULL, 8554);
     if (!rc) {

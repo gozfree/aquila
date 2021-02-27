@@ -39,7 +39,7 @@ static int on_shell_help(struct rpc *r, void *arg, int len)
     device_ioctl(NULL, 0, NULL, 0);
     loge("ret = %d, errno = %d\n", ret, errno);
     logi("send len = %d, buf: %s\n", strlen(buf), buf);
-    rpc_send(r, buf, strlen(buf));
+    //rpc_send(r, buf, strlen(buf));
     return 0;
 }
 
@@ -54,7 +54,7 @@ int rpcd_group_register()
 }
 
 
-static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media)
+static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media, void *conf)
 {
     int port = RPCD_PORT;
     struct rpc *rpc = rpc_server_create(NULL, port);
@@ -77,7 +77,7 @@ static int rpcd_write(struct protocol_ctx *pc, void *buf, int len)
 static void rpcd_close(struct protocol_ctx *pc)
 {
     struct rpc *rpc = (struct rpc *)pc->priv;
-    rpc_destroy(rpc);
+    //rpc_destroy(rpc);
 }
 
 struct protocol aq_rpcd_protocol = {
