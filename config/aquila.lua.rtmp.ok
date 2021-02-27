@@ -49,7 +49,10 @@ aquila_global = {
 
         upstream = {
                 type = "rtmp",
-		url = "rtmp://localhost/live",
+		--url = "rtmp://localhost/live",
+		url = "rtmp://sendtc3a.douyu.com/live",
+		key = "5864578reGFT9O0y?wsSecret=822f8fcd876080d393ded32db76fec60&wsTime=603a21fb&wsSeek=off&wm=0&tw=0&roirecognition=0&record=flv&origin=tct",
+
         },
 
 

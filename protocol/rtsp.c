@@ -52,7 +52,7 @@ static void *item_alloc_hook(void *data, size_t len, void *arg)
         return NULL;
     }
     struct media_packet *new_pkt = media_packet_copy(pkt);
-    logd("media_packet size=%d\n", media_packet_get_size(new_pkt));
+    logi("media_packet size=%d\n", media_packet_get_size(new_pkt));
     return new_pkt;
 }
 
@@ -130,13 +130,13 @@ static int proxy_read(struct media_source *ms, void **data, size_t *len)
     struct item *it = queue_pop(c->q);
     *data = (struct media_packet *)it->opaque.iov_base;
     *len = it->opaque.iov_len;
-    loge("queue_pop ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
+    logi("queue_pop ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
     //item_free(c->q, it);
     return 0;
 }
 
-struct media_source media_source_proxy = {
-    .name         = "proxy",
+static struct media_source media_source_proxy = {
+    .name         = "usbcam",
     .sdp_generate = sdp_generate,
     .open         = proxy_open,
     .read         = proxy_read,
@@ -144,32 +144,30 @@ struct media_source media_source_proxy = {
 };
 
 extern struct media_source media_source_proxy;
-
 static int rtsp_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media, void *conf)
 {
+    int ret;
     struct rtsp_server *rc = rtsp_server_init(NULL, 8554);
     if (!rc) {
         loge("rtsp_server_init failed!\n");
         return -1;
     }
-    logd("url=%s\n", url);
+    logi("url=%s\n", url);
     rtsp_media_source_register(&media_source_proxy);
     logi("rtsp_media_source_register %s:%p\n", media_source_proxy.name, &media_source_proxy);
-    rtsp_server_dispatch(rc);
+    ret = rtsp_server_dispatch(rc);
+    if (ret != 0) {
+        loge("rtsp_server_dispatch failed\n");
+        return -1;
+    }
 
     pc->priv = rc;
     return 0;
 }
 
-static int rtsp_read(struct protocol_ctx *pc, void *buf, int len)
-{
-    loge("xxxx\n");
-    return 0;
-}
-
 static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
 {
-    struct media_source *ms = rtsp_media_source_lookup("proxy");
+    struct media_source *ms = rtsp_media_source_lookup(media_source_proxy.name);
     if (!ms) {
         loge("rtsp_media_source_lookup proxy failed!\n");
         return -1;
@@ -183,9 +181,11 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
     struct item *it = NULL;
     switch (pkt->type) {
     case MEDIA_TYPE_AUDIO:
+        logd("item_alloc MEDIA_TYPE_AUDIO\n");
         it = item_alloc(c->q, pkt->audio->data, pkt->audio->size, pkt);
         break;
     case MEDIA_TYPE_VIDEO:
+        logd("item_alloc MEDIA_TYPE_VIDEO\n");
         it = item_alloc(c->q, pkt->video->data, pkt->video->size, pkt);
         break;
     default:
@@ -195,7 +195,7 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
         loge("item_alloc packet type %d failed!\n", pkt->type);
         return -1;
     }
-    loge("queue_push ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
+    logi("queue_push ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
     if (0 != queue_push(c->q, it)) {
         loge("queue_push failed!\n");
         return -1;
@@ -207,13 +207,15 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
 static void rtsp_close(struct protocol_ctx *pc)
 {
     struct rtsp_server *rc = (struct rtsp_server *)pc->priv;
+    loge("before\n");
     rtsp_server_deinit(rc);
+    loge("after \n");
 }
 
 struct protocol aq_rtsp_protocol = {
     .name = "rtsp",
     .open = rtsp_open,
-    .read = rtsp_read,
+    .read = NULL,
     .write = rtsp_write,
     .close = rtsp_close,
 };

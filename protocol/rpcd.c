@@ -27,19 +27,19 @@
 
 #define RPCD_PORT           (54321)
 
-static int on_shell_help(struct rpc *r, void *arg, int len)
+static int on_shell_help(struct rpc_session *r, void *ibuf, size_t ilen, void **obuf, size_t *olen)
 {
     int ret;
-    char buf[1024];
-    char *cmd = (char *)arg;
-    logi("on_shell_help cmd = %s\n", cmd);
-    memset(buf, 0, sizeof(buf));
-    ret = 0;//system_with_result(cmd, buf, sizeof(buf));
-    strncpy(buf, "abcd", sizeof(buf));
-    device_ioctl(NULL, 0, NULL, 0);
-    loge("ret = %d, errno = %d\n", ret, errno);
-    logi("send len = %d, buf: %s\n", strlen(buf), buf);
-    //rpc_send(r, buf, strlen(buf));
+    char *cmd = (char *)ibuf;
+    *obuf = calloc(1, 1024);
+    *olen = 1024;
+    printf("on_shell_help cmd = %s\n", cmd);
+    memset(*obuf, 0, 1024);
+    ret = 0;//system_with_result(cmd, *obuf, 1024);
+    if (ret > 0) {
+        *olen = ret;
+    }
+    //device_ioctl(NULL, 0, NULL, 0);
     return 0;
 }
 
@@ -57,7 +57,7 @@ int rpcd_group_register()
 static int rpcd_open(struct protocol_ctx *pc, const char *url, struct media_encoder *media, void *conf)
 {
     int port = RPCD_PORT;
-    struct rpc *rpc = rpc_server_create(NULL, port);
+    struct rpcs *rpc = rpc_server_create(NULL, port);
     loge("rpcd created!\n");
     rpcd_group_register();
     pc->priv = rpc;
@@ -76,8 +76,8 @@ static int rpcd_write(struct protocol_ctx *pc, void *buf, int len)
 
 static void rpcd_close(struct protocol_ctx *pc)
 {
-    struct rpc *rpc = (struct rpc *)pc->priv;
-    //rpc_destroy(rpc);
+    struct rpcs *rpc = (struct rpcs *)pc->priv;
+    rpc_server_destroy(rpc);
 }
 
 struct protocol aq_rpcd_protocol = {

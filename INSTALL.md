@@ -20,3 +20,5 @@ libasound-dev libx264-dev libsdl-dev libjpeg-dev libfdk-aac-dev`
   make sure install libraries then
   `$ sudo ldconfig`
 ffplay -f rawvideo -pixel_format yuv422p -video_size 320x240 sample/sample_yuv422p.yuv
+
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.4
