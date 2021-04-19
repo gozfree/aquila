@@ -36,12 +36,40 @@ struct videocap_ctx {
     struct videocap_conf *conf;
 };
 
+static struct iovec *videocap_alloc(struct filter_ctx *fc)
+{
+    struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
+    struct media_producer *mp = &fc->conf->videocap.mp;
+    struct video_frame *frm = video_frame_create(mp->video.format, mp->video.width, mp->video.height, VFC_ALLOC);
+    if (!frm) {
+        loge("video_frame_create failed!\n");
+        return NULL;
+    }
+    logd("video_frame_create %p\n", frm);
+    struct iovec *io = calloc(1, sizeof(struct iovec));
+    io->iov_base = frm;
+    io->iov_len = frm->total_size;
+    return io;
+}
+
+static void videocap_free(struct filter_ctx *fc, struct iovec *data)
+{
+    struct video_frame *frm = (struct video_frame *)data->iov_base;
+    video_frame_destroy(frm);
+    logd("video_frame_destroy %p\n", frm);
+    //free(data);
+}
+
 static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
     struct media_producer *mp = &fc->conf->videocap.mp;
     char tmp_tm[32];
-    struct video_frame *frm = video_frame_create(mp->video.format, mp->video.width, mp->video.height, VFC_ALLOC);
+    struct video_frame *frm = out->iov_base;
+    if (!frm) {
+        loge("on_videocap_read input failed!\n");
+        return -1;
+    }
 
     int ret = device_read(ctx->dev, frm, sizeof(struct video_frame));
     if (ret == -1) {
@@ -56,7 +84,6 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");
     }
-    out->iov_base = frm;
     out->iov_len = frm->total_size;
     return ret;
 }
@@ -104,9 +131,11 @@ static void videocap_close(struct filter_ctx *fc)
 }
 
 struct filter aq_videocap_filter = {
-    .name     = "videocap",
-    .open     = videocap_open,
-    .on_read  = on_videocap_read,
-    .on_write = NULL,
-    .close    = videocap_close,
+    .name       = "videocap",
+    .open       = videocap_open,
+    .on_read    = on_videocap_read,
+    .on_write   = NULL,
+    .alloc_data = videocap_alloc,
+    .free_data  = videocap_free,
+    .close      = videocap_close,
 };

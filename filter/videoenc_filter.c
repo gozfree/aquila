@@ -32,18 +32,41 @@ struct videoenc_ctx {
     struct videoenc_conf *conf;
 };
 
+static struct iovec *videoenc_alloc(struct filter_ctx *fc)
+{
+    struct videoenc_ctx *vc = (struct videoenc_ctx *)fc->priv;
+
+    struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, NULL, 0);
+    if (!pkt) {
+        loge("media_packet_create failed\n", pkt);
+        return NULL;
+    }
+    logd("media_packet_create %p\n", pkt);
+    struct iovec *io = calloc(1, sizeof(struct iovec));
+    io->iov_base = pkt;
+    io->iov_len = media_packet_get_size(pkt);
+    return io;
+}
+
+static void videoenc_free(struct filter_ctx *fc, struct iovec *data)
+{
+    struct media_packet *pkt = (struct media_packet *)data->iov_base;
+    logd("media_packet_destroy %p\n", pkt);
+    media_packet_destroy(pkt);
+    //free(data);
+}
+
 static int on_videoenc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)
 {
     int ret;
     struct videoenc_ctx *vc = (struct videoenc_ctx *)fc->priv;
-    struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, NULL, 0);
+    struct media_packet *pkt = out->iov_base;
     struct iovec iov_pkt;
     iov_pkt.iov_base = pkt->video;
     ret = codec_encode(vc->encoder, in, &iov_pkt);
     if (-1 == ret) {
         loge("encode failed!\n");
     }
-    out->iov_base = pkt;
     out->iov_len = media_packet_get_size(pkt);
     return ret;
 }
@@ -87,9 +110,11 @@ static void videoenc_close(struct filter_ctx *fc)
 }
 
 struct filter aq_videoenc_filter = {
-    .name     = "videoenc",
-    .open     = videoenc_open,
-    .on_read  = on_videoenc_read,
-    .on_write = NULL,
-    .close    = videoenc_close,
+    .name       = "videoenc",
+    .open       = videoenc_open,
+    .on_read    = on_videoenc_read,
+    .on_write   = NULL,
+    .alloc_data = videoenc_alloc,
+    .free_data  = videoenc_free,
+    .close      = videoenc_close,
 };

@@ -81,9 +81,11 @@ static void upstream_close(struct filter_ctx *fc)
 }
 
 struct filter aq_upstream_filter = {
-    .name     = "upstream",
-    .open     = upstream_open,
-    .on_read  = on_upstream_read,
-    .on_write = NULL,
-    .close    = upstream_close,
+    .name       = "upstream",
+    .open       = upstream_open,
+    .on_read    = on_upstream_read,
+    .on_write   = NULL,
+    .alloc_data = NULL,
+    .free_data  = NULL,
+    .close      = upstream_close,
 };

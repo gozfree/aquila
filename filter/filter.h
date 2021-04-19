@@ -56,6 +56,7 @@ struct filter_ctx {
     void *priv;
     struct filter_conf *conf;
     struct filter_conf *prev_conf;
+    int debug_cnt;
 };
 
 
@@ -64,6 +65,8 @@ struct filter {
     int (*open)(struct filter_ctx *c);
     int (*on_read)(struct filter_ctx *c, struct iovec *in, struct iovec *out);
     int (*on_write)(struct filter_ctx *c);
+    struct iovec *(*alloc_data)(struct filter_ctx *c);
+    void (*free_data)(struct filter_ctx *c, struct iovec *data);
     void (*close)(struct filter_ctx *c);
     struct filter *next;
 };
