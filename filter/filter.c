@@ -60,33 +60,35 @@ void filter_register_all(void)
 
 static void on_src_filter_read(struct filter_ctx *ctx)
 {
-    struct iovec *out;
-    struct item *src_item = NULL;
-    int ret;
+    struct iovec *out = NULL;
+    struct queue_item *out_item = NULL;
+
     if (ctx->ops->alloc_data) {
         out = ctx->ops->alloc_data(ctx);
-        logd("filter[%s]: %d alloc_data %p\n", ctx->name, ctx->debug_cnt, out->iov_base);
     }
-    logd("filter[%s]: before on_read out.len=%d\n", ctx->name, out->iov_len);
+    if (!out) {
+        loge("filter[%s]: alloc_data NULL!\n", ctx->name);
+        return;
+    }
+    logi("filter[%s]: %d alloc_data %p, len=%d\n", ctx->name, ctx->debug_cnt, out->iov_base, out->iov_len);
     thread_lock(ctx->thread);
-    ret = ctx->ops->on_read(ctx, NULL, out);
-    if (ret == -1) {
+    if (-1 == ctx->ops->on_read(ctx, NULL, out)) {
         loge("filter[%s] on_read failed!\n", ctx->name);
         goto exit;
     }
-    logd("filter[%s]: after on_read out.len=%d\n", ctx->name, out->iov_len);
-    src_item = item_alloc(ctx->q_snk, out->iov_base, out->iov_len, ctx);
-    logd("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, src_item);
-    if (!src_item) {
+    logi("filter[%s]: %d on_read len=%d\n", ctx->name, ctx->debug_cnt, out->iov_len);
+    out_item = queue_item_alloc(ctx->q_snk, out->iov_base, out->iov_len, ctx);
+    if (!out_item) {
         loge("filter[%s] item_alloc failed!\n", ctx->name);
         goto exit;
     }
-    if (-1 == queue_push(ctx->q_snk, src_item)) {
+    logi("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, out_item);
+    if (-1 == queue_push(ctx->q_snk, out_item)) {
         loge("filter[%s] buffer_push failed!\n", ctx->name);
         goto exit;
     }
-    logd("filter[%s]: %d queue_push %p to   %p\n",
-          ctx->name, ctx->debug_cnt, src_item->opaque.iov_base, ctx->q_snk);
+    logi("filter[%s]: %d queue_push %p to   %p\n",
+          ctx->name, ctx->debug_cnt, out_item, ctx->q_snk);
 exit:
     thread_unlock(ctx->thread);
     logd("filter[%s] %d leave\n", ctx->name, ctx->debug_cnt);
@@ -94,50 +96,59 @@ exit:
 
 static void on_mid_filter_read(struct filter_ctx *ctx)
 {
-    struct item *in_item = NULL;
-    struct item *out_item = NULL;
+    struct queue_item *in_item = NULL;
+    struct queue_item *out_item = NULL;
     struct iovec *out = NULL;
     struct iovec *in = NULL;
     struct filter_ctx *prev_filter;
-    int ret;
 
     in_item = queue_branch_pop(ctx->q_src, ctx->name);
     if (!in_item) {
-        logi("filter[%s]: %d queue_branch_pop empty\n", ctx->name, ctx->debug_cnt);
+        loge("filter[%s]: %d queue_branch_pop empty\n", ctx->name, ctx->debug_cnt);
         return;
     }
     prev_filter = in_item->arg;
     logd("filter[%s]: %d queue_pop  %p from %p filter[%s]\n",
-          ctx->name, ctx->debug_cnt, in_item->opaque.iov_base, ctx->q_src, prev_filter->name);
+          ctx->name, ctx->debug_cnt, in_item, ctx->q_src, prev_filter->name);
 
-    in = item_get_data(ctx->q_src, in_item);
+    in = queue_item_get_data(ctx->q_src, in_item);
+    if (!in) {
+        loge("filter[%s]: %d item_get_data empty\n", ctx->name, ctx->debug_cnt);
+        return;
+    }
 
     if (ctx->ops->alloc_data) {
         out = ctx->ops->alloc_data(ctx);
-        logd("filter[%s]: %d alloc_data %p\n", ctx->name, ctx->debug_cnt, out->iov_base);
+    }
+    if (!out) {
+        loge("filter[%s]: alloc_data NULL!\n", ctx->name);
+        return;
     }
 
-    logd("filter[%s]: before on_read in.len=%d, out.len=%d\n", ctx->name, in->iov_len, out->iov_len);
+    logi("filter[%s]: %d alloc_data %p, len=%d\n", ctx->name, ctx->debug_cnt, out->iov_base, out->iov_len);
     thread_lock(ctx->thread);
-    ret = ctx->ops->on_read(ctx, in, out);
-    if (ret == -1) {
+    if (-1 == ctx->ops->on_read(ctx, in, out)) {
         loge("filter %s on_read failed!\n", ctx->name);
         goto exit;
     }
-    logd("filter[%s]: after on_read in.len=%d, out.len=%d\n", ctx->name, in->iov_len, out->iov_len);
-    if (in->iov_base && in_item) {
-        logd("filter[%s]: %d free_data %p\n", prev_filter->name, ctx->debug_cnt, in);
-        if (prev_filter->ops->free_data)
-            prev_filter->ops->free_data(prev_filter, in);
-        logd("filter[%s]: %d item_free %p\n", ctx->name, ctx->debug_cnt, in_item);
-        item_free(ctx->q_src, in_item);
+    logi("filter[%s]: %d on_read len=%d\n", ctx->name, ctx->debug_cnt, out->iov_len);
+    logi("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
+    if (prev_filter->ops->free_data)
+        prev_filter->ops->free_data(prev_filter, in);
+    logi("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
+    queue_item_free(ctx->q_src, in_item);
+    out_item = queue_item_alloc(ctx->q_snk, out->iov_base, out->iov_len, ctx);
+    if (!out_item) {
+        loge("filter[%s] item_alloc failed!\n", ctx->name);
+        goto exit;
     }
-    out_item = item_alloc(ctx->q_snk, out->iov_base, out->iov_len, ctx);
+    logi("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, out_item);
     if (-1 == queue_push(ctx->q_snk, out_item)) {
         loge("filter[%s] buffer_push failed!\n", ctx->name);
         goto exit;
     }
-    logd("filter[%s]: queue_push %p to %p\n", ctx->name, out_item->opaque.iov_base, ctx->q_snk);
+    logi("filter[%s]: %d queue_push %p to   %p\n",
+          ctx->name, ctx->debug_cnt, out_item, ctx->q_snk);
 
 exit:
     thread_unlock(ctx->thread);
@@ -146,10 +157,9 @@ exit:
 
 static void on_snk_filter_read(struct filter_ctx *ctx)
 {
-    struct item *in_item = NULL;
+    struct queue_item *in_item = NULL;
     struct iovec *in = NULL;
     struct filter_ctx *prev_filter;
-    int ret;
 
     in_item = queue_branch_pop(ctx->q_src, ctx->name);
     if (!in_item) {
@@ -158,24 +168,23 @@ static void on_snk_filter_read(struct filter_ctx *ctx)
     }
     prev_filter = in_item->arg;
     logd("filter[%s]: %d queue_pop  %p from %p filter[%s]\n",
-          ctx->name, ctx->debug_cnt, in_item->opaque.iov_base, ctx->q_src, prev_filter->name);
+          ctx->name, ctx->debug_cnt, in_item, ctx->q_src, prev_filter->name);
 
-    in = item_get_data(ctx->q_src, in_item);
-    logd("filter[%s]: before on_read in.len=%d\n", ctx->name, in->iov_len);
+    in = queue_item_get_data(ctx->q_src, in_item);
+    if (!in) {
+        loge("filter[%s]: %d item_get_data empty\n", ctx->name, ctx->debug_cnt);
+        return;
+    }
     thread_lock(ctx->thread);
-    ret = ctx->ops->on_read(ctx, in, NULL);
-    if (ret == -1) {
+    if (-1 == ctx->ops->on_read(ctx, in, NULL)) {
         loge("filter %s on_read failed!\n", ctx->name);
         goto exit;
     }
-    logd("filter[%s]: after on_read in.len=%d\n", ctx->name, in->iov_len);
-    if (in->iov_base && in_item) {
-        logd("filter[%s]: %d free_data %p\n", ctx->name, ctx->debug_cnt, in);
-        if (prev_filter->ops->free_data)
-            prev_filter->ops->free_data(prev_filter, in);
-        logd("filter[%s]: %d item_free %p\n", ctx->name, ctx->debug_cnt, in_item);
-        item_free(ctx->q_src, in_item);
-    }
+    logi("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
+    if (prev_filter->ops->free_data)
+        prev_filter->ops->free_data(prev_filter, in);
+    logi("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
+    queue_item_free(ctx->q_src, in_item);
 
 exit:
     thread_unlock(ctx->thread);
@@ -185,11 +194,8 @@ exit:
 static void on_filter_read(int fd, void *arg)
 {
     struct filter_ctx *ctx = (struct filter_ctx *)arg;
-    struct item *in_item = NULL;
-    struct iovec in = {NULL, 0};
-    struct iovec out = {NULL, 0};
-    int ret;
     ctx->debug_cnt++;
+
     switch (ctx->type) {
     case FILTER_TYPE_SRC:
         on_src_filter_read(ctx);
@@ -438,7 +444,7 @@ void filter_destroy(struct filter_ctx *ctx)
     queue_flush(ctx->q_src);
     queue_flush(ctx->q_snk);
     gevent_destroy(ctx->ev_read);
-    gevent_base_destroy(ctx->ev_base);
+    //gevent_base_destroy(ctx->ev_base);
     thread_destroy(ctx->thread);
     ctx->thread = NULL;
     free(ctx);

@@ -36,7 +36,7 @@ static struct iovec *videoenc_alloc(struct filter_ctx *fc)
 {
     struct videoenc_ctx *vc = (struct videoenc_ctx *)fc->priv;
 
-    struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, NULL, 0);
+    struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, MEDIA_MEM_SHALLOW, NULL, 0);
     if (!pkt) {
         loge("media_packet_create failed\n", pkt);
         return NULL;

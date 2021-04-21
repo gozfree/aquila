@@ -51,7 +51,7 @@ static void *item_alloc_hook(void *data, size_t len, void *arg)
         loge("calloc packet failed!\n");
         return NULL;
     }
-    struct media_packet *new_pkt = media_packet_copy(pkt);
+    struct media_packet *new_pkt = media_packet_copy(pkt, MEDIA_MEM_SHALLOW);
     logi("media_packet size=%d\n", media_packet_get_size(new_pkt));
     return new_pkt;
 }
@@ -127,7 +127,7 @@ static int sdp_generate(struct media_source *ms)
 static int proxy_read(struct media_source *ms, void **data, size_t *len)
 {
     struct proxy_source_ctx *c = (struct proxy_source_ctx *)ms->opaque;
-    struct item *it = queue_pop(c->q);
+    struct queue_item *it = queue_pop(c->q);
     *data = (struct media_packet *)it->opaque.iov_base;
     *len = it->opaque.iov_len;
     logi("queue_pop ptr=%p, data=%p, len=%d\n", it->opaque.iov_base, it->opaque.iov_base, it->opaque.iov_len);
@@ -178,15 +178,15 @@ static int rtsp_write(struct protocol_ctx *pc, void *buf, int len)
     }
     struct proxy_source_ctx *c = (struct proxy_source_ctx *)ms->opaque;
     struct media_packet *pkt = buf;
-    struct item *it = NULL;
+    struct queue_item *it = NULL;
     switch (pkt->type) {
     case MEDIA_TYPE_AUDIO:
         logd("item_alloc MEDIA_TYPE_AUDIO\n");
-        it = item_alloc(c->q, pkt->audio->data, pkt->audio->size, pkt);
+        it = queue_item_alloc(c->q, pkt->audio->data, pkt->audio->size, pkt);
         break;
     case MEDIA_TYPE_VIDEO:
         logd("item_alloc MEDIA_TYPE_VIDEO\n");
-        it = item_alloc(c->q, pkt->video->data, pkt->video->size, pkt);
+        it = queue_item_alloc(c->q, pkt->video->data, pkt->video->size, pkt);
         break;
     default:
         break;

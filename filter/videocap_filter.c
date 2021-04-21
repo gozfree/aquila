@@ -40,7 +40,7 @@ static struct iovec *videocap_alloc(struct filter_ctx *fc)
 {
     struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
     struct media_producer *mp = &fc->conf->videocap.mp;
-    struct video_frame *frm = video_frame_create(mp->video.format, mp->video.width, mp->video.height, VFC_ALLOC);
+    struct video_frame *frm = video_frame_create(mp->video.format, mp->video.width, mp->video.height, MEDIA_MEM_DEEP);
     if (!frm) {
         loge("video_frame_create failed!\n");
         return NULL;
