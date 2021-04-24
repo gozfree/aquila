@@ -99,6 +99,7 @@ static void rtmp_close(struct protocol_ctx *pc)
 {
     struct rtmp_ctx *rc = (struct rtmp_ctx *)pc->priv;
     rtmpc_stream_stop(rc->client);
+    rtmpc_destroy(rc->client);
     free(rc->url);
     free(rc);
 }

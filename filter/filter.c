@@ -70,26 +70,27 @@ static void on_src_filter_read(struct filter_ctx *ctx)
         loge("filter[%s]: alloc_data NULL!\n", ctx->name);
         return;
     }
-    logi("filter[%s]: %d alloc_data %p, len=%d\n", ctx->name, ctx->debug_cnt, out->iov_base, out->iov_len);
+    logd("filter[%s]: %d alloc_data %p, len=%d\n", ctx->name, ctx->debug_cnt, out->iov_base, out->iov_len);
     thread_lock(ctx->thread);
     if (-1 == ctx->ops->on_read(ctx, NULL, out)) {
         loge("filter[%s] on_read failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d on_read len=%d\n", ctx->name, ctx->debug_cnt, out->iov_len);
+    logd("filter[%s]: %d on_read len=%d\n", ctx->name, ctx->debug_cnt, out->iov_len);
     out_item = queue_item_alloc(ctx->q_snk, out->iov_base, out->iov_len, ctx);
     if (!out_item) {
         loge("filter[%s] item_alloc failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, out_item);
+    logd("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, out_item);
     if (-1 == queue_push(ctx->q_snk, out_item)) {
         loge("filter[%s] buffer_push failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d queue_push %p to   %p\n",
+    logd("filter[%s]: %d queue_push %p to   %p\n",
           ctx->name, ctx->debug_cnt, out_item, ctx->q_snk);
 exit:
+    free(out);
     thread_unlock(ctx->thread);
     logd("filter[%s] %d leave\n", ctx->name, ctx->debug_cnt);
 }
@@ -119,38 +120,40 @@ static void on_mid_filter_read(struct filter_ctx *ctx)
 
     if (ctx->ops->alloc_data) {
         out = ctx->ops->alloc_data(ctx);
+        logi("alloc_data %p\n", out);
     }
     if (!out) {
         loge("filter[%s]: alloc_data NULL!\n", ctx->name);
         return;
     }
 
-    logi("filter[%s]: %d alloc_data %p, len=%d\n", ctx->name, ctx->debug_cnt, out->iov_base, out->iov_len);
+    logd("filter[%s]: %d alloc_data %p, len=%d\n", ctx->name, ctx->debug_cnt, out->iov_base, out->iov_len);
     thread_lock(ctx->thread);
     if (-1 == ctx->ops->on_read(ctx, in, out)) {
         loge("filter %s on_read failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d on_read len=%d\n", ctx->name, ctx->debug_cnt, out->iov_len);
-    logi("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
+    logd("filter[%s]: %d on_read len=%d\n", ctx->name, ctx->debug_cnt, out->iov_len);
+    logd("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
     if (prev_filter->ops->free_data)
         prev_filter->ops->free_data(prev_filter, in);
-    logi("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
+    logd("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
     queue_item_free(ctx->q_src, in_item);
     out_item = queue_item_alloc(ctx->q_snk, out->iov_base, out->iov_len, ctx);
     if (!out_item) {
         loge("filter[%s] item_alloc failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, out_item);
+    logd("filter[%s]: %d item_alloc %p\n", ctx->name, ctx->debug_cnt, out_item);
     if (-1 == queue_push(ctx->q_snk, out_item)) {
         loge("filter[%s] buffer_push failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d queue_push %p to   %p\n",
+    logd("filter[%s]: %d queue_push %p to   %p\n",
           ctx->name, ctx->debug_cnt, out_item, ctx->q_snk);
 
 exit:
+    free(out);
     thread_unlock(ctx->thread);
     logd("filter[%s] leave\n", ctx->name);
 }
@@ -180,10 +183,11 @@ static void on_snk_filter_read(struct filter_ctx *ctx)
         loge("filter %s on_read failed!\n", ctx->name);
         goto exit;
     }
-    logi("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
+    logd("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
     if (prev_filter->ops->free_data)
         prev_filter->ops->free_data(prev_filter, in);
-    logi("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
+        logi("free_data %p\n", in);
+    logd("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
     queue_item_free(ctx->q_src, in_item);
 
 exit:
