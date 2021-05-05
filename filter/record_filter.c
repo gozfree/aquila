@@ -41,8 +41,6 @@ static int on_rec_read(struct filter_ctx *fc, struct iovec *in, struct iovec *ou
     if (ret == -1) {
         loge("decode failed!\n");
     }
-    //media_packet_destroy(pkt);
-    out->iov_len = ret;
     return ret;
 }
 

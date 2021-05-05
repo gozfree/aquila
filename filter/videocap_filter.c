@@ -36,16 +36,18 @@ struct videocap_ctx {
     struct videocap_conf *conf;
 };
 
+static int g_alloc_cnt = 0;
+static int g_free_cnt = 0;
+
 static struct iovec *videocap_alloc(struct filter_ctx *fc)
 {
-    struct videocap_ctx *ctx = (struct videocap_ctx *)fc->priv;
     struct media_producer *mp = &fc->conf->videocap.mp;
     struct video_frame *frm = video_frame_create(mp->video.format, mp->video.width, mp->video.height, MEDIA_MEM_DEEP);
     if (!frm) {
         loge("video_frame_create failed!\n");
         return NULL;
     }
-    logd("video_frame_create %p\n", frm);
+    logd("video_frame_create %p, alloc_cnt=%d\n", frm, g_alloc_cnt++);
     struct iovec *io = calloc(1, sizeof(struct iovec));
     io->iov_base = frm;
     io->iov_len = frm->total_size;
@@ -56,8 +58,7 @@ static void videocap_free(struct filter_ctx *fc, struct iovec *data)
 {
     struct video_frame *frm = (struct video_frame *)data->iov_base;
     video_frame_destroy(frm);
-    logd("video_frame_destroy %p\n", frm);
-    //free(data);
+    logd("video_frame_destroy %p, free_cnt=%d\n", frm, g_free_cnt++);
 }
 
 static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)

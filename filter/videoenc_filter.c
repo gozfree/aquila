@@ -34,8 +34,6 @@ struct videoenc_ctx {
 
 static struct iovec *videoenc_alloc(struct filter_ctx *fc)
 {
-    struct videoenc_ctx *vc = (struct videoenc_ctx *)fc->priv;
-
     struct media_packet *pkt = media_packet_create(MEDIA_TYPE_VIDEO, MEDIA_MEM_SHALLOW, NULL, 0);
     if (!pkt) {
         loge("media_packet_create failed\n", pkt);
@@ -53,7 +51,6 @@ static void videoenc_free(struct filter_ctx *fc, struct iovec *data)
     struct media_packet *pkt = (struct media_packet *)data->iov_base;
     logd("media_packet_destroy %p\n", pkt);
     media_packet_destroy(pkt);
-    //free(data);
 }
 
 static int on_videoenc_read(struct filter_ctx *fc, struct iovec *in, struct iovec *out)

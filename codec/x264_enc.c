@@ -21,14 +21,7 @@
 #include <string.h>
 #include <errno.h>
 #include <stdint.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <x264.h>
-#ifdef __cplusplus
-}
-#endif
-
 
 #include <gear-lib/liblog.h>
 #include <gear-lib/libdarray.h>

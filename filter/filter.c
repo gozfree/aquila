@@ -120,7 +120,7 @@ static void on_mid_filter_read(struct filter_ctx *ctx)
 
     if (ctx->ops->alloc_data) {
         out = ctx->ops->alloc_data(ctx);
-        logi("alloc_data %p\n", out);
+        logd("alloc_data %p\n", out);
     }
     if (!out) {
         loge("filter[%s]: alloc_data NULL!\n", ctx->name);
@@ -186,7 +186,7 @@ static void on_snk_filter_read(struct filter_ctx *ctx)
     logd("filter[%s]: %d free_data %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in, prev_filter->name);
     if (prev_filter->ops->free_data)
         prev_filter->ops->free_data(prev_filter, in);
-        logi("free_data %p\n", in);
+        logd("free_data %p\n", in);
     logd("filter[%s]: %d item_free %p by filter[%s]\n", ctx->name, ctx->debug_cnt, in_item, prev_filter->name);
     queue_item_free(ctx->q_src, in_item);
 
@@ -440,6 +440,7 @@ void filter_destroy(struct filter_ctx *ctx)
     if (!ctx)
         return;
 
+    logi("filter[%s]: destroy\n", ctx->name);
     ctx->ops->close(ctx);
 
     queue_branch_del(ctx->q_src, ctx->name);
@@ -448,7 +449,7 @@ void filter_destroy(struct filter_ctx *ctx)
     queue_flush(ctx->q_src);
     queue_flush(ctx->q_snk);
     gevent_destroy(ctx->ev_read);
-    //gevent_base_destroy(ctx->ev_base);
+    gevent_base_destroy(ctx->ev_base);
     thread_destroy(ctx->thread);
     ctx->thread = NULL;
     free(ctx);
