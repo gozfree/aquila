@@ -80,7 +80,7 @@ static int on_videocap_read(struct filter_ctx *fc, struct iovec *in, struct iove
         return -1;
     }
 
-    time_msec_str(tmp_tm, sizeof(tmp_tm));
+    time_now_msec_str(tmp_tm, sizeof(tmp_tm));
     //overlay_draw_text((unsigned char *)frm, 0, 0, mp->video.width, tmp_tm);
     if (-1 == device_write(ctx->dev, NULL, 0)) {
         loge("device_write failed!\n");

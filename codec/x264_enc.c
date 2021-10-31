@@ -47,10 +47,14 @@ struct x264_ctx {
 static int pixel_format_to_x264_csp(enum pixel_format fmt)
 {
     switch (fmt) {
+#if X264_BUILD >= 149
     case PIXEL_FORMAT_UYVY:
         return X264_CSP_UYVY;
+#endif
+#if X264_BUILD > 156
     case PIXEL_FORMAT_YUY2:
         return X264_CSP_YUYV;
+#endif
     case PIXEL_FORMAT_NV12:
         return X264_CSP_NV12;
     case PIXEL_FORMAT_I420:
@@ -184,9 +188,11 @@ static int init_pic_data(struct x264_ctx *c, x264_picture_t *pic,
     pic->img.i_csp = c->param.i_csp;
 
     switch (c->param.i_csp) {
+#if X264_BUILD >= 149
     case X264_CSP_YUYV:
         pic->img.i_plane = 1;
         break;
+#endif
     case X264_CSP_NV12:
         pic->img.i_plane = 2;
         break;

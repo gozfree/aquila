@@ -322,11 +322,11 @@ struct filter_ctx *filter_create(struct filter_conf *conf,
         break;
     case FILTER_TYPE_MID:
         qb = queue_branch_get(q_src, ctx->name);
-        fd = qb->RD_FD;
+        fd = qb->evfd;
         break;
     case FILTER_TYPE_SNK:
         qb = queue_branch_get(q_src, ctx->name);
-        fd = qb->RD_FD;
+        fd = qb->evfd;
         break;
     default:
         break;

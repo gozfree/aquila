@@ -1,7 +1,7 @@
 INSTALL
 =======
 
-## install lastest libraries
+## install lastest gear-lib
 $ `git clone https://github.com/gozfree/gear-lib.git`  
 $ `cd gear-lib`  
 $ `./build.sh`  
@@ -17,7 +17,9 @@ libasound-dev libx264-dev libsdl-dev libjpeg-dev libfdk-aac-dev`
 
 ## FAQ
 1.error while loading shared libraries: libdebug.so: cannot open shared object file: No such file or directory
-  make sure install libraries then
+  make sure install gear-lib into /usr/local/lib/ then
+  `$ sudo vi /etc/ld.so.conf.d/gear-lib.conf`
+  `input "/usr/local/lib/gear-lib" save and exit `
   `$ sudo ldconfig`
 ffplay -f rawvideo -pixel_format yuv422p -video_size 320x240 sample/sample_yuv422p.yuv
 
